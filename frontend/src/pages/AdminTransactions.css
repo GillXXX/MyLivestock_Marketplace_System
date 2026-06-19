@@ -1,0 +1,337 @@
+.admin-transactions-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding: 34px;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  color: #1a1f36;
+}
+
+.transactions-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  gap: 20px;
+}
+
+.title-area {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.back-btn {
+  width: 52px;
+  height: 52px;
+  background: #0f3d2e;
+  color: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title-area span {
+  color: #d4a437;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.title-area h1 {
+  margin: 6px 0;
+  font-size: 44px;
+  font-weight: 950;
+  letter-spacing: -1px;
+  color: #09291f;
+}
+
+.title-area p {
+  margin: 0;
+  color: #6b7280;
+  max-width: 760px;
+}
+
+.export-btn {
+  height: 52px;
+  border: none;
+  background: #0f3d2e;
+  color: white;
+  border-radius: 16px;
+  padding: 0 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transaction-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.transaction-stat-card,
+.workflow-overview,
+.transaction-toolbar,
+.transactions-card {
+  background: white;
+  border: 1px solid #e8ecf2;
+  border-radius: 22px;
+  box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
+}
+
+.transaction-stat-card {
+  padding: 24px;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  background: #eaf5ef;
+  color: #0f3d2e;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transaction-stat-card h2 {
+  font-size: 40px;
+  font-weight: 950;
+  margin: 14px 0 0;
+  color: #09291f;
+}
+
+.transaction-stat-card p {
+  margin: 0;
+  color: #6b7280;
+  font-weight: 800;
+}
+
+.transaction-stat-card small {
+  display: block;
+  margin-top: 8px;
+  color: #d4a437;
+  font-weight: 800;
+}
+
+.workflow-overview {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.workflow-overview h3 {
+  margin: 0;
+  font-weight: 950;
+  color: #09291f;
+}
+
+.workflow-overview p {
+  margin: 5px 0 18px;
+  color: #6b7280;
+}
+
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.workflow-steps div {
+  background: #f8fafc;
+  border: 1px solid #e8ecf2;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 900;
+  color: #0f3d2e;
+  text-align: center;
+}
+
+.transaction-toolbar {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1fr 180px 180px 150px;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.transaction-search {
+  height: 52px;
+  border: 1px solid #e8ecf2;
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.transaction-search input,
+.transaction-toolbar select {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+}
+
+.transaction-toolbar select {
+  height: 52px;
+  border: 1px solid #e8ecf2;
+  border-radius: 16px;
+  padding: 0 15px;
+  background: #f8fafc;
+}
+
+.date-btn {
+  border: none;
+  background: #0f3d2e;
+  color: white;
+  border-radius: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.transactions-card {
+  padding: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-weight: 950;
+  color: #09291f;
+}
+
+.card-header p {
+  margin: 5px 0 0;
+  color: #6b7280;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions-table th {
+  text-align: left;
+  color: #6b7280;
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 14px 10px;
+  border-bottom: 1px solid #e8ecf2;
+}
+
+.transactions-table td {
+  padding: 18px 10px;
+  border-bottom: 1px solid #e8ecf2;
+  vertical-align: middle;
+}
+
+.transactions-table td strong {
+  display: block;
+  color: #09291f;
+}
+
+.transactions-table td small {
+  color: #6b7280;
+}
+
+.amount {
+  color: #0f3d2e;
+  font-weight: 950;
+}
+
+.trx-status {
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.trx-status.completed {
+  background: #eaf5ef;
+  color: #0f3d2e;
+}
+
+.trx-status.pending {
+  background: #fff7d6;
+  color: #8a6500;
+}
+
+.trx-status.flagged {
+  background: #ffe5e5;
+  color: #b42318;
+}
+
+.workflow-box {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.workflow-box span {
+  width: 24px;
+  height: 7px;
+  border-radius: 20px;
+  background: #dfe4ea;
+}
+
+.workflow-box .done {
+  background: #0f3d2e;
+}
+
+.workflow-box .active {
+  background: #d4a437;
+}
+
+.stage-label {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.transaction-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.transaction-actions button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 12px;
+  background: #eaf5ef;
+  color: #0f3d2e;
+}
+
+.transaction-actions .danger {
+  background: #ffe5e5;
+  color: #b42318;
+}
+
+@media (max-width: 1100px) {
+  .transaction-stats,
+  .transaction-toolbar,
+  .workflow-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .transactions-top {
+    flex-direction: column;
+  }
+
+  .admin-transactions-page {
+    padding: 22px;
+  }
+}
