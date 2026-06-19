@@ -25,8 +25,12 @@ const getBuyerTransactions = async (req, res) => {
     res.json({ transactions });
   } catch (error) {
     console.error("Buyer transactions error:", error);
-    res.status(500).json({ message: "Server error loading buyer transactions" });
+    res.status(500).json({
+      message: "Server error loading buyer transactions",
+    });
   }
 };
 
-module.exports = { getBuyerTransactions };
+module.exports = {
+  getBuyerTransactions,
+};
