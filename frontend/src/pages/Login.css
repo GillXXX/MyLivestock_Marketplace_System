@@ -1,24 +1,25 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #09291f;
-  --accent: #d4a437;
-  --background: #f7f8fa;
-  --card: #ffffff;
-  --text: #1a1f36;
-  --muted: #6b7280;
-  --border: #e8ecf2;
-  --shadow: 0 18px 50px rgba(15, 61, 46, 0.1);
-}
-
 * {
   box-sizing: border-box;
 }
 
 .modern-login {
+  --primary: #0f3d2e;
+  --primary-dark: #071f16;
+  --accent: #d7a24d;
+  --background: #f4f1e8;
+  --card: #fbfaf5;
+  --text: #111827;
+  --muted: #667085;
+  --border: #e8e2d4;
+  --soft: #eef6f1;
+  --shadow: 0 18px 50px rgba(15, 61, 46, 0.09);
+
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
-  background: var(--background);
+  background:
+    radial-gradient(circle at top right, rgba(215, 162, 77, 0.10), transparent 32%),
+    var(--background);
   font-family: "Inter", "Segoe UI", sans-serif;
 }
 
@@ -29,9 +30,10 @@
   overflow: hidden;
   background:
     linear-gradient(
-      135deg,
-      rgba(15, 61, 46, 0.96),
-      rgba(9, 41, 31, 0.98)
+      165deg,
+      rgba(7, 31, 22, 0.94) 0%,
+      rgba(15, 61, 46, 0.82) 55%,
+      rgba(9, 41, 31, 0.95) 100%
     ),
     url("https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=1600&auto=format&fit=crop");
   background-size: cover;
@@ -45,11 +47,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(
-      circle at top right,
-      rgba(212, 164, 55, 0.25),
-      transparent 28%
-    );
+    radial-gradient(circle at 85% 15%, rgba(215, 162, 77, 0.35), transparent 45%),
+    radial-gradient(circle at 12% 92%, rgba(215, 162, 77, 0.12), transparent 42%);
 }
 
 .showcase-content {
@@ -70,9 +69,9 @@
   width: 58px;
   height: 58px;
   border-radius: 18px;
-  background: rgba(255,255,255,0.12);
-  -webkit-backdrop-filter: blur(10px);
-backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, var(--accent), #b8842c);
+  color: var(--primary-dark);
+  box-shadow: 0 10px 24px rgba(215, 162, 77, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,19 +120,28 @@ backdrop-filter: blur(10px);
 }
 
 .feature-card {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(215, 162, 77, 0.18);
   border-radius: 22px;
-  padding: 22px;
+  padding: 20px;
   display: flex;
+  align-items: flex-start;
   gap: 16px;
   -webkit-backdrop-filter: blur(14px);
 backdrop-filter: blur(14px);
 }
 
-.feature-card svg {
-  color: var(--accent);
+.feature-icon-badge {
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #b8842c);
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(215, 162, 77, 0.3);
 }
 
 .feature-card strong {
@@ -159,11 +167,11 @@ backdrop-filter: blur(14px);
 
 .login-card {
   width: 100%;
-  max-width: 470px;
+  max-width: 540px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 30px;
-  padding: 42px;
+  padding: 48px;
   box-shadow: var(--shadow);
 }
 
@@ -197,7 +205,7 @@ backdrop-filter: blur(14px);
   margin-bottom: 10px;
   font-size: 14px;
   font-weight: 850;
-  color: #374151;
+  color: var(--text);
 }
 
 .password-label {
@@ -217,7 +225,7 @@ backdrop-filter: blur(14px);
   height: 58px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: #f8fafc;
+  background: var(--card);
   padding: 0 18px;
   display: flex;
   align-items: center;
@@ -232,7 +240,7 @@ backdrop-filter: blur(14px);
 }
 
 .input-wrapper svg {
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .input-wrapper input {
@@ -248,7 +256,25 @@ backdrop-filter: blur(14px);
   border: none;
   background: transparent;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.eye-btn:hover {
+  color: var(--primary);
+}
+
+.form-error {
+  margin: 0 0 15px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(198, 62, 62, 0.08);
+  border: 1px solid rgba(198, 62, 62, 0.22);
+  color: #b23434;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .login-options {
@@ -313,9 +339,8 @@ backdrop-filter: blur(14px);
 }
 
 .social-login {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .social-login button {

@@ -1,9 +1,29 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { OAuth2Client } = require("google-auth-library");
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const issueSession = (res, user) => {
+  const token = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  res.status(200).json({
+    message: "Login successful",
+    token,
+    user: {
+      id: user.id,
+      fullName: user.full_name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+};
 
 const register = async (req, res) => {
   try {
@@ -88,26 +108,7 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user.id,
-        fullName: user.full_name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+    issueSession(res, user);
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Server error during login" });
@@ -116,22 +117,36 @@ const login = async (req, res) => {
 
 const googleLogin = async (req, res) => {
   try {
-    const { credential } = req.body;
+    const { accessToken } = req.body;
 
-    if (!credential) {
-      return res.status(400).json({ message: "Missing Google credential" });
+    if (!accessToken) {
+      return res.status(400).json({ message: "Missing Google access token" });
     }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    const tokenInfoRes = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`
+    );
+    const tokenInfo = await tokenInfoRes.json();
 
-    const { email } = ticket.getPayload();
+    if (!tokenInfo.aud || tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID) {
+      return res.status(401).json({ message: "Invalid Google token" });
+    }
+
+    const profileRes = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const profile = await profileRes.json();
+
+    if (!profile.email) {
+      return res.status(400).json({
+        message: "Could not get an email from Google.",
+      });
+    }
 
     const [users] = await db.query(
       "SELECT * FROM users WHERE email = ?",
-      [email]
+      [profile.email]
     );
 
     if (users.length === 0) {
@@ -142,26 +157,7 @@ const googleLogin = async (req, res) => {
 
     const user = users[0];
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user.id,
-        fullName: user.full_name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+    issueSession(res, user);
   } catch (error) {
     console.error("Google login error:", error);
     res.status(401).json({ message: "Google sign-in failed" });

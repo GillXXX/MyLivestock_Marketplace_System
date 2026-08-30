@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useNavigate, Link } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import "./Login.css";
 
 function Login() {
@@ -78,30 +78,33 @@ function Login() {
     setLoading(false);
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setMessage("");
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setMessage("");
 
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ credential: credentialResponse.credential }),
-      });
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/google", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ accessToken: tokenResponse.access_token }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok) {
-        setMessage(data.message || "Google sign-in failed");
-        return;
+        if (!res.ok) {
+          setMessage(data.message || "Google sign-in failed");
+          return;
+        }
+
+        handleAuthSuccess(data);
+      } catch (error) {
+        setMessage("Cannot connect to backend server");
       }
-
-      handleAuthSuccess(data);
-    } catch (error) {
-      setMessage("Cannot connect to backend server");
-    }
-  };
+    },
+    onError: () => setMessage("Google sign-in failed"),
+  });
 
   return (
     <div className="modern-login">
@@ -237,10 +240,15 @@ function Login() {
           </div>
 
           <div className="social-login">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setMessage("Google sign-in failed")}
-            />
+            <button type="button" onClick={() => googleLogin()}>
+              <svg viewBox="0 0 48 48" width="20" height="20">
+                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34 5.1 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-3.5z" />
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3.1 0 5.8 1.1 8 3l6-6C34 5.1 29.3 3 24 3 16.3 3 9.7 7.3 6.3 14.7z" />
+                <path fill="#4CAF50" d="M24 45c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 36.6 26.7 37.5 24 37.5c-5.4 0-9.9-3.4-11.6-8.2l-6.5 5C9.5 40.6 16.2 45 24 45z" />
+                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C39.9 37.6 44 32.6 44 24c0-1.4-.1-2.7-.4-3.5z" />
+              </svg>
+              Continue with Google
+            </button>
           </div>
 
           <div className="register-link">
