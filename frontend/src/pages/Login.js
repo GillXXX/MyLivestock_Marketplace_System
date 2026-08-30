@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import "./Login.css";
 
 function Login() {
@@ -30,6 +31,21 @@ function Login() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleAuthSuccess = (data) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    if (data.user.role === "admin") {
+      navigate("/admin-dashboard");
+    } else if (data.user.role === "farmer") {
+      navigate("/farmer-dashboard");
+    } else if (data.user.role === "buyer") {
+      navigate("/buyer-dashboard");
+    } else {
+      setMessage("Unknown user role");
+    }
   };
 
   const handleLogin = async (e) => {
@@ -54,23 +70,37 @@ function Login() {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      if (data.user.role === "admin") {
-        navigate("/admin-dashboard");
-      } else if (data.user.role === "farmer") {
-        navigate("/farmer-dashboard");
-      } else if (data.user.role === "buyer") {
-        navigate("/buyer-dashboard");
-      } else {
-        setMessage("Unknown user role");
-      }
+      handleAuthSuccess(data);
     } catch (error) {
       setMessage("Cannot connect to backend server");
     }
 
     setLoading(false);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setMessage("");
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || "Google sign-in failed");
+        return;
+      }
+
+      handleAuthSuccess(data);
+    } catch (error) {
+      setMessage("Cannot connect to backend server");
+    }
   };
 
   return (
@@ -104,7 +134,9 @@ function Login() {
 
           <div className="showcase-features">
             <div className="feature-card">
-              <ShieldCheck size={22} />
+              <div className="feature-icon-badge">
+                <ShieldCheck size={20} />
+              </div>
 
               <div>
                 <strong>Secure Trading Workflow</strong>
@@ -113,7 +145,9 @@ function Login() {
             </div>
 
             <div className="feature-card">
-              <Mail size={22} />
+              <div className="feature-icon-badge">
+                <Mail size={20} />
+              </div>
 
               <div>
                 <strong>Farmer & Buyer Messaging</strong>
@@ -134,11 +168,7 @@ function Login() {
             <p>Access your livestock marketplace dashboard and continue trading.</p>
           </div>
 
-          {message && (
-            <p style={{ color: "red", marginBottom: "15px" }}>
-              {message}
-            </p>
-          )}
+          {message && <p className="form-error">{message}</p>}
 
           <form onSubmit={handleLogin}>
             <div className="form-group">
@@ -207,15 +237,10 @@ function Login() {
           </div>
 
           <div className="social-login">
-            <button type="button">
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
-                alt="google"
-              />
-              Google
-            </button>
-
-            <button type="button">📱 Phone</button>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setMessage("Google sign-in failed")}
+            />
           </div>
 
           <div className="register-link">
@@ -223,12 +248,6 @@ function Login() {
               Don’t have an account?
               <Link to="/register"> Create Account</Link>
             </p>
-          </div>
-
-          <div style={{ marginTop: "20px", fontSize: "13px", color: "#777" }}>
-            <p><strong>Default Admin Account</strong></p>
-            <p>Email: admin@herdmarket.com</p>
-            <p>Password: admin123</p>
           </div>
         </div>
       </section>
