@@ -6,80 +6,18 @@ const getAdminNotifications = async (req, res) => {
       return res.status(403).json({ message: "Admin access only" });
     }
 
-    const notifications = [];
+    const [rows] = await db.query(
+      "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100"
+    );
 
-    const [listings] = await db.query(`
-      SELECT 
-        l.id,
-        l.livestock_type,
-        l.breed,
-        l.status,
-        l.created_at,
-        u.full_name AS farmer_name
-      FROM livestock_listings l
-      JOIN users u ON l.farmer_id = u.id
-      ORDER BY l.created_at DESC
-      LIMIT 10
-    `);
-
-    listings.forEach((item) => {
-      notifications.push({
-        id: `L-${item.id}`,
-        type: "Listing Approval",
-        title: "Livestock listing submitted",
-        message: `${item.farmer_name} submitted a ${item.livestock_type} listing for review.`,
-        time: item.created_at,
-        status: item.status === "Pending" ? "Unread" : "Read",
-      });
-    });
-
-    const [transactions] = await db.query(`
-      SELECT 
-        t.id,
-        t.status,
-        t.created_at,
-        l.livestock_type,
-        farmer.full_name AS farmer_name,
-        buyer.full_name AS buyer_name
-      FROM transactions t
-      JOIN livestock_listings l ON t.listing_id = l.id
-      JOIN users farmer ON t.farmer_id = farmer.id
-      JOIN users buyer ON t.buyer_id = buyer.id
-      ORDER BY t.created_at DESC
-      LIMIT 10
-    `);
-
-    transactions.forEach((item) => {
-      notifications.push({
-        id: `T-${item.id}`,
-        type: "Transaction Alert",
-        title: "Transaction update",
-        message: `${item.livestock_type} transaction between ${item.farmer_name} and ${item.buyer_name} is ${item.status}.`,
-        time: item.created_at,
-        status: item.status === "Pending" ? "Unread" : "Read",
-      });
-    });
-
-    const [users] = await db.query(`
-      SELECT id, full_name, role, created_at
-      FROM users
-      WHERE role != 'admin'
-      ORDER BY created_at DESC
-      LIMIT 10
-    `);
-
-    users.forEach((item) => {
-      notifications.push({
-        id: `U-${item.id}`,
-        type: "User Registration",
-        title: `New ${item.role} registered`,
-        message: `${item.full_name} created a ${item.role} account.`,
-        time: item.created_at,
-        status: "Read",
-      });
-    });
-
-    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+    const notifications = rows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      message: row.message,
+      time: row.created_at,
+      status: row.is_read ? "Read" : "Unread",
+    }));
 
     const totalAlerts = notifications.length;
     const unreadAlerts = notifications.filter((n) => n.status === "Unread").length;
@@ -109,4 +47,56 @@ const getAdminNotifications = async (req, res) => {
   }
 };
 
-module.exports = { getAdminNotifications };
+const markNotificationRead = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access only" });
+    }
+
+    await db.query("UPDATE notifications SET is_read = 1 WHERE id = ?", [
+      req.params.id,
+    ]);
+
+    res.json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Mark notification read error:", error);
+    res.status(500).json({ message: "Server error updating notification" });
+  }
+};
+
+const markAllNotificationsRead = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access only" });
+    }
+
+    await db.query("UPDATE notifications SET is_read = 1 WHERE is_read = 0");
+
+    res.json({ message: "All notifications marked as read" });
+  } catch (error) {
+    console.error("Mark all notifications read error:", error);
+    res.status(500).json({ message: "Server error updating notifications" });
+  }
+};
+
+const deleteNotification = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access only" });
+    }
+
+    await db.query("DELETE FROM notifications WHERE id = ?", [req.params.id]);
+
+    res.json({ message: "Notification deleted" });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    res.status(500).json({ message: "Server error deleting notification" });
+  }
+};
+
+module.exports = {
+  getAdminNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification,
+};

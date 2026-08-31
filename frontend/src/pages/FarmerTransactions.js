@@ -13,9 +13,11 @@ import {
   Calendar,
   Wallet,
   TrendingUp,
+  XCircle,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./FarmerTransactions.css";
 
 function FarmerTransactions() {
@@ -36,42 +38,103 @@ function FarmerTransactions() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
+  const fetchTransactions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/farmer/transactions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || "Failed to load transactions");
+        setLoading(false);
+        return;
+      }
+
+      setTransactions(data.transactions);
+      setFilteredTransactions(data.transactions);
+      setStats(data.stats);
+      setLoading(false);
+    } catch (error) {
+      setMessage("Cannot connect to backend server");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const token = localStorage.getItem("token");
+    fetchTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
-        if (!token) {
-          navigate("/login");
-          return;
-        }
+  const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];
 
-        const res = await fetch("http://localhost:5000/api/farmer/transactions", {
+  const advanceStep = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_URL}/api/farmer/transactions/${id}/advance`,
+        {
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setMessage(data.message || "Failed to load transactions");
-          setLoading(false);
-          return;
         }
+      );
 
-        setTransactions(data.transactions);
-        setFilteredTransactions(data.transactions);
-        setStats(data.stats);
-        setLoading(false);
-      } catch (error) {
-        setMessage("Cannot connect to backend server");
-        setLoading(false);
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to advance transaction");
+        return;
       }
-    };
 
-    fetchTransactions();
-  }, [navigate]);
+      fetchTransactions();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const declineOffer = async (id) => {
+    if (!window.confirm("Decline this offer? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_URL}/api/farmer/transactions/${id}/decline`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to decline transaction");
+        return;
+      }
+
+      fetchTransactions();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
 
   useEffect(() => {
     let results = [...transactions];
@@ -244,12 +307,16 @@ function FarmerTransactions() {
                         className={
                           item.status === "Completed"
                             ? "premium-status completed"
+                            : item.status === "Declined" || item.status === "Cancelled"
+                            ? "premium-status declined"
                             : item.workflow_step === "Verification"
                             ? "premium-status verification"
                             : "premium-status pending"
                         }
                       >
-                        {item.status === "Completed" ? "Completed" : item.workflow_step}
+                        {item.status === "Completed" || item.status === "Declined" || item.status === "Cancelled"
+                          ? item.status
+                          : item.workflow_step}
                       </span>
                     </div>
                   </div>
@@ -283,6 +350,32 @@ function FarmerTransactions() {
                         <MessageCircle size={17} />
                         Message Buyer
                       </Link>
+
+                      {item.status === "Pending" && item.workflow_step !== "Confirmation" && (
+                        <button
+                          type="button"
+                          className="message-btn-premium"
+                          onClick={() => advanceStep(item.id)}
+                        >
+                          <CheckCircle size={17} />
+                          Advance to {WORKFLOW_STEPS[WORKFLOW_STEPS.indexOf(item.workflow_step) + 1]}
+                        </button>
+                      )}
+
+                      {item.status === "Pending" && item.workflow_step === "Confirmation" && (
+                        <span className="waiting-buyer-note">Waiting for buyer to confirm</span>
+                      )}
+
+                      {item.status === "Pending" && (
+                        <button
+                          type="button"
+                          className="decline-btn-premium"
+                          onClick={() => declineOffer(item.id)}
+                        >
+                          <XCircle size={17} />
+                          Decline Offer
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

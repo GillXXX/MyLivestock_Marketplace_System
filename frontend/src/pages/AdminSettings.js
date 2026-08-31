@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./AdminSettings.css";
 
 function AdminSettings() {
@@ -44,7 +45,7 @@ function AdminSettings() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/admin/settings", {
+        const res = await fetch(`${API_URL}/api/admin/settings`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -100,7 +101,7 @@ function AdminSettings() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/admin/settings", {
+      const res = await fetch(`${API_URL}/api/admin/settings`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

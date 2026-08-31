@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   ImagePlus,
@@ -14,15 +14,23 @@ import {
   UploadCloud,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { API_URL } from "../config";
 import "./Post.css";
 
 function Post() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
 
   const [loading, setLoading] = useState(false);
+  const [loadingListing, setLoadingListing] = useState(isEditMode);
   const [message, setMessage] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [existingImageUrl, setExistingImageUrl] = useState("");
+  const [existingDocuments, setExistingDocuments] = useState([]);
+  const [isVerified, setIsVerified] = useState(true);
 
   const [formData, setFormData] = useState({
     livestockType: "",
@@ -36,6 +44,92 @@ function Post() {
     imageUrl: "",
   });
 
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const fetchListing = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/listings/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setMessage(data.message || "Failed to load listing");
+          setLoadingListing(false);
+          return;
+        }
+
+        setFormData({
+          livestockType: data.livestock_type || "",
+          breed: data.breed || "",
+          age: data.age || "",
+          weight: data.weight || "",
+          price: data.price || "",
+          healthStatus: data.health_status || "",
+          location: data.location || "",
+          description: data.description || "",
+          imageUrl: "",
+        });
+
+        setExistingImageUrl(data.image_url || "");
+
+        try {
+          const docs = data.documents ? JSON.parse(data.documents) : [];
+          setExistingDocuments(Array.isArray(docs) ? docs : []);
+        } catch (error) {
+          setExistingDocuments([]);
+        }
+
+        setLoadingListing(false);
+      } catch (error) {
+        setMessage("Cannot connect to backend server");
+        setLoadingListing(false);
+      }
+    };
+
+    fetchListing();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+
+    const checkVerification = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/farmer/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setIsVerified(Boolean(data.is_verified));
+        }
+      } catch (error) {
+        // If this check fails, let the actual submit attempt surface the error.
+      }
+    };
+
+    checkVerification();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode]);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -43,9 +137,12 @@ function Post() {
     });
   };
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    setSelectedFiles(files);
+  const handleImageChange = (e) => {
+    setSelectedImage(e.target.files[0] || null);
+  };
+
+  const handleDocumentsChange = (e) => {
+    setSelectedDocuments(Array.from(e.target.files));
   };
 
   const handlePost = async (e) => {
@@ -61,24 +158,41 @@ function Post() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/listings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
+      const payload = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        payload.append(key, value);
       });
+
+      if (selectedImage) {
+        payload.append("image", selectedImage);
+      }
+
+      selectedDocuments.forEach((file) => {
+        payload.append("documents", file);
+      });
+
+      const res = await fetch(
+        isEditMode
+          ? `${API_URL}/api/listings/${id}`
+          : `${API_URL}/api/listings`,
+        {
+          method: isEditMode ? "PUT" : "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: payload,
+        }
+      );
 
       const data = await res.json();
 
       if (!res.ok) {
-        setMessage(data.message || "Failed to create listing");
+        setMessage(data.message || (isEditMode ? "Failed to update listing" : "Failed to create listing"));
         setLoading(false);
         return;
       }
 
-      alert("Listing published successfully!");
+      alert(isEditMode ? "Listing updated successfully!" : "Listing published successfully!");
       navigate("/listings");
     } catch (error) {
       setMessage("Cannot connect to backend server");
@@ -86,6 +200,10 @@ function Post() {
 
     setLoading(false);
   };
+
+  if (loadingListing) {
+    return <h2 style={{ padding: "30px" }}>Loading listing...</h2>;
+  }
 
   return (
     <div className="premium-post-page">
@@ -97,15 +215,25 @@ function Post() {
 
           <div>
             <span className="page-tag">LIVESTOCK MARKETPLACE</span>
-            <h1>Create New Listing</h1>
+            <h1>{isEditMode ? "Edit Listing" : "Create New Listing"}</h1>
             <p>
-              Publish your livestock professionally and reach more verified buyers across the marketplace.
+              {isEditMode
+                ? "Update your livestock listing details, photo, or documents."
+                : "Publish your livestock professionally and reach more verified buyers across the marketplace."}
             </p>
           </div>
         </div>
       </div>
 
       <div className="premium-post-card">
+        {!isEditMode && !isVerified && (
+          <p style={{ color: "#946200", background: "#fff5d8", padding: "12px 16px", borderRadius: "12px", marginBottom: "15px" }}>
+            Your account isn't verified yet, so you can't post a listing. Submit your
+            government ID and barangay certificate on your{" "}
+            <Link to="/profile">Profile page</Link> to get verified.
+          </p>
+        )}
+
         {message && (
           <p style={{ color: "red", marginBottom: "15px" }}>
             {message}
@@ -115,16 +243,16 @@ function Post() {
         <form onSubmit={handlePost}>
           <div className="premium-upload-box">
             <div className="upload-icon">
-              <UploadCloud size={44} />
+              <UploadCloud size={26} />
             </div>
 
-            <h3>Upload Livestock Images</h3>
+            <h3>Upload Livestock Photo</h3>
 
-            <p>Click Choose Files to select livestock photos from your computer.</p>
+            <p>Click Choose Photo to select a livestock image from your computer.</p>
 
             <label
               className="upload-btn"
-              htmlFor="livestockImages"
+              htmlFor="livestockImage"
               style={{
                 cursor: "pointer",
                 display: "inline-flex",
@@ -135,15 +263,14 @@ function Post() {
               }}
             >
               <ImagePlus size={18} />
-              Choose Files
+              Choose Photo
             </label>
 
             <input
-              id="livestockImages"
+              id="livestockImage"
               type="file"
-              multiple
               accept="image/*"
-              onChange={handleFileChange}
+              onChange={handleImageChange}
               style={{
                 opacity: 0,
                 position: "absolute",
@@ -153,26 +280,98 @@ function Post() {
               }}
             />
 
-            {selectedFiles.length > 0 && (
+            {selectedImage ? (
               <div style={{ marginTop: "15px" }}>
-                <strong>Selected files:</strong>
+                <strong>Selected photo:</strong>
+                <p style={{ margin: "5px 0" }}>{selectedImage.name}</p>
+              </div>
+            ) : existingImageUrl ? (
+              <div style={{ marginTop: "15px" }}>
+                <strong>Current photo:</strong>
+                <p style={{ margin: "5px 0" }}>
+                  <img
+                    src={existingImageUrl}
+                    alt="Current listing"
+                    style={{ maxWidth: "160px", borderRadius: "12px", marginTop: "8px" }}
+                  />
+                </p>
+              </div>
+            ) : null}
 
-                {selectedFiles.map((file, index) => (
+            <input
+              name="imageUrl"
+              type="text"
+              placeholder="Or paste an image URL instead"
+              value={formData.imageUrl}
+              onChange={handleChange}
+              disabled={!!selectedImage}
+              style={{ marginTop: "15px" }}
+            />
+          </div>
+
+          <div className="premium-upload-box">
+            <div className="upload-icon">
+              <FileText size={26} />
+            </div>
+
+            <h3>Upload Supporting Documents</h3>
+
+            <p>Attach health certificates, ownership documents, or other proof for MAO verification.</p>
+
+            <label
+              className="upload-btn"
+              htmlFor="livestockDocuments"
+              style={{
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                position: "relative",
+                zIndex: 10,
+              }}
+            >
+              <FileText size={18} />
+              Choose Documents
+            </label>
+
+            <input
+              id="livestockDocuments"
+              type="file"
+              multiple
+              accept="image/*,application/pdf"
+              onChange={handleDocumentsChange}
+              style={{
+                opacity: 0,
+                position: "absolute",
+                width: "1px",
+                height: "1px",
+                pointerEvents: "none",
+              }}
+            />
+
+            {selectedDocuments.length > 0 ? (
+              <div style={{ marginTop: "15px" }}>
+                <strong>Selected documents (will replace existing):</strong>
+
+                {selectedDocuments.map((file, index) => (
                   <p key={index} style={{ margin: "5px 0" }}>
                     {file.name}
                   </p>
                 ))}
               </div>
-            )}
+            ) : existingDocuments.length > 0 ? (
+              <div style={{ marginTop: "15px" }}>
+                <strong>Current documents:</strong>
 
-            <input
-              name="imageUrl"
-              type="text"
-              placeholder="Optional: Paste image URL here"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              style={{ marginTop: "15px" }}
-            />
+                {existingDocuments.map((docUrl, index) => (
+                  <p key={index} style={{ margin: "5px 0" }}>
+                    <a href={docUrl} target="_blank" rel="noopener noreferrer">
+                      Document {index + 1}
+                    </a>
+                  </p>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="section-title">
@@ -322,12 +521,18 @@ function Post() {
           </div>
 
           <div className="post-actions">
-            <button type="button" className="draft-btn">
-              Save Draft
-            </button>
-
-            <button className="publish-btn" type="submit" disabled={loading}>
-              {loading ? "Publishing..." : "Publish Listing"}
+            <button
+              className="publish-btn"
+              type="submit"
+              disabled={loading || (!isEditMode && !isVerified)}
+            >
+              {loading
+                ? isEditMode
+                  ? "Saving..."
+                  : "Publishing..."
+                : isEditMode
+                ? "Save Changes"
+                : "Publish Listing"}
             </button>
           </div>
         </form>

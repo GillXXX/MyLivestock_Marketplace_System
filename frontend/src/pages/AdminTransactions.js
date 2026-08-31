@@ -1,21 +1,22 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   Search,
-  Eye,
   AlertTriangle,
   ArrowLeft,
-  Calendar,
   Download,
   CheckCircle,
   Clock,
   FileCheck2,
   Flag,
-  MoreHorizontal,
   TrendingUp,
+  XCircle,
+  RotateCcw,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { exportToCsv } from "../utils/exportCsv";
+import { API_URL } from "../config";
 import "./AdminTransactions.css";
 
 function AdminTransactions() {
@@ -26,6 +27,7 @@ function AdminTransactions() {
     completed: 0,
     pending: 0,
     flagged: 0,
+    declinedCancelled: 0,
     tradeValue: 0,
   });
 
@@ -35,7 +37,7 @@ function AdminTransactions() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
 
@@ -44,7 +46,7 @@ function AdminTransactions() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/admin/transactions", {
+      const res = await fetch(`${API_URL}/api/admin/transactions`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -65,18 +67,30 @@ function AdminTransactions() {
       setMessage("Cannot connect to backend server");
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [fetchTransactions]);
+
+  const STATUS_CONFIRM_MESSAGES = {
+    Completed:
+      "Force-complete this transaction? This marks the listing as Sold and declines every other pending offer on it.",
+    Declined: "Decline this transaction?",
+    Flagged: "Flag this transaction for review?",
+    Pending: "Reset this transaction back to Pending?",
+  };
 
   const updateStatus = async (id, status) => {
+    if (!window.confirm(STATUS_CONFIRM_MESSAGES[status] || `Set this transaction to ${status}?`)) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5000/api/admin/transactions/${id}/status`,
+        `${API_URL}/api/admin/transactions/${id}/status`,
         {
           method: "PUT",
           headers: {
@@ -98,6 +112,19 @@ function AdminTransactions() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const handleExport = () => {
+    exportToCsv("transactions.csv", [
+      { label: "Transaction", value: (t) => `TRX-${t.id}` },
+      { label: "Livestock", value: (t) => t.livestock_type },
+      { label: "Seller", value: (t) => t.seller_name },
+      { label: "Buyer", value: (t) => t.buyer_name },
+      { label: "Amount", value: (t) => t.amount },
+      { label: "Date", value: (t) => new Date(t.created_at).toLocaleDateString() },
+      { label: "Workflow Step", value: (t) => t.workflow_step },
+      { label: "Status", value: (t) => t.status },
+    ], filteredTransactions);
   };
 
   const filteredTransactions = transactions.filter((trx) => {
@@ -146,7 +173,7 @@ function AdminTransactions() {
           </div>
         </div>
 
-        <button className="export-btn" type="button">
+        <button className="export-btn" type="button" onClick={handleExport}>
           <Download size={18} />
           Export Report
         </button>
@@ -172,6 +199,13 @@ function AdminTransactions() {
           value={stats.flagged}
           label="Flagged"
           trend="Needs MAO review"
+        />
+
+        <StatCard
+          icon={<XCircle />}
+          value={stats.declinedCancelled}
+          label="Declined/Cancelled"
+          trend="Rejected or withdrawn"
         />
 
         <StatCard
@@ -216,6 +250,8 @@ function AdminTransactions() {
           <option>Completed</option>
           <option>Pending</option>
           <option>Flagged</option>
+          <option>Declined</option>
+          <option>Cancelled</option>
         </select>
 
         <select
@@ -228,11 +264,6 @@ function AdminTransactions() {
           <option>Goat</option>
           <option>Poultry</option>
         </select>
-
-        <button className="date-btn" type="button">
-          <Calendar size={17} />
-          Date Filter
-        </button>
       </section>
 
       <section className="transactions-card">
@@ -241,8 +272,6 @@ function AdminTransactions() {
             <h3>Transaction Records</h3>
             <p>Monitor complete transaction history and workflow progress.</p>
           </div>
-
-          <MoreHorizontal size={22} />
         </div>
 
         <div className="table-responsive">
@@ -299,10 +328,6 @@ function AdminTransactions() {
 
                     <td>
                       <div className="transaction-actions">
-                        <button title="View" type="button">
-                          <Eye size={17} />
-                        </button>
-
                         <button
                           title="Approve"
                           type="button"
@@ -321,11 +346,20 @@ function AdminTransactions() {
 
                         <button
                           className="danger"
-                          title="Issue"
+                          title="Decline"
+                          type="button"
+                          onClick={() => updateStatus(trx.id, "Declined")}
+                        >
+                          <XCircle size={17} />
+                        </button>
+
+                        <button
+                          className="neutral"
+                          title="Reset to Pending"
                           type="button"
                           onClick={() => updateStatus(trx.id, "Pending")}
                         >
-                          <AlertTriangle size={17} />
+                          <RotateCcw size={17} />
                         </button>
                       </div>
                     </td>

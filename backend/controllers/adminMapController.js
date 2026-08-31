@@ -12,6 +12,8 @@ const getAdminMapData = async (req, res) => {
         u.full_name AS farmer,
         u.farm_location AS address,
         u.location,
+        u.farm_lat,
+        u.farm_lng,
         COUNT(l.id) AS listings,
         GROUP_CONCAT(DISTINCT l.livestock_type) AS livestock_types,
         MAX(l.status) AS status
@@ -28,9 +30,15 @@ const getAdminMapData = async (req, res) => {
     `);
 
     const [sellerLocations] = await db.query(`
-      SELECT COUNT(*) AS total 
-      FROM users 
+      SELECT COUNT(*) AS total
+      FROM users
       WHERE role = 'farmer'
+    `);
+
+    const [pinnedLocations] = await db.query(`
+      SELECT COUNT(*) AS total
+      FROM users
+      WHERE role = 'farmer' AND farm_lat IS NOT NULL AND farm_lng IS NOT NULL
     `);
 
     const [livestockTypes] = await db.query(`
@@ -53,6 +61,7 @@ const getAdminMapData = async (req, res) => {
     res.json({
       stats: {
         sellerLocations: sellerLocations[0].total,
+        pinnedLocations: pinnedLocations[0].total,
         mappedListings: mappedListings[0].total,
         livestockTypes: livestockTypes[0].total,
         withinVeruela: "100%",

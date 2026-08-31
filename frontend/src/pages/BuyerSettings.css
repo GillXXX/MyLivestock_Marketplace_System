@@ -24,6 +24,12 @@
   padding: 40px;
   font-family: "Inter", "Segoe UI", sans-serif;
   color: var(--text);
+  animation: settings-fade-in 0.4s ease;
+}
+
+@keyframes settings-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .settings-header {
@@ -38,12 +44,20 @@
   height: 58px;
   border-radius: 20px;
   border: 1px solid var(--border);
-  background: white;
+  background: rgba(255,255,255,0.84);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 61, 46, 0.1);
 }
 
 .page-tag {
@@ -76,8 +90,10 @@
 }
 
 .settings-card {
-  background: white;
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-radius: 26px;
   box-shadow: var(--shadow);
   padding: 28px;
@@ -195,10 +211,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 16px 0;
+  padding: 16px;
+  margin: 0 -16px;
+  border-radius: 16px;
   border-bottom: 1px solid var(--border);
   text-decoration: none;
   color: inherit;
+  transition: background 0.2s ease;
+}
+
+.settings-link-row:hover {
+  background: var(--soft);
 }
 
 .settings-link-row:last-child {
@@ -247,6 +270,12 @@
   justify-content: center;
   gap: 8px;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.settings-logout-btn:hover {
+  background: rgba(180, 35, 24, 0.12);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 950px) {

@@ -10,6 +10,7 @@ import {
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import NotFound from "./pages/NotFound";
 
 
 /* =========================
@@ -20,6 +21,9 @@ import Listings from "./pages/Listings";
 import Post from "./pages/Post";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
+import FarmerTransactions from "./pages/FarmerTransactions";
+import FarmerNotifications from "./pages/FarmerNotifications";
+import FarmerSettings from "./pages/FarmerSettings";
 
 /* =========================
    ADMIN PAGES
@@ -42,7 +46,6 @@ import BuyerDashboard from "./pages/BuyerDashboard";
 /* FUTURE BUYER PAGES */
 import Marketplace from "./pages/Marketplace";
 import BuyerFavorites from "./pages/BuyerFavorites";
-import BuyerMessages from "./pages/BuyerMessages";
 import BuyerTransactions from "./pages/BuyerTransactions";
 import BuyerNotifications from "./pages/BuyerNotifications";
 import BuyerMapExplorer from "./pages/BuyerMap";
@@ -96,6 +99,11 @@ function App() {
         />
 
         <Route
+          path="/post/:id"
+          element={<Post />}
+        />
+
+        <Route
           path="/messages"
           element={<Messages />}
         />
@@ -103,6 +111,21 @@ function App() {
         <Route
           path="/profile"
           element={<Profile />}
+        />
+
+        <Route
+          path="/farmer-transactions"
+          element={<FarmerTransactions />}
+        />
+
+        <Route
+          path="/farmer-notifications"
+          element={<FarmerNotifications />}
+        />
+
+        <Route
+          path="/farmer-settings"
+          element={<FarmerSettings />}
         />
 
         {/* =========================
@@ -173,8 +196,6 @@ function App() {
           element={<BuyerFavorites />}
         />
 
-        <Route path="/buyer-messages" element={<BuyerMessages />} />
-
         <Route
           path="/buyer-transactions"
           element={<BuyerTransactions />}
@@ -198,6 +219,15 @@ function App() {
         <Route
           path="/buyer-settings"
           element={<BuyerSettings />}
+        />
+
+        {/* =========================
+            FALLBACK
+        ========================= */}
+
+        <Route
+          path="*"
+          element={<NotFound />}
         />
 
       </Routes>

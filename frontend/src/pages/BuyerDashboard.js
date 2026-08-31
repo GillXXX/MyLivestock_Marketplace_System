@@ -13,26 +13,28 @@ import {
   User,
   Settings,
   LogOut,
-  Search,
   ShoppingBag,
-  Clock,
-  ShieldCheck,
   TrendingUp,
   ArrowUpRight,
-  Eye,
+  ShoppingCart,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import InquiryModal from "../components/InquiryModal";
+import { API_URL } from "../config";
 import "./BuyerDashboard.css";
 
 function BuyerDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [inquiryListing, setInquiryListing] = useState(null);
 
   const defaultImage =
     "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
@@ -47,7 +49,7 @@ function BuyerDashboard() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/buyer/dashboard", {
+        const res = await fetch(`${API_URL}/api/buyer/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -78,6 +80,41 @@ function BuyerDashboard() {
     navigate("/login");
   };
 
+  const addToFavorites = async (listingId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/favorites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listingId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to add favorite");
+        return;
+      }
+
+      setFavoriteIds((prev) =>
+        prev.includes(listingId) ? prev : [...prev, listingId]
+      );
+
+      alert("Added to favorites ❤️");
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading buyer dashboard...</h2>;
   }
@@ -93,7 +130,9 @@ function BuyerDashboard() {
     <div className="buyer-shell">
       <aside className={sidebarOpen ? "buyer-sidebar" : "buyer-sidebar collapsed"}>
         <div className="buyer-brand">
-          <div className="buyer-logo">🐄</div>
+          <div className="buyer-logo">
+            <ShoppingCart size={26} />
+          </div>
 
           {sidebarOpen && (
             <div>
@@ -104,42 +143,74 @@ function BuyerDashboard() {
         </div>
 
         <nav className="buyer-nav">
-          <Link className="active" to="/buyer-dashboard">
+          <Link
+            className={location.pathname === "/buyer-dashboard" ? "active" : ""}
+            to="/buyer-dashboard"
+          >
             <Home size={20} />
             <span>Dashboard</span>
           </Link>
 
-          <Link to="/marketplace">
+          <Link
+            className={location.pathname === "/marketplace" ? "active" : ""}
+            to="/marketplace"
+          >
             <Store size={20} />
             <span>Marketplace</span>
           </Link>
 
-          <Link to="/buyer-favorites">
+          <Link
+            className={location.pathname === "/buyer-favorites" ? "active" : ""}
+            to="/buyer-favorites"
+          >
             <Heart size={20} />
             <span>Saved Listings</span>
           </Link>
 
-          <Link to="/messages">
+          <Link
+            className={location.pathname === "/messages" ? "active" : ""}
+            to="/messages"
+          >
             <MessageCircle size={20} />
             <span>Messages</span>
           </Link>
 
-          <Link to="/buyer-transactions">
+          <Link
+            className={location.pathname === "/buyer-transactions" ? "active" : ""}
+            to="/buyer-transactions"
+          >
             <FileCheck2 size={20} />
             <span>Transactions</span>
           </Link>
 
-          <Link to="/buyer-map">
+          <Link
+            className={location.pathname === "/buyer-notifications" ? "active" : ""}
+            to="/buyer-notifications"
+          >
+            <Bell size={20} />
+            <span>Notifications</span>
+          </Link>
+
+          <Link
+            className={location.pathname === "/buyer-map" ? "active" : ""}
+            to="/buyer-map"
+          >
             <MapPin size={20} />
             <span>Map Explorer</span>
           </Link>
 
-          <Link to="/buyer-profile">
+          <Link
+            className={location.pathname === "/buyer-profile" ? "active" : ""}
+            to="/buyer-profile"
+          >
             <User size={20} />
             <span>Profile</span>
           </Link>
 
-          <Link to="/buyer-settings">
+          <Link
+            className={location.pathname === "/buyer-settings" ? "active" : ""}
+            to="/buyer-settings"
+          >
             <Settings size={20} />
             <span>Settings</span>
           </Link>
@@ -175,11 +246,6 @@ function BuyerDashboard() {
           </div>
 
           <div className="topbar-actions">
-            <div className="buyer-search">
-              <Search size={18} />
-              <input type="text" placeholder="Search livestock, breed, location..." />
-            </div>
-
             <div className="notification-wrapper">
               <button
                 className="notification-btn"
@@ -227,6 +293,8 @@ function BuyerDashboard() {
         </header>
 
         <section className="buyer-hero">
+          <Store className="hero-watermark" />
+
           <div>
             <span>Livestock Discovery</span>
             <h2>Explore verified livestock listings from farmers in Veruela.</h2>
@@ -259,6 +327,7 @@ function BuyerDashboard() {
             value={dashboardData.stats.savedListings}
             label="Saved Listings"
             note="Your favorites"
+            tone="gold"
           />
 
           <KpiCard
@@ -266,6 +335,7 @@ function BuyerDashboard() {
             value={dashboardData.stats.activeInquiries}
             label="Active Inquiries"
             note="Seller conversations"
+            tone="teal"
           />
 
           <KpiCard
@@ -273,13 +343,15 @@ function BuyerDashboard() {
             value={dashboardData.stats.completedPurchases}
             label="Completed Purchases"
             note="Transaction history"
+            tone="green"
           />
 
           <KpiCard
             icon={<MapPin />}
             value={dashboardData.stats.nearbySellers}
             label="Nearby Sellers"
-            note="Available livestock posts"
+            note="Farmers with active listings"
+            tone="terracotta"
           />
         </section>
 
@@ -303,8 +375,15 @@ function BuyerDashboard() {
                     <div className="recommended-image">
                       <img src={item.image_url || defaultImage} alt={item.breed} />
                       <span>{item.livestock_type}</span>
-                      <button>
-                        <Heart size={17} />
+                      <button
+                        type="button"
+                        onClick={() => addToFavorites(item.id)}
+                      >
+                        <Heart
+                          size={17}
+                          fill={favoriteIds.includes(item.id) ? "currentColor" : "none"}
+                          color={favoriteIds.includes(item.id) ? "red" : "currentColor"}
+                        />
                       </button>
                     </div>
 
@@ -324,12 +403,11 @@ function BuyerDashboard() {
                       </div>
 
                       <div className="recommended-actions">
-                        <button>
-                          <Eye size={16} />
-                          View Details
-                        </button>
-
-                        <button className="inquire">
+                        <button
+                          className="inquire"
+                          type="button"
+                          onClick={() => setInquiryListing(item)}
+                        >
                           <MessageCircle size={16} />
                           Inquire
                         </button>
@@ -344,39 +422,6 @@ function BuyerDashboard() {
           <aside className="buyer-panel">
             <div className="panel-header compact">
               <div>
-                <h3>Recent Inquiries</h3>
-                <p>Your latest seller conversations.</p>
-              </div>
-            </div>
-
-            {dashboardData.recentInquiries.length === 0 ? (
-              <p>No inquiries yet.</p>
-            ) : (
-              dashboardData.recentInquiries.map((item, index) => (
-                <InquiryItem
-                  key={index}
-                  icon={
-                    item.status === "Completed" ? (
-                      <ShieldCheck />
-                    ) : item.status === "Negotiation" ? (
-                      <MessageCircle />
-                    ) : (
-                      <Clock />
-                    )
-                  }
-                  title={item.breed || item.livestock_type}
-                  text={`${item.livestock_type} inquiry update`}
-                  status={item.status}
-                />
-              ))
-            )}
-          </aside>
-        </section>
-
-        <section className="buyer-bottom-grid">
-          <div className="buyer-panel">
-            <div className="panel-header">
-              <div>
                 <h3>Marketplace Activity</h3>
                 <p>Latest updates from livestock sellers.</p>
               </div>
@@ -390,41 +435,27 @@ function BuyerDashboard() {
                   key={index}
                   title={`New ${item.livestock_type} listing posted`}
                   text={`${item.location} • ₱${Number(item.price).toLocaleString()}`}
+                  tone={["green", "gold", "teal"][index % 3]}
                 />
               ))
             )}
-          </div>
-
-          <div className="buyer-panel">
-            <div className="panel-header">
-              <div>
-                <h3>Nearby Seller Map</h3>
-                <p>Preview of seller locations near you.</p>
-              </div>
-
-              <MapPin size={22} />
-            </div>
-
-            <div className="buyer-map-preview">
-              <div className="map-pin one"></div>
-              <div className="map-pin two"></div>
-              <div className="map-pin three"></div>
-
-              <div className="map-label">
-                <strong>Veruela, Agusan del Sur</strong>
-                <p>{dashboardData.stats.nearbySellers} mapped livestock sellers</p>
-              </div>
-            </div>
-          </div>
+          </aside>
         </section>
       </main>
+
+      {inquiryListing && (
+        <InquiryModal
+          listing={inquiryListing}
+          onClose={() => setInquiryListing(null)}
+        />
+      )}
     </div>
   );
 }
 
-function KpiCard({ icon, value, label, note }) {
+function KpiCard({ icon, value, label, note, tone = "green" }) {
   return (
-    <div className="buyer-kpi-card">
+    <div className={`buyer-kpi-card tone-${tone}`}>
       <div className="kpi-icon">{icon}</div>
       <h2>{value}</h2>
       <p>{label}</p>
@@ -433,22 +464,7 @@ function KpiCard({ icon, value, label, note }) {
   );
 }
 
-function InquiryItem({ icon, title, text, status }) {
-  return (
-    <div className="inquiry-item">
-      <div className="inquiry-icon">{icon}</div>
-
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </div>
-
-      <span>{status}</span>
-    </div>
-  );
-}
-
-function ActivityItem({ title, text }) {
+function ActivityItem({ title, text, tone = "green" }) {
   return (
     <div className="buyer-activity-item">
       <div>
@@ -456,7 +472,9 @@ function ActivityItem({ title, text }) {
         <p>{text}</p>
       </div>
 
-      <TrendingUp size={18} />
+      <div className={`activity-badge tone-${tone}`}>
+        <TrendingUp size={16} />
+      </div>
     </div>
   );
 }

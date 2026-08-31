@@ -1,15 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   Search,
-  Eye,
   CheckCircle,
   AlertTriangle,
   Trash2,
   ArrowLeft,
-  Filter,
   MapPin,
-  MoreHorizontal,
   ClipboardCheck,
   Clock,
   BadgeCheck,
@@ -17,6 +14,8 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { exportToCsv } from "../utils/exportCsv";
+import { API_URL } from "../config";
 import "./AdminListings.css";
 
 function AdminListings() {
@@ -36,7 +35,7 @@ function AdminListings() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const fetchListings = async () => {
+  const fetchListings = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
 
@@ -45,7 +44,7 @@ function AdminListings() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/admin/listings", {
+      const res = await fetch(`${API_URL}/api/admin/listings`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -66,17 +65,17 @@ function AdminListings() {
       setMessage("Cannot connect to backend server");
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchListings();
-  }, []);
+  }, [fetchListings]);
 
   const updateStatus = async (id, status) => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5000/api/admin/listings/${id}/status`, {
+      const res = await fetch(`${API_URL}/api/admin/listings/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -105,7 +104,7 @@ function AdminListings() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5000/api/admin/listings/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/listings/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -123,6 +122,19 @@ function AdminListings() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const handleExport = () => {
+    exportToCsv("listings.csv", [
+      { label: "ID", value: (l) => l.id },
+      { label: "Livestock Type", value: (l) => l.livestock_type },
+      { label: "Breed", value: (l) => l.breed },
+      { label: "Farmer", value: (l) => l.farmer_name },
+      { label: "Location", value: (l) => l.location },
+      { label: "Price", value: (l) => l.price },
+      { label: "Status", value: (l) => (l.status === "Available" ? "Approved" : l.status) },
+      { label: "Date Posted", value: (l) => new Date(l.created_at).toLocaleDateString() },
+    ], filteredListings);
   };
 
   const filteredListings = listings.filter((item) => {
@@ -172,22 +184,22 @@ function AdminListings() {
           </div>
         </div>
 
-        <button className="export-btn" type="button">
+        <button className="export-btn" type="button" onClick={handleExport}>
           <ClipboardCheck size={18} />
           Approval Log
         </button>
       </header>
 
       <section className="listing-kpi-grid">
-        <Kpi icon={<ClipboardCheck />} value={stats.totalListings} label="Total Listings" />
-        <Kpi icon={<Clock />} value={stats.pendingReview} label="Pending Review" />
-        <Kpi icon={<BadgeCheck />} value={stats.approved} label="Approved" />
-        <Kpi icon={<AlertTriangle />} value={stats.flagged} label="Flagged" />
+        <Kpi tone="blue" icon={<ClipboardCheck />} value={stats.totalListings} label="Total Listings" />
+        <Kpi tone="amber" icon={<Clock />} value={stats.pendingReview} label="Pending Review" />
+        <Kpi tone="green" icon={<BadgeCheck />} value={stats.approved} label="Approved" />
+        <Kpi tone="red" icon={<AlertTriangle />} value={stats.flagged} label="Flagged" />
       </section>
 
       <section className="listing-toolbar">
         <div className="listing-search">
-          <Search size={18} />
+          <Search size={16} />
           <input
             placeholder="Search by livestock, farmer, ID, or location..."
             value={searchText}
@@ -210,11 +222,6 @@ function AdminListings() {
           <option>Flagged</option>
           <option>Rejected</option>
         </select>
-
-        <button className="filter-btn" type="button">
-          <Filter size={17} />
-          Apply Filter
-        </button>
       </section>
 
       <section className="listings-layout">
@@ -224,10 +231,6 @@ function AdminListings() {
               <h3>Submitted Livestock Listings</h3>
               <p>Listings submitted by farmers for MAO review.</p>
             </div>
-
-            <button className="more-btn" type="button">
-              <MoreHorizontal size={20} />
-            </button>
           </div>
 
           <div className="table-responsive">
@@ -258,9 +261,24 @@ function AdminListings() {
                       <tr key={item.id}>
                         <td>
                           <div className="listing-cell">
-                            <div className="animal-icon">
-                              {getAnimalIcon(item.livestock_type)}
-                            </div>
+                            {item.image_url ? (
+                              <button
+                                type="button"
+                                className="listing-thumb-btn"
+                                title="View full image"
+                                onClick={() => window.open(item.image_url, "_blank")}
+                              >
+                                <img
+                                  className="listing-thumb"
+                                  src={item.image_url}
+                                  alt={item.breed || item.livestock_type}
+                                />
+                              </button>
+                            ) : (
+                              <div className="animal-icon">
+                                {getAnimalIcon(item.livestock_type)}
+                              </div>
+                            )}
                             <div>
                               <strong>{item.livestock_type}</strong>
                               <p>{item.breed} • LST-{item.id}</p>
@@ -294,10 +312,6 @@ function AdminListings() {
 
                         <td>
                           <div className="action-set">
-                            <button title="View Details" type="button">
-                              <Eye size={17} />
-                            </button>
-
                             <button
                               className="approve"
                               title="Approve Listing"
@@ -388,10 +402,10 @@ function AdminListings() {
   );
 }
 
-function Kpi({ icon, value, label }) {
+function Kpi({ icon, value, label, tone = "green" }) {
   return (
-    <div className="listing-kpi-card">
-      <div className="kpi-icon">{icon}</div>
+    <div className={`listing-kpi-card tone-${tone}`}>
+      <div className="listing-kpi-icon">{icon}</div>
       <h2>{value}</h2>
       <p>{label}</p>
     </div>

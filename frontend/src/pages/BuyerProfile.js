@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Camera,
@@ -16,13 +16,16 @@ import {
   User2,
   Lock,
   ShoppingBag,
+  X,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./Profile.css";
 
 function BuyerProfile() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState({
@@ -33,42 +36,116 @@ function BuyerProfile() {
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const defaultImage =
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43?w=500";
+
+  const imageUrl = profile?.profile_image
+    ? profile.profile_image.startsWith("http")
+      ? profile.profile_image
+      : `${API_URL}${profile.profile_image}`
+    : defaultImage;
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/buyer/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || "Failed to load profile");
+        setLoading(false);
+        return;
+      }
+
+      setProfile(data.user);
+      setStats(data.stats);
+      setLoading(false);
+    } catch (error) {
+      setMessage("Cannot connect to backend server");
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        const res = await fetch("http://localhost:5000/api/buyer/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setMessage(data.message || "Failed to load profile");
-          setLoading(false);
-          return;
-        }
-
-        setProfile(data.user);
-        setStats(data.stats);
-        setLoading(false);
-      } catch (error) {
-        setMessage("Cannot connect to backend server");
-        setLoading(false);
-      }
-    };
-
     fetchProfile();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (e) => {
+    setProfile({ ...profile, [e.target.name]: e.target.value });
+  };
+
+  const handleImageClick = () => {
+    if (isEditing) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSelectedImage(file);
+    setProfile({ ...profile, profile_image: URL.createObjectURL(file) });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSelectedImage(null);
+    fetchProfile();
+  };
+
+  const saveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("full_name", profile.full_name || "");
+      formData.append("phone", profile.phone || "");
+      formData.append("location", profile.location || "");
+      formData.append("about", profile.about || "");
+
+      if (selectedImage) {
+        formData.append("profile_image", selectedImage);
+      }
+
+      const res = await fetch(`${API_URL}/api/buyer/profile`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to update profile");
+        return;
+      }
+
+      alert("Profile updated successfully!");
+      setIsEditing(false);
+      setSelectedImage(null);
+      fetchProfile();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
 
   if (loading) return <h2 style={{ padding: "30px" }}>Loading buyer profile...</h2>;
   if (message) return <h2 style={{ padding: "30px", color: "red" }}>{message}</h2>;
@@ -85,7 +162,8 @@ function BuyerProfile() {
             <span className="page-tag">ACCOUNT MANAGEMENT</span>
             <h1>Buyer Profile</h1>
             <p>
-              Manage your buyer account, marketplace identity, and livestock purchasing activity.
+              Manage your buyer account, marketplace identity, and livestock
+              purchasing activity.
             </p>
           </div>
         </div>
@@ -97,11 +175,30 @@ function BuyerProfile() {
 
           <div className="profile-user">
             <div className="profile-image-wrapper">
-              <img src="https://i.pravatar.cc/300" alt="profile" />
+              <img
+                src={
+                  profile.profile_image?.startsWith("blob:")
+                    ? profile.profile_image
+                    : imageUrl
+                }
+                alt="profile"
+              />
 
-              <button className="camera-btn">
+              <button
+                type="button"
+                className="camera-btn"
+                onClick={handleImageClick}
+              >
                 <Camera size={16} />
               </button>
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
             </div>
 
             <div className="profile-user-info">
@@ -110,44 +207,52 @@ function BuyerProfile() {
               <div className="verified-row">
                 <span className="verified-badge">
                   <BadgeCheck size={15} />
-                  Verified Buyer
+                  Buyer Account
                 </span>
               </div>
 
               <p>
-                Livestock buyer using HerdMarket to browse verified livestock,
-                inquire with farmers, and track purchase transactions.
+                {profile.about ||
+                  "Livestock buyer using HerdMarket to browse verified listings, inquire with farmers, and track purchase transactions."}
               </p>
             </div>
           </div>
 
           <div className="profile-stats">
-            <div className="stat-box">
-              <TrendingUp size={20} />
+            <div className="stat-box tone-green">
+              <span className="stat-icon">
+                <TrendingUp size={20} />
+              </span>
               <div>
                 <h3>{stats.activeInquiries}</h3>
                 <span>Active Inquiries</span>
               </div>
             </div>
 
-            <div className="stat-box">
-              <ShoppingBag size={20} />
+            <div className="stat-box tone-gold">
+              <span className="stat-icon">
+                <ShoppingBag size={20} />
+              </span>
               <div>
                 <h3>{stats.completedPurchases}</h3>
                 <span>Completed Purchases</span>
               </div>
             </div>
 
-            <div className="stat-box">
-              <Wallet size={20} />
+            <div className="stat-box tone-teal">
+              <span className="stat-icon">
+                <Wallet size={20} />
+              </span>
               <div>
                 <h3>₱{Number(stats.purchaseValue).toLocaleString()}</h3>
                 <span>Total Purchase Value</span>
               </div>
             </div>
 
-            <div className="stat-box">
-              <Calendar size={20} />
+            <div className="stat-box tone-terracotta">
+              <span className="stat-icon">
+                <Calendar size={20} />
+              </span>
               <div>
                 <h3>{new Date(profile.created_at).getFullYear()}</h3>
                 <span>Joined Marketplace</span>
@@ -161,28 +266,37 @@ function BuyerProfile() {
 
               <div>
                 <h4>Account Security</h4>
-                <p>Your buyer account is verified and protected.</p>
+                <p>Your account is protected.</p>
               </div>
             </div>
 
-            <button>
+            <Link to="/buyer-settings">
               <Lock size={16} />
               Security Settings
-            </button>
+            </Link>
           </div>
         </aside>
 
         <main className="profile-main">
           <div className="profile-actions">
-            <button className="edit-btn">
-              <Pencil size={18} />
-              Edit Profile
-            </button>
+            {isEditing ? (
+              <>
+                <button className="cancel-btn" onClick={handleCancelEdit}>
+                  <X size={18} />
+                  Cancel
+                </button>
 
-            <button className="save-btn">
-              <Save size={18} />
-              Save Changes
-            </button>
+                <button className="save-btn" onClick={saveProfile}>
+                  <Save size={18} />
+                  Save Changes
+                </button>
+              </>
+            ) : (
+              <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                <Pencil size={18} />
+                Edit Profile
+              </button>
+            )}
           </div>
 
           <div className="profile-form-card">
@@ -197,7 +311,13 @@ function BuyerProfile() {
 
                 <div className="input-wrapper">
                   <User2 size={18} />
-                  <input type="text" value={profile.full_name || ""} readOnly />
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={profile.full_name || ""}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
                 </div>
               </div>
 
@@ -215,7 +335,13 @@ function BuyerProfile() {
 
                 <div className="input-wrapper">
                   <Phone size={18} />
-                  <input type="text" value={profile.phone || ""} readOnly />
+                  <input
+                    type="text"
+                    name="phone"
+                    value={profile.phone || ""}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
                 </div>
               </div>
 
@@ -224,16 +350,22 @@ function BuyerProfile() {
 
                 <div className="input-wrapper">
                   <MapPin size={18} />
-                  <input type="text" value={profile.location || ""} readOnly />
+                  <input
+                    type="text"
+                    name="location"
+                    value={profile.location || ""}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
                 </div>
               </div>
 
               <div className="form-group full-width">
-                <label>Account Role</label>
+                <label>Role</label>
 
                 <div className="input-wrapper">
                   <ShieldCheck size={18} />
-                  <input type="text" value="Verified Buyer Account" readOnly />
+                  <input type="text" value={profile.role || ""} readOnly />
                 </div>
               </div>
 
@@ -242,8 +374,11 @@ function BuyerProfile() {
 
                 <textarea
                   rows="6"
-                  readOnly
-                  value="Verified livestock buyer participating in digital livestock trading through HerdMarket. This account can browse marketplace listings, send inquiries, and monitor transaction progress."
+                  name="about"
+                  value={profile.about || ""}
+                  onChange={handleChange}
+                  readOnly={!isEditing}
+                  placeholder="Tell sellers a bit about what you're looking for..."
                 ></textarea>
               </div>
             </div>

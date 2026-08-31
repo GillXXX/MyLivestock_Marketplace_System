@@ -23,12 +23,19 @@ const getAdminDashboard = async (req, res) => {
     );
 
     const [verificationQueue] = await db.query(
-      `SELECT 
+      `SELECT
         l.id,
-        u.full_name AS farmer_name,
         l.livestock_type,
         l.health_status,
-        l.status
+        l.status,
+        u.id AS farmer_id,
+        u.full_name AS farmer_name,
+        u.email AS farmer_email,
+        u.phone AS farmer_phone,
+        u.location AS farmer_location,
+        u.farm_location AS farmer_farm_location,
+        u.is_verified AS farmer_is_verified,
+        u.created_at AS farmer_joined_at
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id
       ORDER BY l.created_at DESC

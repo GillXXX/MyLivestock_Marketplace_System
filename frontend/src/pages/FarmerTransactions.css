@@ -1,6 +1,6 @@
 :root {
   --primary: #0f3d2e;
-  --primary-dark: #082117;
+  --primary-dark: #071f16;
   --accent: #d7a24d;
   --background: #f4f1e8;
   --card: #ffffff;
@@ -338,6 +338,11 @@
   color: #2457a6;
 }
 
+.premium-status.declined {
+  background: #fdeaea;
+  color: #d64545;
+}
+
 /* WORKFLOW */
 
 .transaction-center {
@@ -444,6 +449,30 @@
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   text-decoration: none;
+}
+
+.decline-btn-premium {
+  height: 52px;
+  padding: 0 18px;
+  border: 1px solid #d64545;
+  border-radius: 18px;
+  font-weight: 850;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  background: #fff5f5;
+  color: #d64545;
+}
+
+.waiting-buyer-note {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #946200;
 }
 
 /* SIDE PANEL */

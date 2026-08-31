@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { createNotification } = require("../utils/notify");
 
 const issueSession = (res, user) => {
   const token = jwt.sign(
@@ -70,10 +71,16 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
-      `INSERT INTO users 
+      `INSERT INTO users
       (full_name, email, phone, location, farm_location, role, password)
       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [fullName, email, phone, location, farmLocation || null, role, hashedPassword]
+    );
+
+    await createNotification(
+      "User Registration",
+      `New ${role} registered`,
+      `${fullName} created a ${role} account.`
     );
 
     res.status(201).json({ message: "Account created successfully" });
@@ -106,6 +113,12 @@ const login = async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({
+        message: "Your account has been deactivated. Contact the MAO administrator.",
+      });
     }
 
     issueSession(res, user);
@@ -156,6 +169,12 @@ const googleLogin = async (req, res) => {
     }
 
     const user = users[0];
+
+    if (!user.is_active) {
+      return res.status(403).json({
+        message: "Your account has been deactivated. Contact the MAO administrator.",
+      });
+    }
 
     issueSession(res, user);
   } catch (error) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   ArrowLeft,
@@ -12,10 +12,10 @@ import {
   Eye,
   Trash2,
   Search,
-  Filter,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./AdminNotifications.css";
 
 function AdminNotifications() {
@@ -42,42 +42,96 @@ function AdminNotifications() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        const res = await fetch("http://localhost:5000/api/admin/notifications", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setMessage(data.message || "Failed to load notifications");
-          setLoading(false);
-          return;
-        }
-
-        setNotifications(data.notifications);
-        setStats(data.stats);
-        setCategories(data.categories);
-        setLoading(false);
-      } catch (error) {
-        setMessage("Cannot connect to backend server");
-        setLoading(false);
+      if (!token) {
+        navigate("/login");
+        return;
       }
-    };
 
-    fetchNotifications();
+      const res = await fetch(`${API_URL}/api/admin/notifications`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || "Failed to load notifications");
+        setLoading(false);
+        return;
+      }
+
+      setNotifications(data.notifications);
+      setStats(data.stats);
+      setCategories(data.categories);
+      setLoading(false);
+    } catch (error) {
+      setMessage("Cannot connect to backend server");
+      setLoading(false);
+    }
   }, [navigate]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkRead = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await fetch(`${API_URL}/api/admin/notifications/${id}/read`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      fetchNotifications();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await fetch(`${API_URL}/api/admin/notifications/read-all`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      fetchNotifications();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Delete this notification?");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await fetch(`${API_URL}/api/admin/notifications/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      fetchNotifications();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
 
   const filteredNotifications = notifications.filter((notif) => {
     const search = searchText.toLowerCase();
@@ -154,7 +208,6 @@ function AdminNotifications() {
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
           <option>All Types</option>
           <option>Listing Approval</option>
-          <option>Document Verification</option>
           <option>Transaction Alert</option>
           <option>User Registration</option>
         </select>
@@ -164,11 +217,6 @@ function AdminNotifications() {
           <option>Unread</option>
           <option>Read</option>
         </select>
-
-        <button type="button">
-          <Filter size={17} />
-          Filter
-        </button>
       </div>
 
       <section className="notifications-layout">
@@ -179,7 +227,7 @@ function AdminNotifications() {
               <p>Latest marketplace actions that require admin attention.</p>
             </div>
 
-            <button type="button">Mark all as read</button>
+            <button type="button" onClick={handleMarkAllRead}>Mark all as read</button>
           </div>
 
           <div className="notification-list">
@@ -216,11 +264,22 @@ function AdminNotifications() {
                   </div>
 
                   <div className="notification-actions">
-                    <button title="View details" type="button">
-                      <Eye size={17} />
-                    </button>
+                    {notif.status === "Unread" && (
+                      <button
+                        title="Mark as read"
+                        type="button"
+                        onClick={() => handleMarkRead(notif.id)}
+                      >
+                        <Eye size={17} />
+                      </button>
+                    )}
 
-                    <button className="danger" title="Delete notification" type="button">
+                    <button
+                      className="danger"
+                      title="Delete notification"
+                      type="button"
+                      onClick={() => handleDelete(notif.id)}
+                    >
                       <Trash2 size={17} />
                     </button>
                   </div>

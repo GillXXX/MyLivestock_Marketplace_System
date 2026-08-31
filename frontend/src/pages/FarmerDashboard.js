@@ -13,25 +13,29 @@ import {
   TrendingUp,
   CheckCircle,
   ClipboardList,
-  Search,
   ArrowUpRight,
   Clock,
   BadgeCheck,
-  MapPin,
   Wallet,
+  FileCheck2,
+  Settings,
+  Tractor,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { API_URL } from "../config";
 import "./FarmerDashboard.css";
 
 function FarmerDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAllActivities, setShowAllActivities] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -43,7 +47,7 @@ function FarmerDashboard() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/farmer/dashboard", {
+        const res = await fetch(`${API_URL}/api/farmer/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -93,7 +97,9 @@ function FarmerDashboard() {
     <div className="farmer-shell">
       <aside className={sidebarOpen ? "farmer-sidebar" : "farmer-sidebar collapsed"}>
         <div className="farmer-brand">
-          <div className="farmer-logo">🐮</div>
+          <div className="farmer-logo">
+            <Tractor size={26} />
+          </div>
 
           {sidebarOpen && (
             <div>
@@ -104,29 +110,68 @@ function FarmerDashboard() {
         </div>
 
         <nav className="farmer-nav">
-          <Link className="active" to="/farmer-dashboard">
+          <Link
+            className={location.pathname === "/farmer-dashboard" ? "active" : ""}
+            to="/farmer-dashboard"
+          >
             <Home size={20} />
             <span>Dashboard</span>
           </Link>
 
-          <Link to="/listings">
+          <Link
+            className={location.pathname === "/listings" ? "active" : ""}
+            to="/listings"
+          >
             <List size={20} />
             <span>My Listings</span>
           </Link>
 
-          <Link to="/post">
+          <Link
+            className={location.pathname === "/post" ? "active" : ""}
+            to="/post"
+          >
             <PlusCircle size={20} />
             <span>Post Livestock</span>
           </Link>
 
-          <Link to="/messages">
+          <Link
+            className={location.pathname === "/messages" ? "active" : ""}
+            to="/messages"
+          >
             <MessageCircle size={20} />
             <span>Messages</span>
           </Link>
 
-          <Link to="/profile">
+          <Link
+            className={location.pathname === "/farmer-transactions" ? "active" : ""}
+            to="/farmer-transactions"
+          >
+            <FileCheck2 size={20} />
+            <span>Transactions</span>
+          </Link>
+
+          <Link
+            className={location.pathname === "/farmer-notifications" ? "active" : ""}
+            to="/farmer-notifications"
+          >
+            <Bell size={20} />
+            <span>Notifications</span>
+          </Link>
+
+          <Link
+            className={location.pathname === "/profile" ? "active" : ""}
+            to="/profile"
+          >
             <User size={20} />
             <span>Profile</span>
+          </Link>
+
+          <Link
+            className={location.pathname === "/farmer-settings" ? "active" : ""}
+            to="/farmer-settings"
+          >
+            <Settings size={20} />
+            <span>Settings</span>
           </Link>
         </nav>
 
@@ -160,11 +205,6 @@ function FarmerDashboard() {
           </div>
 
           <div className="topbar-actions">
-            <div className="dashboard-search">
-              <Search size={18} />
-              <input type="text" placeholder="Search listings, buyers..." />
-            </div>
-
             <div className="notification-wrapper">
               <button
                 className="notification-btn"
@@ -195,6 +235,14 @@ function FarmerDashboard() {
                       </div>
                     ))
                   )}
+
+                  <Link
+                    to="/farmer-notifications"
+                    className="notification-view-all"
+                    onClick={() => setShowNotifications(false)}
+                  >
+                    View all notifications
+                  </Link>
                 </div>
               )}
             </div>
@@ -211,6 +259,8 @@ function FarmerDashboard() {
         </header>
 
         <section className="farmer-hero-card">
+          <TrendingUp className="hero-watermark" />
+
           <div>
             <span>Marketplace Performance</span>
             <h2>Your herd is gaining more buyer attention this week.</h2>
@@ -243,6 +293,7 @@ function FarmerDashboard() {
             value={dashboardData.stats.activeListings}
             label="Active Listings"
             note="Current active posts"
+            tone="green"
           />
 
           <KpiCard
@@ -250,6 +301,7 @@ function FarmerDashboard() {
             value={dashboardData.stats.buyerInquiries}
             label="Buyer Inquiries"
             note="Total inquiries"
+            tone="gold"
           />
 
           <KpiCard
@@ -257,6 +309,7 @@ function FarmerDashboard() {
             value={dashboardData.stats.completedSales}
             label="Completed Sales"
             note="Recorded transactions"
+            tone="teal"
           />
 
           <KpiCard
@@ -264,6 +317,7 @@ function FarmerDashboard() {
             value={`₱${Number(dashboardData.stats.tradeValue).toLocaleString()}`}
             label="Trade Value"
             note="Estimated total"
+            tone="terracotta"
           />
         </section>
 
@@ -275,13 +329,20 @@ function FarmerDashboard() {
                 <p>Latest updates from your marketplace transactions.</p>
               </div>
 
-              <button>View all</button>
+              {dashboardData.activities.length > 5 && (
+                <button onClick={() => setShowAllActivities(!showAllActivities)}>
+                  {showAllActivities ? "Show less" : "View all"}
+                </button>
+              )}
             </div>
 
             {dashboardData.activities.length === 0 ? (
               <p>No recent activity yet.</p>
             ) : (
-              dashboardData.activities.map((item, index) => (
+              (showAllActivities
+                ? dashboardData.activities
+                : dashboardData.activities.slice(0, 5)
+              ).map((item, index) => (
                 <ActivityItem
                   key={index}
                   icon={
@@ -293,6 +354,7 @@ function FarmerDashboard() {
                       <Clock />
                     )
                   }
+                  tone={["green", "gold", "teal"][index % 3]}
                   title={item.title}
                   text={item.text}
                   time="Recently"
@@ -323,62 +385,14 @@ function FarmerDashboard() {
             )}
           </div>
         </section>
-
-        <section className="dashboard-grid bottom">
-          <div className="dashboard-card">
-            <div className="card-header">
-              <div>
-                <h3>Trading Workflow</h3>
-                <p>Your current transaction progress.</p>
-              </div>
-            </div>
-
-            {dashboardData.workflows.length === 0 ? (
-              <p>No active transaction workflow yet.</p>
-            ) : (
-              dashboardData.workflows.map((item, index) => (
-                <WorkflowItem
-                  key={index}
-                  livestock={item.livestock_type}
-                  buyer={item.buyer_name}
-                  step={item.workflow_step}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="dashboard-card">
-            <div className="card-header">
-              <div>
-                <h3>Farm Location</h3>
-                <p>Seller visibility for buyer inspection.</p>
-              </div>
-
-              <MapPin size={22} />
-            </div>
-
-            <div className="mini-map">
-              <div className="map-pin"></div>
-
-              <div className="map-label">
-                <strong>
-                  {dashboardData.user.farm_location ||
-                    dashboardData.user.location ||
-                    "Veruela, Agusan del Sur"}
-                </strong>
-                <p>Farm location visible to buyers</p>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );
 }
 
-function KpiCard({ icon, value, label, note }) {
+function KpiCard({ icon, value, label, note, tone = "green" }) {
   return (
-    <div className="kpi-card">
+    <div className={`kpi-card tone-${tone}`}>
       <div className="kpi-icon">{icon}</div>
       <h2>{value}</h2>
       <p>{label}</p>
@@ -387,11 +401,11 @@ function KpiCard({ icon, value, label, note }) {
   );
 }
 
-function ActivityItem({ icon, title, text, time }) {
+function ActivityItem({ icon, title, text, time, tone = "green" }) {
   return (
     <div className="activity-row">
       <div className="activity-left">
-        <div className="activity-icon">{icon}</div>
+        <div className={`activity-icon tone-${tone}`}>{icon}</div>
 
         <div className="activity-content">
           <strong>{title}</strong>
@@ -415,44 +429,6 @@ function ListingItem({ name, detail, status }) {
       <span className={status === "Available" ? "status available" : "status pending"}>
         {status}
       </span>
-    </div>
-  );
-}
-
-function WorkflowItem({ livestock, buyer, step }) {
-  return (
-    <div className="workflow-item">
-      <div>
-        <strong>{livestock}</strong>
-        <p>Buyer: {buyer}</p>
-      </div>
-
-      <div>
-        <Workflow step={step} />
-        <span>{step}</span>
-      </div>
-    </div>
-  );
-}
-
-function Workflow({ step }) {
-  const steps = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];
-  const activeIndex = steps.indexOf(step);
-
-  return (
-    <div className="workflow-line">
-      {steps.map((item, index) => (
-        <i
-          key={item}
-          className={
-            index < activeIndex
-              ? "done"
-              : index === activeIndex
-              ? "active"
-              : ""
-          }
-        ></i>
-      ))}
     </div>
   );
 }

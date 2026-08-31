@@ -1,18 +1,20 @@
 :root {
-  --dark: #0f3d2e;
-  --dark-2: #09291f;
-  --accent: #d4a437;
-  --bg: #f7f8fa;
-  --card: #ffffff;
-  --border: #e8ecf2;
-  --text: #1a1f36;
-  --muted: #6b7280;
+  --primary: #0f3d2e;
+  --primary-dark: #071f16;
+  --accent: #d7a24d;
+  --background: #f4f1e8;
+  --card: #fbfaf5;
+  --border: #e8e2d4;
+  --text: #111827;
+  --muted: #667085;
   --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
 }
 
 .verification-page {
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top right, rgba(215, 162, 77, 0.08), transparent 30%),
+    var(--background);
   padding: 34px;
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
   color: var(--text);
@@ -35,7 +37,7 @@
 .back-btn {
   width: 50px;
   height: 50px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   border-radius: 16px;
   display: flex;
@@ -57,7 +59,7 @@
   font-size: 42px;
   font-weight: 950;
   letter-spacing: -1px;
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .verification-topbar p {
@@ -70,7 +72,7 @@
   height: 50px;
   border: none;
   border-radius: 15px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   padding: 0 18px;
   display: flex;
@@ -130,7 +132,7 @@
   margin: 0;
   font-size: 34px;
   font-weight: 950;
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .verify-kpi p {
@@ -159,7 +161,7 @@
 .verification-guide h3 {
   margin: 0;
   font-weight: 950;
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .panel-header p,
@@ -170,8 +172,8 @@
 
 .more-btn {
   border: none;
-  background: #f8fafc;
-  color: var(--dark);
+  background: #f8f5ec;
+  color: var(--primary);
   border-radius: 14px;
   width: 42px;
   height: 42px;
@@ -188,7 +190,7 @@
   height: 52px;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #f8fafc;
+  background: #f8f5ec;
   padding: 0 15px;
   display: flex;
   align-items: center;
@@ -207,20 +209,24 @@
   height: 52px;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #f8fafc;
+  background: #f8f5ec;
   padding: 0 15px;
 }
 
 .filter-btn {
   border: none;
   border-radius: 16px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   font-weight: 850;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.table-responsive {
+  overflow-x: auto;
 }
 
 .verification-table {
@@ -253,7 +259,7 @@
 .avatar {
   width: 44px;
   height: 44px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   border-radius: 14px;
   display: flex;
@@ -263,7 +269,7 @@
 }
 
 .farmer-cell strong {
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .farmer-cell p {
@@ -274,7 +280,7 @@
 
 .livestock-pill {
   background: #eaf5ef;
-  color: var(--dark);
+  color: var(--primary);
   padding: 8px 13px;
   border-radius: 999px;
   font-weight: 900;
@@ -285,7 +291,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--dark);
+  color: var(--primary);
   font-weight: 750;
 }
 
@@ -303,7 +309,7 @@
 
 .doc-status.approved {
   background: #eaf5ef;
-  color: var(--dark);
+  color: var(--primary);
 }
 
 .doc-status.rejected {
@@ -322,7 +328,7 @@
   border: none;
   border-radius: 12px;
   background: #eaf5ef;
-  color: var(--dark);
+  color: var(--primary);
 }
 
 .verification-actions .danger {
@@ -343,14 +349,14 @@
 }
 
 .guide-card {
-  background: #f8fafc;
+  background: #f8f5ec;
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 18px;
 }
 
 .guide-card strong {
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .guide-card p {

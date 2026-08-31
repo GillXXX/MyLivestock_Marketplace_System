@@ -6,12 +6,20 @@ import {
   Heart,
   MapPin,
   ShieldCheck,
-  Star,
   SlidersHorizontal,
   Eye,
+  Wallet,
+  Weight,
+  Calendar,
+  BadgeCheck,
+  PawPrint,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import ListingDetailsModal from "../components/ListingDetailsModal";
+import InquiryModal from "../components/InquiryModal";
+import MakeOfferModal from "../components/MakeOfferModal";
+import { API_URL } from "../config";
 import "./Marketplace.css";
 
 function Marketplace() {
@@ -25,6 +33,11 @@ function Marketplace() {
   const [livestockType, setLivestockType] = useState("All Livestock");
   const [priceRange, setPriceRange] = useState("Price Range");
   const [sortBy, setSortBy] = useState("Sort by Newest");
+  const [docsOnly, setDocsOnly] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [inquiryListing, setInquiryListing] = useState(null);
+  const [offerListing, setOfferListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -40,7 +53,7 @@ function Marketplace() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/favorites", {
+      const res = await fetch(`${API_URL}/api/favorites`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,6 +79,29 @@ function Marketplace() {
     }
   };
 
+  const parseDocuments = (documents) => {
+    if (!documents) return [];
+
+    try {
+      const parsed = JSON.parse(documents);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const viewListingDetails = (item) => {
+    setSelectedListing(item);
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch(`${API_URL}/api/marketplace/${item.id}/view`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     const fetchMarketplaceListings = async () => {
       try {
@@ -76,7 +112,7 @@ function Marketplace() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/marketplace", {
+        const res = await fetch(`${API_URL}/api/marketplace`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -139,6 +175,10 @@ function Marketplace() {
       results = results.filter((item) => Number(item.price) > 30000);
     }
 
+    if (docsOnly) {
+      results = results.filter((item) => parseDocuments(item.documents).length > 0);
+    }
+
     if (sortBy === "Lowest Price") {
       results.sort((a, b) => Number(a.price) - Number(b.price));
     }
@@ -152,7 +192,7 @@ function Marketplace() {
     }
 
     setFilteredListings(results);
-  }, [searchText, livestockType, priceRange, sortBy, listings]);
+  }, [searchText, livestockType, priceRange, sortBy, docsOnly, listings]);
 
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading marketplace...</h2>;
@@ -212,13 +252,14 @@ function Marketplace() {
           <option>₱30,000 above</option>
         </select>
 
-        <button type="button">
+        <button type="button" onClick={() => setShowFilters((prev) => !prev)}>
           <SlidersHorizontal size={18} />
-          Filters
+          {showFilters ? "Hide Filters" : "Filters"}
         </button>
       </section>
 
       <section className="market-layout">
+        {showFilters && (
         <aside className="filter-panel">
           <div className="filter-title">
             <Filter size={20} />
@@ -283,24 +324,21 @@ function Marketplace() {
 
           <div className="filter-group">
             <label>Verification</label>
+            <p className="filter-note">
+              <ShieldCheck size={14} />
+              Sellers verified by MAO are marked with a badge below.
+            </p>
             <div>
-              <input type="checkbox" defaultChecked /> Verified sellers only
-            </div>
-            <div>
-              <input type="checkbox" defaultChecked /> With health documents
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <label>Location</label>
-            <div>
-              <input type="checkbox" defaultChecked /> Veruela only
-            </div>
-            <div>
-              <input type="checkbox" /> Nearby barangays
+              <input
+                type="checkbox"
+                checked={docsOnly}
+                onChange={(e) => setDocsOnly(e.target.checked)}
+              />{" "}
+              With health documents
             </div>
           </div>
         </aside>
+        )}
 
         <main className="market-content">
           <div className="market-section-header">
@@ -329,9 +367,9 @@ function Marketplace() {
                       alt={item.breed}
                     />
 
-                    <span className="verified-pill">
-                      <ShieldCheck size={14} />
-                      Verified
+                    <span className="market-type-chip">
+                      <PawPrint size={13} />
+                      {item.livestock_type}
                     </span>
 
                     <button
@@ -340,7 +378,7 @@ function Marketplace() {
                       onClick={() => addToFavorites(item.id)}
                     >
                       <Heart
-                        size={20}
+                        size={16}
                         fill={
                           favoriteIds.includes(item.id)
                             ? "currentColor"
@@ -353,48 +391,56 @@ function Marketplace() {
                         }
                       />
                     </button>
+
+                    <div className="market-image-overlay">
+                      <div className="market-overlay-text">
+                        <h3>{item.breed}</h3>
+                        <span className="market-price-tag">
+                          ₱{Number(item.price).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="market-body">
-                    <div className="market-card-head">
-                      <div>
-                        <h3>{item.breed}</h3>
-                        <p>
-                          {item.livestock_type} • {item.age}
-                        </p>
-                      </div>
-
-                      <h4>₱{Number(item.price).toLocaleString()}</h4>
-                    </div>
-
-                    <div className="market-info">
-                      <div>
-                        <span>Weight</span>
-                        <strong>{item.weight || "N/A"}</strong>
-                      </div>
-
-                      <div>
-                        <span>Type</span>
-                        <strong>{item.livestock_type}</strong>
-                      </div>
-                    </div>
-
-                    <div className="seller-box">
-                      <div>
-                        <strong>{item.seller_name}</strong>
-                        <p>
-                          <MapPin size={14} />
-                          {item.location}
-                        </p>
-                      </div>
-
+                    <div className="market-meta-row">
                       <span>
-                        <Star size={14} />
-                        4.8
+                        <Weight size={14} />
+                        {item.weight || "N/A"}
+                      </span>
+                      <span className="meta-divider">•</span>
+                      <span>
+                        <Calendar size={14} />
+                        {item.age || "N/A"}
                       </span>
                     </div>
 
-                    <button className="view-details-btn" type="button">
+                    <div className="market-divider" />
+
+                    <div className="seller-row">
+                      <span className="seller-avatar">
+                        {item.seller_name?.charAt(0) || "?"}
+                      </span>
+
+                      <div className="seller-row-info">
+                        <strong>
+                          {item.seller_name}
+                          {item.seller_verified && (
+                            <BadgeCheck size={14} className="seller-verified-icon" />
+                          )}
+                        </strong>
+                        <p>
+                          <MapPin size={13} />
+                          {item.location}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      className="view-details-btn"
+                      type="button"
+                      onClick={() => viewListingDetails(item)}
+                    >
                       <Eye size={18} />
                       View Details
                     </button>
@@ -405,6 +451,38 @@ function Marketplace() {
           </div>
         </main>
       </section>
+
+      {selectedListing && (
+        <ListingDetailsModal
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
+          onInquire={(item) => setInquiryListing(item)}
+          extraActions={
+            <button
+              type="button"
+              className="secondary-action"
+              onClick={() => setOfferListing(selectedListing)}
+            >
+              <Wallet size={16} />
+              Make an Offer
+            </button>
+          }
+        />
+      )}
+
+      {inquiryListing && (
+        <InquiryModal
+          listing={inquiryListing}
+          onClose={() => setInquiryListing(null)}
+        />
+      )}
+
+      {offerListing && (
+        <MakeOfferModal
+          listing={offerListing}
+          onClose={() => setOfferListing(null)}
+        />
+      )}
     </div>
   );
 }

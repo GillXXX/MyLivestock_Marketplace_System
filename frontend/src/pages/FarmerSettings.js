@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./FarmerSettings.css";
 
 function FarmerSettings() {
@@ -44,7 +45,7 @@ function FarmerSettings() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/farmer/change-password", {
+      const res = await fetch(`${API_URL}/api/farmer/change-password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 :root {
   --primary: #0f3d2e;
-  --primary-dark: #082117;
+  --primary-dark: #071f16;
   --accent: #d7a24d;
 
   --background: #f4f1e8;
@@ -39,6 +39,13 @@
     "Inter",
     "Segoe UI",
     sans-serif;
+
+  animation: post-fade-in 0.4s ease;
+}
+
+@keyframes post-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* HEADER */
@@ -95,44 +102,57 @@
 .premium-post-header h1 {
   margin: 0;
 
-  font-size: 56px;
-  line-height: 1;
+  font-size: 40px;
+  line-height: 1.05;
 
   font-weight: 950;
 
   color: var(--primary-dark);
 
-  letter-spacing: -2px;
+  letter-spacing: -1.5px;
 }
 
 .premium-post-header p {
-  margin-top: 14px;
+  margin-top: 10px;
 
   color: var(--muted);
 
-  font-size: 17px;
+  font-size: 15px;
 
   max-width: 760px;
 
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 /* CARD */
 
 .premium-post-card {
+  position: relative;
+  overflow: hidden;
+
   background:
     rgba(255,255,255,0.72);
 
-  -webkit-backdrop-filter: blur(10px);  
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(18px);
 
-  border-radius: 36px;
+  border-radius: 28px;
 
   border: 1px solid rgba(255,255,255,0.7);
 
-  padding: 34px;
+  padding: 26px;
 
   box-shadow: var(--shadow);
+}
+
+.premium-post-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent 140%);
 }
 
 /* UPLOAD */
@@ -140,9 +160,9 @@
 .premium-upload-box {
   border: 2px dashed #d9d3c4;
 
-  border-radius: 30px;
+  border-radius: 22px;
 
-  padding: 50px 30px;
+  padding: 28px 24px;
 
   background:
     linear-gradient(
@@ -153,16 +173,22 @@
 
   text-align: center;
 
-  margin-bottom: 36px;
+  margin-bottom: 26px;
 
   position: relative;
+
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.premium-upload-box:hover {
+  border-color: var(--accent);
 }
 
 .upload-icon {
-  width: 82px;
-  height: 82px;
+  width: 56px;
+  height: 56px;
 
-  border-radius: 24px;
+  border-radius: 16px;
 
   background:
     linear-gradient(
@@ -173,17 +199,19 @@
 
   color: white;
 
-  margin: auto auto 22px;
+  margin: auto auto 14px;
 
   display: flex;
   align-items: center;
   justify-content: center;
+
+  box-shadow: 0 8px 16px rgba(15,61,46,0.24);
 }
 
 .premium-upload-box h3 {
   margin: 0;
 
-  font-size: 28px;
+  font-size: 18px;
 
   font-weight: 900;
 
@@ -193,17 +221,19 @@
 .premium-upload-box p {
   color: var(--muted);
 
-  margin: 12px 0 24px;
+  font-size: 13.5px;
+
+  margin: 8px 0 16px;
 }
 
 .upload-btn {
-  height: 54px;
+  height: 42px;
 
-  padding: 0 22px;
+  padding: 0 18px;
 
   border: none;
 
-  border-radius: 18px;
+  border-radius: 14px;
 
   background:
     linear-gradient(
@@ -214,6 +244,7 @@
 
   color: white;
 
+  font-size: 13.5px;
   font-weight: 850;
 
   display: inline-flex;
@@ -221,6 +252,15 @@
   gap: 8px;
 
   cursor: pointer;
+
+  box-shadow: 0 8px 16px rgba(15,61,46,0.2);
+
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(15,61,46,0.28);
 }
 
 .premium-upload-box input {
@@ -235,14 +275,18 @@
 .section-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 850;
 
   color: var(--primary-dark);
 
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+.section-title svg {
+  color: var(--accent);
 }
 
 /* GRID */
@@ -250,19 +294,19 @@
 .premium-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 18px;
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
 
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 850;
 
   color: var(--primary-dark);
@@ -274,34 +318,35 @@
 .textarea-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 
   background:
     rgba(255,255,255,0.82);
 
   border: 1px solid var(--border);
 
-  border-radius: 20px;
+  border-radius: 16px;
 
-  padding: 0 18px;
+  padding: 0 14px;
 
-  transition: 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input-wrapper {
-  height: 64px;
+  height: 48px;
 }
 
 .input-wrapper:focus-within,
 .textarea-wrapper:focus-within {
   border-color: var(--primary);
   box-shadow:
-    0 0 0 4px rgba(15,61,46,0.08);
+    0 0 0 3px rgba(15,61,46,0.08);
 }
 
 .input-wrapper svg,
 .textarea-wrapper svg {
   color: var(--muted);
+  flex-shrink: 0;
 }
 
 .input-wrapper input,
@@ -313,12 +358,12 @@
 
   background: transparent;
 
-  font-size: 15px;
+  font-size: 13.5px;
 }
 
 .textarea-wrapper {
   align-items: flex-start;
-  padding-top: 18px;
+  padding-top: 14px;
 }
 
 .textarea-wrapper textarea {
@@ -331,9 +376,10 @@
 
   background: transparent;
 
-  font-size: 15px;
+  font-size: 13.5px;
+  line-height: 1.6;
 
-  padding-bottom: 18px;
+  padding-bottom: 14px;
 }
 
 /* FULL WIDTH */
@@ -352,32 +398,39 @@
   margin-top: 24px;
 }
 
+.draft-btn,
+.publish-btn {
+  height: 48px;
+
+  border-radius: 14px;
+
+  font-size: 13.5px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
 .draft-btn {
-  height: 58px;
-
-  padding: 0 24px;
-
-  border-radius: 18px;
+  padding: 0 20px;
 
   border: 1px solid var(--border);
 
   background: white;
 
   color: var(--primary);
+}
 
-  font-weight: 850;
-
-  cursor: pointer;
+.draft-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15,61,46,0.1);
 }
 
 .publish-btn {
-  height: 58px;
-
-  padding: 0 28px;
+  padding: 0 22px;
 
   border: none;
-
-  border-radius: 18px;
 
   background:
     linear-gradient(
@@ -388,12 +441,19 @@
 
   color: white;
 
-  font-weight: 850;
-
-  cursor: pointer;
-
   box-shadow:
-    0 16px 30px rgba(15,61,46,0.18);
+    0 10px 20px rgba(15,61,46,0.2);
+}
+
+.publish-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(15,61,46,0.28);
+}
+
+.publish-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+  transform: none;
 }
 
 /* RESPONSIVE */
@@ -413,11 +473,11 @@
   }
 
   .premium-post-header h1 {
-    font-size: 40px;
+    font-size: 30px;
   }
 
   .premium-post-card {
-    padding: 24px;
+    padding: 20px;
   }
 
   .post-actions {

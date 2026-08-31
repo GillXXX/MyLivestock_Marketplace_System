@@ -13,6 +13,7 @@ const getAdminVerification = async (req, res) => {
         l.livestock_type,
         l.health_status,
         l.status,
+        l.documents,
         l.created_at
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id

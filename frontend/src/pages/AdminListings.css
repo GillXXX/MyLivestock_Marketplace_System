@@ -1,9 +1,42 @@
+:root {
+  --primary: #0f3d2e;
+  --primary-dark: #071f16;
+  --accent: #d7a24d;
+
+  --background: #f4f1e8;
+  --card: #ffffff;
+
+  --border: #e8e2d4;
+  --muted: #667085;
+  --soft: #eaf5ef;
+
+  --shadow:
+    0 10px 30px rgba(15,61,46,0.06),
+    0 30px 60px rgba(15,61,46,0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 .admin-listings-page {
   min-height: 100vh;
-  background: #f7f8fa;
-  padding: 34px;
+
+  background:
+    radial-gradient(circle at top right, rgba(215, 162, 77, 0.08), transparent 30%),
+    var(--background);
+
+  padding: 40px;
+
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
-  color: #1a1f36;
+  color: #111827;
+
+  animation: listings-fade-in 0.4s ease;
+}
+
+@keyframes listings-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .listings-header {
@@ -11,7 +44,7 @@
   justify-content: space-between;
   gap: 24px;
   align-items: flex-start;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
 }
 
 .header-left {
@@ -21,19 +54,28 @@
 }
 
 .back-btn {
-  width: 50px;
-  height: 50px;
-  background: #0f3d2e;
-  color: white;
-  border-radius: 16px;
+  width: 58px;
+  height: 58px;
+  background: rgba(255,255,255,0.84);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--primary);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15,61,46,0.1);
 }
 
 .eyebrow {
-  color: #d4a437;
+  color: var(--accent);
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
@@ -45,55 +87,106 @@
   font-size: 42px;
   font-weight: 950;
   letter-spacing: -1px;
-  color: #09291f;
+  color: var(--primary-dark);
 }
 
 .listings-header p {
   max-width: 780px;
-  color: #6b7280;
+  color: var(--muted);
   margin: 0;
 }
 
 .export-btn {
   border: none;
-  height: 50px;
-  padding: 0 18px;
-  border-radius: 15px;
-  background: #0f3d2e;
+  height: 54px;
+  padding: 0 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   font-weight: 850;
   display: flex;
   align-items: center;
   gap: 9px;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(15,61,46,0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15,61,46,0.28);
 }
 
 .listing-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 18px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .listing-kpi-card,
 .listing-toolbar,
 .listings-table-card,
 .approval-panel {
-  background: white;
-  border: 1px solid #e8ecf2;
-  box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
+  background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
 }
 
 .listing-kpi-card {
-  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
   padding: 22px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.kpi-icon {
+.listing-kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 45px rgba(15,61,46,0.14);
+}
+
+/* Same technique as the admin dashboard's KPI cards: a diagonal tint
+   wash plus a thin gradient bar along the top edge, per accent tone. */
+
+.listing-kpi-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(160deg, var(--tone-tint) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.listing-kpi-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--tone-color), transparent 140%);
+}
+
+.listing-kpi-card.tone-green { --tone-color: #0f3d2e; --tone-tint: rgba(15, 61, 46, 0.08); }
+.listing-kpi-card.tone-blue { --tone-color: #2563eb; --tone-tint: rgba(37, 99, 235, 0.08); }
+.listing-kpi-card.tone-amber { --tone-color: #b3790f; --tone-tint: rgba(215, 162, 77, 0.14); }
+.listing-kpi-card.tone-red { --tone-color: #b42318; --tone-tint: rgba(180, 35, 24, 0.08); }
+
+.listing-kpi-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.listing-kpi-icon {
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: #eaf5ef;
-  color: #0f3d2e;
+  background: linear-gradient(145deg, var(--tone-tint), transparent);
+  border: 1px solid var(--tone-tint);
+  color: var(--tone-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,37 +196,45 @@
   margin: 14px 0 0;
   font-size: 36px;
   font-weight: 950;
-  color: #09291f;
+  color: var(--primary-dark);
+  font-family: Georgia, serif;
 }
 
 .listing-kpi-card p {
   margin: 0;
-  color: #6b7280;
+  color: var(--muted);
   font-weight: 750;
 }
 
 .listing-toolbar {
-  border-radius: 20px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 14px;
   display: grid;
-  grid-template-columns: 1fr 210px 170px 150px;
-  gap: 14px;
-  margin-bottom: 22px;
+  grid-template-columns: minmax(0, 320px) 190px 160px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .listing-search,
 .listing-toolbar select {
-  height: 52px;
-  border: 1px solid #e8ecf2;
-  border-radius: 15px;
-  background: #f8fafc;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: white;
+  font-size: 13.5px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .listing-search {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 15px;
+  gap: 8px;
+  padding: 0 13px;
+}
+
+.listing-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15,61,46,0.1);
 }
 
 .listing-search input,
@@ -142,33 +243,49 @@
   border: none;
   outline: none;
   background: transparent;
+  font-family: inherit;
 }
 
 .listing-toolbar select {
   padding: 0 15px;
+  color: var(--primary-dark);
+  font-weight: 700;
+  background: white;
+}
+
+.listing-toolbar select:focus {
+  border-color: var(--primary);
+  outline: none;
 }
 
 .filter-btn {
   border: none;
-  border-radius: 15px;
-  background: #0f3d2e;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   font-weight: 850;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15,61,46,0.2);
 }
 
 .listings-layout {
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 22px;
+  gap: 24px;
 }
 
 .listings-table-card,
 .approval-panel {
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 24px;
 }
 
@@ -182,14 +299,14 @@
 .card-title h3,
 .approval-panel h3 {
   margin: 0;
-  color: #09291f;
+  color: var(--primary-dark);
   font-weight: 950;
 }
 
 .card-title p,
 .approval-panel p {
   margin: 5px 0 0;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .more-btn {
@@ -197,8 +314,18 @@
   height: 42px;
   border: none;
   border-radius: 14px;
-  background: #f1f5f9;
-  color: #0f3d2e;
+  background: var(--soft);
+  color: var(--primary);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.more-btn:hover {
+  transform: translateY(-2px);
+}
+
+.table-responsive {
+  overflow-x: auto;
 }
 
 .professional-table {
@@ -208,19 +335,27 @@
 
 .professional-table th {
   text-align: left;
-  color: #6b7280;
+  color: var(--muted);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   padding: 14px 12px;
-  border-bottom: 1px solid #e8ecf2;
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .professional-table td {
   padding: 18px 12px;
-  border-bottom: 1px solid #e8ecf2;
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
+}
+
+.professional-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.professional-table tbody tr:hover {
+  background: var(--soft);
 }
 
 .listing-cell {
@@ -230,25 +365,69 @@
 }
 
 .animal-icon {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
   border-radius: 16px;
-  background: #eaf5ef;
+  background: linear-gradient(135deg, var(--accent), #b8842c);
+  color: var(--primary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 23px;
+  box-shadow: 0 8px 16px rgba(184,132,44,0.28);
+}
+
+/* Real listing photo, shown instead of the emoji fallback — click to
+   open it full-size so admin can actually inspect the animal. */
+
+.listing-thumb-btn {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(15,61,46,0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.listing-thumb-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 22px rgba(15,61,46,0.28);
+}
+
+.listing-thumb-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(7,33,23,0);
+  transition: background 0.18s ease;
+}
+
+.listing-thumb-btn:hover::after {
+  background: rgba(7,33,23,0.15);
+}
+
+.listing-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .listing-cell strong,
 .professional-table td strong {
-  color: #09291f;
+  color: var(--primary-dark);
 }
 
 .listing-cell p,
 .subtext {
   margin: 4px 0 0;
-  color: #6b7280;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -256,7 +435,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #0f3d2e;
+  color: var(--primary);
   font-weight: 750;
 }
 
@@ -272,14 +451,21 @@
   color: #8a6500;
 }
 
-.status-pill.approved {
-  background: #eaf5ef;
-  color: #0f3d2e;
+.status-pill.approved,
+.status-pill.available {
+  background: var(--soft);
+  color: var(--primary);
 }
 
-.status-pill.flagged {
+.status-pill.flagged,
+.status-pill.rejected {
   background: #ffe5e5;
   color: #b42318;
+}
+
+.status-pill.sold {
+  background: #f1f1f1;
+  color: #6b6b6b;
 }
 
 .action-set {
@@ -289,16 +475,23 @@
 }
 
 .action-set button {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: none;
   border-radius: 12px;
   background: #f1f5f9;
-  color: #0f3d2e;
+  color: var(--primary);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.action-set button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(15,61,46,0.14);
 }
 
 .action-set .approve {
-  background: #eaf5ef;
+  background: var(--soft);
 }
 
 .action-set .flag {
@@ -317,13 +510,17 @@
   align-items: flex-start;
   gap: 10px;
   padding: 14px 0;
-  border-bottom: 1px solid #e8ecf2;
+  border-bottom: 1px solid var(--border);
   color: #374151;
   font-weight: 650;
 }
 
+.guideline:last-of-type {
+  border-bottom: none;
+}
+
 .guideline svg {
-  color: #0f3d2e;
+  color: var(--primary);
   flex-shrink: 0;
 }
 
@@ -338,19 +535,24 @@
 }
 
 .approval-summary div {
-  background: #f8fafc;
-  border: 1px solid #e8ecf2;
+  background: var(--soft);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 15px;
+  transition: border-color 0.15s ease;
+}
+
+.approval-summary div:hover {
+  border-color: var(--accent);
 }
 
 .approval-summary strong {
   display: block;
-  color: #09291f;
+  color: var(--primary-dark);
 }
 
 .approval-summary span {
-  color: #d4a437;
+  color: var(--accent);
   font-weight: 850;
 }
 

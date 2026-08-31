@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   ArrowLeft,
   Search,
-  Filter,
   Download,
-  Eye,
   UserCheck,
   UserX,
   Trash2,
@@ -13,10 +11,11 @@ import {
   Tractor,
   ShoppingBag,
   Clock,
-  MoreVertical,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { exportToCsv } from "../utils/exportCsv";
+import { API_URL } from "../config";
 import "./AdminUsers.css";
 
 function AdminUsers() {
@@ -33,10 +32,12 @@ function AdminUsers() {
   const [verificationQueue, setVerificationQueue] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
+  const [statusFilter, setStatusFilter] = useState("All Account Status");
+  const [verificationFilter, setVerificationFilter] = useState("All Verification");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
 
@@ -45,7 +46,7 @@ function AdminUsers() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/admin/users", {
+      const res = await fetch(`${API_URL}/api/admin/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,11 +68,11 @@ function AdminUsers() {
       setMessage("Cannot connect to backend server");
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm("Delete this user?");
@@ -80,7 +81,7 @@ function AdminUsers() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -101,6 +102,123 @@ function AdminUsers() {
     }
   };
 
+  const handleVerify = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_URL}/api/admin/users/${id}/verify`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to verify farmer");
+        return;
+      }
+
+      fetchUsers();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const handleRejectVerification = async (id) => {
+    const reason = window.prompt("Reason for rejecting this verification (optional):");
+
+    if (reason === null) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_URL}/api/admin/users/${id}/reject-verification`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ reason }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to reject verification");
+        return;
+      }
+
+      fetchUsers();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const getVerificationDocs = (user) => {
+    if (!user.verification_document) return [];
+    try {
+      const parsed = JSON.parse(user.verification_document);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const handleToggleActive = async (id, isActive) => {
+    if (isActive) {
+      const confirmDeactivate = window.confirm("Deactivate this account?");
+      if (!confirmDeactivate) return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_URL}/api/admin/users/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: !isActive }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to update account status");
+        return;
+      }
+
+      fetchUsers();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const handleExport = () => {
+    exportToCsv("users.csv", [
+      { label: "ID", value: (u) => u.id },
+      { label: "Name", value: (u) => u.full_name },
+      { label: "Email", value: (u) => u.email },
+      { label: "Phone", value: (u) => u.phone },
+      { label: "Role", value: (u) => u.role },
+      { label: "Status", value: (u) => (u.is_active ? "Active" : "Inactive") },
+      {
+        label: "Verification",
+        value: (u) => (u.role === "farmer" ? (u.is_verified ? "Verified" : "Unverified") : "N/A"),
+      },
+      { label: "Listings", value: (u) => u.listings },
+      { label: "Joined", value: (u) => new Date(u.created_at).toLocaleDateString() },
+    ], filteredUsers);
+  };
+
   const filteredUsers = users.filter((user) => {
     const search = searchText.toLowerCase();
 
@@ -113,7 +231,15 @@ function AdminUsers() {
       roleFilter === "All Roles" ||
       user.role.toLowerCase() === roleFilter.toLowerCase();
 
-    return matchesSearch && matchesRole;
+    const matchesStatus =
+      statusFilter === "All Account Status" ||
+      (statusFilter === "Active" ? user.is_active : !user.is_active);
+
+    const matchesVerification =
+      verificationFilter === "All Verification" ||
+      (verificationFilter === "Verified" ? Boolean(user.is_verified) : !user.is_verified);
+
+    return matchesSearch && matchesRole && matchesStatus && matchesVerification;
   });
 
   if (loading) {
@@ -142,7 +268,7 @@ function AdminUsers() {
           </div>
         </div>
 
-        <button className="export-btn" type="button">
+        <button className="export-btn" type="button" onClick={handleExport}>
           <Download size={18} />
           Export Users
         </button>
@@ -195,11 +321,6 @@ function AdminUsers() {
                 onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
-
-            <button className="filter-btn" type="button">
-              <Filter size={18} />
-              Filters
-            </button>
           </div>
         </div>
 
@@ -210,14 +331,19 @@ function AdminUsers() {
             <option>Buyer</option>
           </select>
 
-          <select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option>All Account Status</option>
             <option>Active</option>
+            <option>Inactive</option>
           </select>
 
-          <select>
+          <select
+            value={verificationFilter}
+            onChange={(e) => setVerificationFilter(e.target.value)}
+          >
             <option>All Verification</option>
             <option>Verified</option>
+            <option>Unverified</option>
           </select>
         </div>
 
@@ -274,12 +400,26 @@ function AdminUsers() {
                     </td>
 
                     <td>
-                      <span className="status-pill active">Active</span>
+                      <span className={`status-pill ${user.is_active ? "active" : "inactive"}`}>
+                        {user.is_active ? "Active" : "Inactive"}
+                      </span>
                     </td>
 
                     <td>
-                      <span className="verification-pill verified">
-                        {user.role === "farmer" ? "Verified" : "N/A"}
+                      <span
+                        className={`verification-pill ${
+                          user.role !== "farmer"
+                            ? "neutral"
+                            : user.is_verified
+                            ? "verified"
+                            : "pending"
+                        }`}
+                      >
+                        {user.role === "farmer"
+                          ? user.is_verified
+                            ? "Verified"
+                            : "Unverified"
+                          : "N/A"}
                       </span>
                     </td>
 
@@ -291,15 +431,21 @@ function AdminUsers() {
 
                     <td>
                       <div className="table-actions">
-                        <button title="View Details" type="button">
-                          <Eye size={17} />
-                        </button>
+                        {user.role === "farmer" && !user.is_verified && (
+                          <button
+                            title="Verify Farmer"
+                            type="button"
+                            onClick={() => handleVerify(user.id)}
+                          >
+                            <UserCheck size={17} />
+                          </button>
+                        )}
 
-                        <button title="Verify Farmer" type="button">
-                          <UserCheck size={17} />
-                        </button>
-
-                        <button title="Deactivate Account" type="button">
+                        <button
+                          title={user.is_active ? "Deactivate Account" : "Reactivate Account"}
+                          type="button"
+                          onClick={() => handleToggleActive(user.id, user.is_active)}
+                        >
                           <UserX size={17} />
                         </button>
 
@@ -310,10 +456,6 @@ function AdminUsers() {
                           onClick={() => handleDelete(user.id)}
                         >
                           <Trash2 size={17} />
-                        </button>
-
-                        <button title="More Options" type="button">
-                          <MoreVertical size={17} />
                         </button>
                       </div>
                     </td>
@@ -337,16 +479,51 @@ function AdminUsers() {
         <div className="queue-list">
           {verificationQueue.length === 0 ? (
             <div>
-              <strong>No farmers yet</strong>
-              <span>No verification records available.</span>
+              <strong>No pending submissions</strong>
+              <span>No farmers are currently awaiting verification review.</span>
             </div>
           ) : (
-            verificationQueue.slice(0, 3).map((user) => (
-              <div key={user.id}>
-                <strong>{user.full_name}</strong>
-                <span>{user.farm_location || "Farm location not provided"}</span>
-              </div>
-            ))
+            verificationQueue.map((user) => {
+              const docs = getVerificationDocs(user);
+
+              return (
+                <div key={user.id} className="queue-item">
+                  <div>
+                    <strong>{user.full_name}</strong>
+                    <span>
+                      {user.verification_submitted_at
+                        ? `Submitted ${new Date(user.verification_submitted_at).toLocaleDateString()}`
+                        : user.farm_location || "Farm location not provided"}
+                    </span>
+                  </div>
+
+                  <div className="queue-actions">
+                    {docs.map((doc) => (
+                      <button
+                        key={doc.type}
+                        type="button"
+                        onClick={() => window.open(doc.url, "_blank")}
+                      >
+                        View {doc.type}
+                      </button>
+                    ))}
+
+                    <button type="button" onClick={() => handleVerify(user.id)}>
+                      <UserCheck size={15} />
+                      Approve
+                    </button>
+
+                    <button
+                      className="danger"
+                      type="button"
+                      onClick={() => handleRejectVerification(user.id)}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       </section>

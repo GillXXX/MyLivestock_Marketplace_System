@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ArrowLeft,
   Search,
-  Filter,
   FileCheck2,
   Clock,
   CheckCircle,
@@ -16,13 +15,59 @@ import {
   Calendar,
   Wallet,
   TrendingUp,
+  XCircle,
+  X,
+  Beef,
+  Drumstick,
+  PawPrint,
+  Inbox,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { exportToCsv } from "../utils/exportCsv";
+import { API_URL } from "../config";
 import "./BuyerTransactions.css";
+
+const LIVESTOCK_ICONS = {
+  Cattle: Beef,
+  Poultry: Drumstick,
+  Goat: PawPrint,
+  Swine: PawPrint,
+};
+
+const getLivestockIcon = (type) => LIVESTOCK_ICONS[type] || FileCheck2;
+
+function useCountUp(target, durationMs = 700) {
+  const [value, setValue] = useState(0);
+  const frameRef = useRef();
+
+  useEffect(() => {
+    const numericTarget = Number(target) || 0;
+    const startTime = performance.now();
+    const startValue = 0;
+
+    const tick = (now) => {
+      const progress = Math.min(1, (now - startTime) / durationMs);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(startValue + (numericTarget - startValue) * eased);
+
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(tick);
+      } else {
+        setValue(numericTarget);
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [target, durationMs]);
+
+  return value;
+}
 
 function BuyerTransactions() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
@@ -38,43 +83,143 @@ function BuyerTransactions() {
   const [typeFilter, setTypeFilter] = useState("All Livestock");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  const animatedTotal = useCountUp(stats.totalTransactions);
+  const animatedPending = useCountUp(stats.pendingDeals);
+  const animatedCompleted = useCountUp(stats.completed);
+  const animatedValue = useCountUp(stats.purchaseValue);
+
+  const fetchTransactions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/buyer-transactions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || "Failed to load transactions");
+        setLoading(false);
+        return;
+      }
+
+      setTransactions(data.transactions);
+      setFilteredTransactions(data.transactions);
+      setStats(data.stats);
+      setLoading(false);
+
+      const requestedId = location.state?.transactionId;
+      if (requestedId) {
+        const match = data.transactions.find((t) => t.id === requestedId);
+        if (match) setSelectedTransaction(match);
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    } catch (error) {
+      setMessage("Cannot connect to backend server");
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const token = localStorage.getItem("token");
+    fetchTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
-        if (!token) {
-          navigate("/login");
-          return;
-        }
+  const confirmCompletion = async (id) => {
+    if (!window.confirm("Confirm this transaction is complete? This will finalize the sale.")) {
+      return;
+    }
 
-        const res = await fetch("http://localhost:5000/api/buyer-transactions", {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_URL}/api/buyer-transactions/${id}/confirm`,
+        {
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setMessage(data.message || "Failed to load transactions");
-          setLoading(false);
-          return;
         }
+      );
 
-        setTransactions(data.transactions);
-        setFilteredTransactions(data.transactions);
-        setStats(data.stats);
-        setLoading(false);
-      } catch (error) {
-        setMessage("Cannot connect to backend server");
-        setLoading(false);
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to confirm transaction");
+        return;
       }
-    };
 
-    fetchTransactions();
-  }, [navigate]);
+      fetchTransactions();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const cancelOffer = async (id) => {
+    if (!window.confirm("Cancel this offer? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_URL}/api/buyer-transactions/${id}/cancel`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to cancel offer");
+        return;
+      }
+
+      fetchTransactions();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const transactionCsvColumns = [
+    { label: "Transaction ID", value: (t) => `TRX-${String(t.id).padStart(3, "0")}` },
+    { label: "Livestock", value: (t) => t.livestock_type },
+    { label: "Breed", value: (t) => t.breed || "" },
+    { label: "Seller", value: (t) => t.seller_name },
+    { label: "Location", value: (t) => t.location },
+    { label: "Amount", value: (t) => t.amount },
+    { label: "Status", value: (t) => t.status },
+    { label: "Workflow Step", value: (t) => t.workflow_step },
+    { label: "Date", value: (t) => new Date(t.created_at).toLocaleDateString() },
+  ];
+
+  const handleExportAll = () => {
+    exportToCsv("my-transactions.csv", transactionCsvColumns, filteredTransactions);
+  };
+
+  const handleDownloadReceipt = (item) => {
+    exportToCsv(
+      `receipt-TRX-${String(item.id).padStart(3, "0")}.csv`,
+      transactionCsvColumns,
+      [item]
+    );
+  };
 
   useEffect(() => {
     let results = [...transactions];
@@ -107,7 +252,29 @@ function BuyerTransactions() {
   }, [searchText, statusFilter, typeFilter, transactions]);
 
   if (loading) {
-    return <h2 style={{ padding: "30px" }}>Loading transactions...</h2>;
+    return (
+      <div className="buyer-transactions-page">
+        <div className="skeleton-header">
+          <div className="skeleton-block skeleton-btn"></div>
+          <div>
+            <div className="skeleton-block skeleton-tag"></div>
+            <div className="skeleton-block skeleton-title"></div>
+          </div>
+        </div>
+
+        <div className="skeleton-stats">
+          {[0, 1, 2, 3].map((i) => (
+            <div className="skeleton-block skeleton-stat-card" key={i}></div>
+          ))}
+        </div>
+
+        <div className="skeleton-block skeleton-toolbar"></div>
+
+        {[0, 1, 2].map((i) => (
+          <div className="skeleton-block skeleton-transaction-card" key={i}></div>
+        ))}
+      </div>
+    );
   }
 
   if (message) {
@@ -136,30 +303,35 @@ function BuyerTransactions() {
       <section className="transaction-stats">
         <StatCard
           icon={<FileCheck2 />}
-          value={stats.totalTransactions}
+          value={Math.round(animatedTotal)}
           label="Total Transactions"
           note="All purchase records"
+          accent="neutral"
         />
 
         <StatCard
           icon={<Clock />}
-          value={stats.pendingDeals}
+          value={Math.round(animatedPending)}
           label="Pending Deals"
           note="Awaiting seller action"
+          accent="amber"
+          pulse={stats.pendingDeals > 0}
         />
 
         <StatCard
           icon={<CheckCircle />}
-          value={stats.completed}
+          value={Math.round(animatedCompleted)}
           label="Completed"
           note="Recorded purchases"
+          accent="green"
         />
 
         <StatCard
           icon={<Wallet />}
-          value={`₱${Number(stats.purchaseValue).toLocaleString()}`}
+          value={`₱${Math.round(animatedValue).toLocaleString()}`}
           label="Purchase Value"
           note="Total estimated value"
+          accent="neutral"
         />
       </section>
 
@@ -191,10 +363,6 @@ function BuyerTransactions() {
           <option>Poultry</option>
         </select>
 
-        <button type="button">
-          <Filter size={17} />
-          Filter
-        </button>
       </section>
 
       <section className="transactions-layout">
@@ -205,7 +373,12 @@ function BuyerTransactions() {
               <p>Monitor every livestock deal through the structured workflow.</p>
             </div>
 
-            <button className="export-btn" type="button">
+            <button
+              className="export-btn"
+              type="button"
+              onClick={handleExportAll}
+              disabled={filteredTransactions.length === 0}
+            >
               <Download size={17} />
               Export
             </button>
@@ -213,19 +386,39 @@ function BuyerTransactions() {
 
           <div className="transaction-list">
             {filteredTransactions.length === 0 ? (
-              <p>No transactions found.</p>
+              <div className="transactions-empty-state">
+                <Inbox size={40} />
+                <h4>No transactions found</h4>
+                <p>
+                  {transactions.length === 0
+                    ? "Inquire or make an offer on a listing to start your first transaction."
+                    : "Try adjusting your search or filters."}
+                </p>
+                {transactions.length === 0 && (
+                  <Link to="/marketplace" className="empty-state-cta">
+                    Browse Marketplace
+                  </Link>
+                )}
+              </div>
             ) : (
-              filteredTransactions.map((item) => (
-                <div className="premium-transaction-card" key={item.id}>
+              filteredTransactions.map((item, index) => {
+                const LivestockIcon = getLivestockIcon(item.livestock_type);
+
+                return (
+                <div
+                  className="premium-transaction-card"
+                  key={item.id}
+                  style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}
+                >
                   <div className="transaction-top">
                     <div className="transaction-left">
                       <div className="transaction-icon-box">
-                        <FileCheck2 size={24} />
+                        <LivestockIcon size={24} />
                       </div>
 
                       <div>
                         <div className="transaction-heading">
-                          <h3>{item.breed || item.livestock_type}</h3>
+                          <h3>{item.livestock_type}</h3>
 
                           <span className="transaction-id">
                             TRX-{String(item.id).padStart(3, "0")}
@@ -257,12 +450,17 @@ function BuyerTransactions() {
                         className={
                           item.status === "Completed"
                             ? "premium-status completed"
+                            : item.status === "Declined" || item.status === "Cancelled"
+                            ? "premium-status declined"
                             : item.workflow_step === "Verification"
                             ? "premium-status verification"
                             : "premium-status pending"
                         }
                       >
-                        {item.status === "Completed" ? "Completed" : item.workflow_step}
+                        {item.status === "Pending" && <span className="status-pulse-dot"></span>}
+                        {item.status === "Completed" || item.status === "Declined" || item.status === "Cancelled"
+                          ? item.status
+                          : item.workflow_step}
                       </span>
                     </div>
                   </div>
@@ -292,23 +490,55 @@ function BuyerTransactions() {
                     </div>
 
                     <div className="premium-actions">
-                      <button className="view-btn-premium" type="button">
+                      <button
+                        className="view-btn-premium"
+                        type="button"
+                        onClick={() => setSelectedTransaction(item)}
+                      >
                         <Eye size={17} />
                         View Details
                       </button>
 
-                      <button className="message-btn-premium" type="button">
+                      <Link className="message-btn-premium" to="/messages">
                         <MessageCircle size={17} />
                         Contact Seller
-                      </button>
+                      </Link>
 
-                      <button className="download-btn-premium" type="button">
+                      <button
+                        className="download-btn-premium"
+                        type="button"
+                        title="Download receipt"
+                        onClick={() => handleDownloadReceipt(item)}
+                      >
                         <Download size={17} />
                       </button>
+
+                      {item.status === "Pending" && item.workflow_step === "Confirmation" && (
+                        <button
+                          type="button"
+                          className="message-btn-premium"
+                          onClick={() => confirmCompletion(item.id)}
+                        >
+                          <CheckCircle size={17} />
+                          Confirm & Complete
+                        </button>
+                      )}
+
+                      {item.status === "Pending" && (
+                        <button
+                          type="button"
+                          className="decline-btn-premium"
+                          onClick={() => cancelOffer(item.id)}
+                        >
+                          <XCircle size={17} />
+                          Cancel Offer
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -353,14 +583,86 @@ function BuyerTransactions() {
           </div>
         </aside>
       </section>
+
+      {selectedTransaction && (
+        <div
+          className="transaction-modal-overlay"
+          onClick={() => setSelectedTransaction(null)}
+        >
+          <div className="transaction-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="transaction-modal-close"
+              type="button"
+              onClick={() => setSelectedTransaction(null)}
+            >
+              <X size={20} />
+            </button>
+
+            <div className="transaction-modal-head">
+              <div className="transaction-icon-box">
+                {(() => {
+                  const ModalIcon = getLivestockIcon(selectedTransaction.livestock_type);
+                  return <ModalIcon size={26} />;
+                })()}
+              </div>
+
+              <div>
+                <div className="transaction-heading">
+                  <h3>{selectedTransaction.livestock_type}</h3>
+                  <span className="transaction-id">
+                    TRX-{String(selectedTransaction.id).padStart(3, "0")}
+                  </span>
+                </div>
+                <p className="seller-name">Seller: {selectedTransaction.seller_name}</p>
+              </div>
+            </div>
+
+            <div className="transaction-modal-amount">
+              <span>Offer Amount</span>
+              <strong>₱{Number(selectedTransaction.amount).toLocaleString()}</strong>
+            </div>
+
+            <div className="transaction-modal-info">
+              <div>
+                <MapPin size={16} />
+                <span>{selectedTransaction.location}</span>
+              </div>
+              <div>
+                <Calendar size={16} />
+                <span>{new Date(selectedTransaction.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            <div className="workflow-wrapper">
+              <div className="workflow-header">
+                <h4>Transaction Workflow</h4>
+                <p>Current Stage: {selectedTransaction.workflow_step}</p>
+              </div>
+
+              <Workflow stage={selectedTransaction.workflow_step} />
+            </div>
+
+            <Link
+              className="message-btn-premium transaction-modal-contact"
+              to="/messages"
+            >
+              <MessageCircle size={17} />
+              Contact Seller
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function StatCard({ icon, value, label, note }) {
+function StatCard({ icon, value, label, note, accent = "neutral", pulse }) {
   return (
-    <div className="transaction-stat-card">
-      <div className="stat-icon">{icon}</div>
+    <div className={`transaction-stat-card accent-${accent}`}>
+      <div className="stat-icon">
+        {icon}
+        {pulse && <span className="stat-pulse-dot"></span>}
+      </div>
       <h2>{value}</h2>
       <p>{label}</p>
       <small>{note}</small>

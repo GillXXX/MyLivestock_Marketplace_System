@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./FarmerNotifications.css";
 
 function FarmerNotifications() {
@@ -41,7 +42,7 @@ function FarmerNotifications() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/farmer/notifications", {
+        const res = await fetch(`${API_URL}/api/farmer/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

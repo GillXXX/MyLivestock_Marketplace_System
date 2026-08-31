@@ -1,9 +1,23 @@
+:root {
+  --primary: #0f3d2e;
+  --primary-dark: #071f16;
+  --accent: #d7a24d;
+  --background: #f4f1e8;
+  --card: #ffffff;
+  --border: #e8e2d4;
+  --text: #111827;
+  --muted: #667085;
+  --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
+}
+
 .reports-page {
   min-height: 100vh;
-  background: #f7f8fa;
+  background:
+    radial-gradient(circle at top right, rgba(215, 162, 77, 0.08), transparent 30%),
+    var(--background);
   padding: 34px;
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
-  color: #1a1f36;
+  color: #111827;
 }
 
 .reports-hero {
@@ -27,7 +41,7 @@
 
 .eyebrow {
   display: inline-block;
-  color: #d4a437;
+  color: #d7a24d;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
@@ -40,19 +54,19 @@
   font-size: 44px;
   font-weight: 950;
   letter-spacing: -1.2px;
-  color: #09291f;
+  color: #071f16;
 }
 
 .reports-hero p {
   max-width: 820px;
   margin: 8px 0 0;
-  color: #6b7280;
+  color: #667085;
   font-size: 16px;
 }
 
 .report-actions {
   background: white;
-  border: 1px solid #e8ecf2;
+  border: 1px solid #e8e2d4;
   border-radius: 22px;
   padding: 18px;
   display: flex;
@@ -65,8 +79,8 @@
 .filter-box {
   height: 52px;
   min-width: 210px;
-  border: 1px solid #e8ecf2;
-  background: #f8fafc;
+  border: 1px solid #e8e2d4;
+  background: #f8f5ec;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -119,7 +133,7 @@
 .metric-card,
 .report-card {
   background: white;
-  border: 1px solid #e8ecf2;
+  border: 1px solid #e8e2d4;
   border-radius: 22px;
   box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
 }
@@ -143,19 +157,19 @@
   margin: 14px 0 0;
   font-size: 38px;
   font-weight: 950;
-  color: #09291f;
+  color: #071f16;
 }
 
 .metric-card p {
   margin: 0;
-  color: #6b7280;
+  color: #667085;
   font-weight: 700;
 }
 
 .metric-card small {
   display: block;
   margin-top: 8px;
-  color: #d4a437;
+  color: #d7a24d;
   font-weight: 900;
 }
 
@@ -183,13 +197,13 @@
 
 .card-title h3 {
   margin: 0;
-  color: #09291f;
+  color: #071f16;
   font-weight: 950;
 }
 
 .card-title p {
   margin: 5px 0 0;
-  color: #6b7280;
+  color: #667085;
 }
 
 .livestock-performance {
@@ -206,25 +220,25 @@
 }
 
 .performance-row strong {
-  color: #09291f;
+  color: #071f16;
 }
 
 .performance-row p {
   margin: 5px 0 0;
-  color: #6b7280;
+  color: #667085;
 }
 
 .progress-area span {
   display: block;
   text-align: right;
-  color: #d4a437;
+  color: #d7a24d;
   font-weight: 900;
   margin-bottom: 6px;
 }
 
 .progress-bar {
   height: 10px;
-  background: #e8ecf2;
+  background: #e8e2d4;
   border-radius: 999px;
   overflow: hidden;
 }
@@ -236,8 +250,8 @@
 }
 
 .report-item {
-  background: #f8fafc;
-  border: 1px solid #e8ecf2;
+  background: #f8f5ec;
+  border: 1px solid #e8e2d4;
   padding: 16px;
   border-radius: 18px;
   display: flex;
@@ -247,12 +261,12 @@
 }
 
 .report-item strong {
-  color: #09291f;
+  color: #071f16;
 }
 
 .report-item p {
   margin: 4px 0 0;
-  color: #6b7280;
+  color: #667085;
 }
 
 .report-item span {
@@ -271,8 +285,8 @@
   display: flex;
   gap: 14px;
   align-items: center;
-  background: #f8fafc;
-  border: 1px solid #e8ecf2;
+  background: #f8f5ec;
+  border: 1px solid #e8e2d4;
   padding: 18px;
   border-radius: 18px;
   margin-bottom: 14px;
@@ -303,12 +317,16 @@
 }
 
 .status-summary strong {
-  color: #09291f;
+  color: #071f16;
 }
 
 .status-summary p {
   margin: 4px 0 0;
-  color: #6b7280;
+  color: #667085;
+}
+
+.table-responsive {
+  overflow-x: auto;
 }
 
 .professional-table {
@@ -318,16 +336,16 @@
 
 .professional-table th {
   text-align: left;
-  color: #6b7280;
+  color: #667085;
   font-size: 12px;
   text-transform: uppercase;
   padding: 14px 10px;
-  border-bottom: 1px solid #e8ecf2;
+  border-bottom: 1px solid #e8e2d4;
 }
 
 .professional-table td {
   padding: 18px 10px;
-  border-bottom: 1px solid #e8ecf2;
+  border-bottom: 1px solid #e8e2d4;
   font-weight: 700;
 }
 

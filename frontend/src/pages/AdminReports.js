@@ -6,7 +6,6 @@ import {
   Users,
   ShoppingBag,
   TrendingUp,
-  Download,
   Printer,
   Calendar,
   FileSpreadsheet,
@@ -19,6 +18,8 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { exportToCsv } from "../utils/exportCsv";
+import { API_URL } from "../config";
 import "./AdminReports.css";
 
 function AdminReports() {
@@ -41,6 +42,8 @@ function AdminReports() {
   const [monthlyTransactions, setMonthlyTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [period, setPeriod] = useState("current");
+  const [livestockFilter, setLivestockFilter] = useState("All Livestock");
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -52,11 +55,19 @@ function AdminReports() {
           return;
         }
 
-        const res = await fetch("http://localhost:5000/api/admin/reports", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const params = new URLSearchParams({
+          period,
+          livestockType: livestockFilter,
         });
+
+        const res = await fetch(
+          `${API_URL}/api/admin/reports?${params.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const data = await res.json();
 
@@ -78,7 +89,16 @@ function AdminReports() {
     };
 
     fetchReports();
-  }, [navigate]);
+  }, [navigate, period, livestockFilter]);
+
+  const handleExport = () => {
+    exportToCsv("livestock-performance.csv", [
+      { label: "Livestock Type", value: (l) => l.type },
+      { label: "Records", value: (l) => l.total },
+      { label: "Percent", value: (l) => l.percent },
+      { label: "Value", value: (l) => l.value },
+    ], livestockData);
+  };
 
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading reports...</h2>;
@@ -108,15 +128,18 @@ function AdminReports() {
       <section className="report-actions">
         <div className="filter-box">
           <Calendar size={18} />
-          <select>
-            <option>Current Month</option>
-            <option>Previous Month</option>
+          <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="current">Current Month</option>
+            <option value="previous">Previous Month</option>
           </select>
         </div>
 
         <div className="filter-box">
           <Filter size={18} />
-          <select>
+          <select
+            value={livestockFilter}
+            onChange={(e) => setLivestockFilter(e.target.value)}
+          >
             <option>All Livestock</option>
             <option>Swine</option>
             <option>Cattle</option>
@@ -125,12 +148,7 @@ function AdminReports() {
           </select>
         </div>
 
-        <button className="primary-action" type="button">
-          <Download size={18} />
-          Export PDF
-        </button>
-
-        <button className="secondary-action" type="button">
+        <button className="secondary-action" type="button" onClick={handleExport}>
           <FileSpreadsheet size={18} />
           Export Excel
         </button>

@@ -2,12 +2,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const db = require("./config/db");
 
 async function createAdmin() {
   try {
-    const email = "admin@herdmarket.com";
-    const password = "admin123";
+    const email = process.env.ADMIN_EMAIL || "admin@herdmarket.com";
+    const generatedPassword = crypto.randomBytes(9).toString("base64url");
+    const password = process.env.ADMIN_PASSWORD || generatedPassword;
 
     const [existing] = await db.query(
       "SELECT * FROM users WHERE email = ?",
@@ -36,10 +38,19 @@ async function createAdmin() {
     );
 
     console.log("Admin account created!");
+    console.log(`  Email:    ${email}`);
+
+    if (process.env.ADMIN_PASSWORD) {
+      console.log("  Password: (set via ADMIN_PASSWORD env var)");
+    } else {
+      console.log(`  Password: ${password}`);
+      console.log("  This was randomly generated and is not stored anywhere — save it now.");
+    }
+
     process.exit();
   } catch (err) {
     console.error(err);
-    process.exit();
+    process.exit(1);
   }
 }
 

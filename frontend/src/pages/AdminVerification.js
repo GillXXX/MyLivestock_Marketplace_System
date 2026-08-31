@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   Search,
@@ -11,11 +11,11 @@ import {
   ShieldCheck,
   AlertTriangle,
   Clock,
-  Filter,
-  MoreHorizontal,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { exportToCsv } from "../utils/exportCsv";
+import { API_URL } from "../config";
 import "./AdminVerification.css";
 
 function AdminVerification() {
@@ -35,7 +35,7 @@ function AdminVerification() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const fetchVerification = async () => {
+  const fetchVerification = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
 
@@ -44,7 +44,7 @@ function AdminVerification() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/admin/verification", {
+      const res = await fetch(`${API_URL}/api/admin/verification`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -65,18 +65,18 @@ function AdminVerification() {
       setMessage("Cannot connect to backend server");
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchVerification();
-  }, []);
+  }, [fetchVerification]);
 
   const updateStatus = async (id, status) => {
     try {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5000/api/admin/verification/${id}/status`,
+        `${API_URL}/api/admin/verification/${id}/status`,
         {
           method: "PUT",
           headers: {
@@ -98,6 +98,31 @@ function AdminVerification() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const getDocumentUrls = (doc) => {
+    if (!doc.documents) return [];
+    try {
+      const parsed = JSON.parse(doc.documents);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const handleExport = () => {
+    exportToCsv("verification-records.csv", [
+      { label: "Document ID", value: (d) => `DOC-${d.id}` },
+      { label: "Farmer", value: (d) => d.farmer_name },
+      { label: "Livestock", value: (d) => d.livestock_type },
+      { label: "Document Type", value: (d) => getDocumentType(d.livestock_type) },
+      { label: "Files", value: (d) => getDocumentUrls(d).length },
+      { label: "Date Submitted", value: (d) => new Date(d.created_at).toLocaleDateString() },
+      {
+        label: "Status",
+        value: (d) => (d.status === "Available" ? "Approved" : d.status === "Flagged" ? "Rejected" : d.status),
+      },
+    ], filteredDocuments);
   };
 
   const filteredDocuments = documents.filter((doc) => {
@@ -152,7 +177,7 @@ function AdminVerification() {
           </div>
         </div>
 
-        <button className="export-btn" type="button">
+        <button className="export-btn" type="button" onClick={handleExport}>
           <Download size={18} />
           Export Records
         </button>
@@ -194,10 +219,6 @@ function AdminVerification() {
             <h3>Verification Queue</h3>
             <p>Process submitted livestock documents before transaction confirmation.</p>
           </div>
-
-          <button className="more-btn" type="button">
-            <MoreHorizontal size={22} />
-          </button>
         </div>
 
         <div className="verification-toolbar">
@@ -231,11 +252,6 @@ function AdminVerification() {
             <option>Approved</option>
             <option>Rejected</option>
           </select>
-
-          <button className="filter-btn" type="button">
-            <Filter size={17} />
-            Filter
-          </button>
         </div>
 
         <div className="table-responsive">
@@ -261,6 +277,7 @@ function AdminVerification() {
               ) : (
                 filteredDocuments.map((doc) => {
                   const documentType = getDocumentType(doc.livestock_type);
+                  const docUrls = getDocumentUrls(doc);
                   const displayStatus =
                     doc.status === "Available"
                       ? "Approved"
@@ -295,7 +312,10 @@ function AdminVerification() {
                         <div className="file-cell">
                           <FileText size={18} />
                           <span>
-                            {doc.livestock_type.toLowerCase()}-document.pdf
+                            {docUrls.length > 0
+                              ? docUrls[0].split("/").pop()
+                              : "No file uploaded"}
+                            {docUrls.length > 1 ? ` (+${docUrls.length - 1} more)` : ""}
                           </span>
                         </div>
                       </td>
@@ -310,13 +330,25 @@ function AdminVerification() {
 
                       <td>
                         <div className="verification-actions">
-                          <button title="View Document" type="button">
-                            <Eye size={17} />
-                          </button>
+                          {docUrls.length > 0 && (
+                            <>
+                              <button
+                                title="View Document"
+                                type="button"
+                                onClick={() => window.open(docUrls[0], "_blank")}
+                              >
+                                <Eye size={17} />
+                              </button>
 
-                          <button title="Download File" type="button">
-                            <Download size={17} />
-                          </button>
+                              <button
+                                title="Download File"
+                                type="button"
+                                onClick={() => window.open(docUrls[0], "_blank")}
+                              >
+                                <Download size={17} />
+                              </button>
+                            </>
+                          )}
 
                           <button
                             title="Approve Document"

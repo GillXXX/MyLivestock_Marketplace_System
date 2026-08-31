@@ -1,13 +1,13 @@
 :root {
-  --dark: #0f3d2e;
-  --dark-2: #09291f;
-  --accent: #d4a437;
-  --bg: #f7f8fa;
-  --card: #ffffff;
-  --border: #e8ecf2;
-  --text: #1a1f36;
-  --muted: #6b7280;
-  --green-soft: #eaf5ef;
+  --primary: #0f3d2e;
+  --primary-dark: #071f16;
+  --accent: #d7a24d;
+  --background: #f4f1e8;
+  --card: #fbfaf5;
+  --border: #e8e2d4;
+  --text: #111827;
+  --muted: #667085;
+  --green-soft: #eef6f1;
   --blue-soft: #e8f1ff;
   --warning-soft: #fff7d6;
   --danger-soft: #ffe5e5;
@@ -16,7 +16,9 @@
 
 .enterprise-users-page {
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top right, rgba(215, 162, 77, 0.08), transparent 30%),
+    var(--background);
   padding: 34px;
   color: var(--text);
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
@@ -40,7 +42,7 @@
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   display: flex;
   align-items: center;
@@ -61,7 +63,7 @@
   font-weight: 950;
   letter-spacing: -1.2px;
   margin: 5px 0;
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .users-page-header p {
@@ -76,7 +78,7 @@
   border: none;
   border-radius: 16px;
   padding: 0 20px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   font-weight: 850;
   display: flex;
@@ -104,7 +106,7 @@
   height: 46px;
   border-radius: 14px;
   background: var(--green-soft);
-  color: var(--dark);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -113,7 +115,7 @@
 .user-kpi-card h2 {
   font-size: 40px;
   font-weight: 950;
-  color: var(--dark-2);
+  color: var(--primary-dark);
   margin: 14px 0 0;
 }
 
@@ -149,7 +151,7 @@
 
 .toolbar-title h3 {
   margin: 0;
-  color: var(--dark-2);
+  color: var(--primary-dark);
   font-weight: 950;
 }
 
@@ -167,7 +169,7 @@
 .search-control {
   height: 52px;
   width: 360px;
-  background: #f8fafc;
+  background: #f8f5ec;
   border: 1px solid var(--border);
   border-radius: 16px;
   display: flex;
@@ -187,7 +189,7 @@
   height: 52px;
   border: 1px solid var(--border);
   background: white;
-  color: var(--dark);
+  color: var(--primary);
   border-radius: 16px;
   padding: 0 18px;
   font-weight: 850;
@@ -207,7 +209,7 @@
   height: 48px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #f8fafc;
+  background: #f8f5ec;
   padding: 0 14px;
   outline: none;
 }
@@ -239,7 +241,7 @@
 }
 
 .enterprise-users-table tbody tr:hover {
-  background: #f8fafc;
+  background: #f8f5ec;
 }
 
 .user-cell {
@@ -252,7 +254,7 @@
   width: 46px;
   height: 46px;
   border-radius: 15px;
-  background: var(--dark);
+  background: var(--primary);
   color: white;
   display: flex;
   align-items: center;
@@ -262,7 +264,7 @@
 
 .user-cell strong,
 .contact-cell strong {
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .user-cell p,
@@ -286,7 +288,7 @@
 
 .role-pill.farmer {
   background: var(--green-soft);
-  color: var(--dark);
+  color: var(--primary);
 }
 
 .role-pill.buyer {
@@ -296,7 +298,7 @@
 
 .status-pill.active {
   background: var(--green-soft);
-  color: var(--dark);
+  color: var(--primary);
 }
 
 .status-pill.inactive {
@@ -311,7 +313,7 @@
 
 .verification-pill.verified {
   background: var(--green-soft);
-  color: var(--dark);
+  color: var(--primary);
 }
 
 .verification-pill.pending {
@@ -325,7 +327,7 @@
 }
 
 .listing-count {
-  color: var(--dark-2);
+  color: var(--primary-dark);
   font-weight: 950;
 }
 
@@ -340,7 +342,7 @@
   border: none;
   border-radius: 12px;
   background: var(--green-soft);
-  color: var(--dark);
+  color: var(--primary);
 }
 
 .table-actions .danger {
@@ -358,7 +360,7 @@
 .verification-summary h3 {
   margin: 0;
   font-weight: 950;
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .verification-summary p {
@@ -372,7 +374,7 @@
 }
 
 .queue-list div {
-  background: #f8fafc;
+  background: #f8f5ec;
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 16px;
@@ -382,12 +384,46 @@
 }
 
 .queue-list strong {
-  color: var(--dark-2);
+  color: var(--primary-dark);
 }
 
 .queue-list span {
   color: var(--accent);
   font-weight: 850;
+}
+
+.queue-item {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.queue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.queue-actions button {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.queue-actions button.danger {
+  border-color: #ffd1d1;
+  background: #fff5f5;
+  color: #b42318;
 }
 
 @media (max-width: 1100px) {

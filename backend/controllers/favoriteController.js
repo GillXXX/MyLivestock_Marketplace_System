@@ -11,11 +11,17 @@ const getFavorites = async (req, res) => {
         l.id,
         l.livestock_type,
         l.breed,
+        l.age,
+        l.weight,
         l.price,
+        l.health_status,
         l.location,
+        l.description,
         l.image_url,
+        l.documents,
         l.status,
-        u.full_name AS seller_name
+        u.full_name AS seller_name,
+        u.is_verified AS seller_verified
       FROM favorites f
       JOIN livestock_listings l ON f.listing_id = l.id
       JOIN users u ON l.farmer_id = u.id
@@ -33,7 +39,7 @@ const getFavorites = async (req, res) => {
       favorites,
       stats: {
         savedListings: favorites.length,
-        verifiedSellers: favorites.length,
+        verifiedSellers: favorites.filter((item) => item.seller_verified).length,
         savedValue: totalValue,
         activeInquiries: 0,
       },

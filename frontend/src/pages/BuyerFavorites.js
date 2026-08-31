@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   ArrowLeft,
@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import ListingDetailsModal from "../components/ListingDetailsModal";
+import InquiryModal from "../components/InquiryModal";
+import { API_URL } from "../config";
 import "./BuyerFavorites.css";
 
 function BuyerFavorites() {
@@ -33,15 +36,50 @@ function BuyerFavorites() {
   const [searchText, setSearchText] = useState("");
   const [livestockType, setLivestockType] = useState("All Livestock");
   const [status, setStatus] = useState("All Status");
+  const [detailsListing, setDetailsListing] = useState(null);
+  const [inquiryListing, setInquiryListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   const defaultImage =
     "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
 
+  const fetchFavorites = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/favorites`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || "Failed to load saved listings");
+        setLoading(false);
+        return;
+      }
+
+      setSavedListings(data.favorites);
+      setFilteredListings(data.favorites);
+      setStats(data.stats);
+      setLoading(false);
+    } catch (error) {
+      setMessage("Cannot connect to backend server");
+      setLoading(false);
+    }
+  }, [navigate]);
+
   useEffect(() => {
     fetchFavorites();
-  }, []);
+  }, [fetchFavorites]);
 
   useEffect(() => {
     let results = [...savedListings];
@@ -69,44 +107,11 @@ function BuyerFavorites() {
     setFilteredListings(results);
   }, [searchText, livestockType, status, savedListings]);
 
-  const fetchFavorites = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      const res = await fetch("http://localhost:5000/api/favorites", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.message || "Failed to load saved listings");
-        setLoading(false);
-        return;
-      }
-
-      setSavedListings(data.favorites);
-      setFilteredListings(data.favorites);
-      setStats(data.stats);
-      setLoading(false);
-    } catch (error) {
-      setMessage("Cannot connect to backend server");
-      setLoading(false);
-    }
-  };
-
   const removeFavorite = async (listingId) => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5000/api/favorites/${listingId}`, {
+      const res = await fetch(`${API_URL}/api/favorites/${listingId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -124,6 +129,18 @@ function BuyerFavorites() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const handleViewDetails = (item) => {
+    setDetailsListing(item);
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    fetch(`${API_URL}/api/marketplace/${item.id}/view`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
   };
 
   if (loading) {
@@ -271,19 +288,34 @@ function BuyerFavorites() {
                     {item.status}
                   </span>
 
-                  <span className="verified-seller">
-                    <ShieldCheck size={14} />
-                    Verified seller
-                  </span>
+                  {item.seller_verified ? (
+                    <span className="verified-seller">
+                      <ShieldCheck size={14} />
+                      Verified seller
+                    </span>
+                  ) : (
+                    <span className="verified-seller pending">
+                      <ShieldCheck size={14} />
+                      Verification pending
+                    </span>
+                  )}
                 </div>
 
                 <div className="saved-actions">
-                  <button className="view-btn" type="button">
+                  <button
+                    className="view-btn"
+                    type="button"
+                    onClick={() => handleViewDetails(item)}
+                  >
                     <Eye size={17} />
                     View Details
                   </button>
 
-                  <button className="message-btn" type="button">
+                  <button
+                    className="message-btn"
+                    type="button"
+                    onClick={() => setInquiryListing(item)}
+                  >
                     <MessageCircle size={17} />
                     Inquire
                   </button>
@@ -301,6 +333,21 @@ function BuyerFavorites() {
           ))
         )}
       </section>
+
+      {detailsListing && (
+        <ListingDetailsModal
+          listing={detailsListing}
+          onClose={() => setDetailsListing(null)}
+          onInquire={(item) => setInquiryListing(item)}
+        />
+      )}
+
+      {inquiryListing && (
+        <InquiryModal
+          listing={inquiryListing}
+          onClose={() => setInquiryListing(null)}
+        />
+      )}
     </div>
   );
 }

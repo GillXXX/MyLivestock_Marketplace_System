@@ -12,6 +12,7 @@ import {
 
 import { useNavigate, Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { API_URL } from "../config";
 import "./Login.css";
 
 function Login() {
@@ -54,7 +55,7 @@ function Login() {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +84,7 @@ function Login() {
       setMessage("");
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/google", {
+        const res = await fetch(`${API_URL}/api/auth/google`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

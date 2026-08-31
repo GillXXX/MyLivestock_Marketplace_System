@@ -1,0 +1,22 @@
+[
+  { "name": "Anitap", "lat": 7.9596, "lng": 125.7892 },
+  { "name": "Bacay II", "lat": 8.0860, "lng": 125.8808 },
+  { "name": "Binongan", "lat": 8.0232, "lng": 125.9783 },
+  { "name": "Caigangan", "lat": 8.0583, "lng": 125.8619 },
+  { "name": "Candiis", "lat": 7.9376, "lng": 125.8796 },
+  { "name": "Del Monte", "lat": 7.9876, "lng": 125.8821 },
+  { "name": "Don Mateo", "lat": 8.0888, "lng": 125.8895 },
+  { "name": "Katipunan", "lat": 7.9756, "lng": 125.8548 },
+  { "name": "La Fortuna", "lat": 8.0257, "lng": 125.9137 },
+  { "name": "Limot", "lat": 7.9530, "lng": 125.8752 },
+  { "name": "Magsaysay", "lat": 8.0542, "lng": 125.9312 },
+  { "name": "Masayan", "lat": 8.0641, "lng": 125.9032 },
+  { "name": "Poblacion", "lat": 8.0721, "lng": 125.9549 },
+  { "name": "Sampaguita", "lat": 8.0209, "lng": 125.9508 },
+  { "name": "San Gabriel", "lat": 8.0927, "lng": 125.9202 },
+  { "name": "Santa Cruz", "lat": 7.9840, "lng": 125.8385 },
+  { "name": "Santa Emelia", "lat": 7.9436, "lng": 125.9030 },
+  { "name": "Sawagan", "lat": 8.0155, "lng": 125.8708 },
+  { "name": "Sinobong", "lat": 7.9631, "lng": 125.9214 },
+  { "name": "Sisimon", "lat": 7.9655, "lng": 125.8632 }
+]

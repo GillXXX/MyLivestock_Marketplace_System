@@ -4,6 +4,7 @@ import {
   Tractor, ShoppingBag, ShieldCheck, ArrowRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 import "./Register.css";
 
 function Register() {
@@ -34,7 +35,7 @@ function Register() {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +90,9 @@ function Register() {
           </div>
 
           <div className="register-feature">
-            <ShieldCheck size={24} />
+            <div className="feature-icon-badge">
+              <ShieldCheck size={20} />
+            </div>
             <div>
               <strong>Role-Based Access</strong>
               <p>
@@ -109,7 +112,7 @@ function Register() {
             <p>Select your account role and complete your registration details.</p>
           </div>
 
-          {message && <p style={{ color: "red", marginBottom: "15px" }}>{message}</p>}
+          {message && <p className="form-error">{message}</p>}
 
           <form onSubmit={handleRegister}>
             <label className="field-label">Select Account Role</label>

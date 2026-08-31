@@ -7,13 +7,14 @@ const getAdminListings = async (req, res) => {
     }
 
     const [listings] = await db.query(`
-      SELECT 
+      SELECT
         l.id,
         l.livestock_type,
         l.breed,
         l.price,
         l.location,
         l.status,
+        l.image_url,
         l.created_at,
         u.full_name AS farmer_name
       FROM livestock_listings l
