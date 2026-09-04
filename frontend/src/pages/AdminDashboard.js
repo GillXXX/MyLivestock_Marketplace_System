@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 
 import {
-  LayoutDashboard,
   Users,
   ClipboardCheck,
-  ShieldCheck,
-  FileCheck2,
   BarChart3,
-  Bell,
   BellRing,
   Search,
-  Settings,
-  LogOut,
   MapPin,
   CheckCircle,
   AlertTriangle,
@@ -31,9 +25,10 @@ import {
   Phone,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
+import NotificationBell from "../components/NotificationBell";
 import { VERUELA_CENTER, VERUELA_BOUNDARY_GEOJSON } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
 import "./AdminDashboard.css";
@@ -50,7 +45,6 @@ const STATUS_COLORS = {
 function AdminDashboard() {
   const navigate = useNavigate();
 
-  const [showNotif, setShowNotif] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -127,12 +121,6 @@ function AdminDashboard() {
     const interval = setInterval(fetchMapPreview, MAP_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
 
   const categoryBreakdown = useMemo(() => {
     if (!dashboardData) return [];
@@ -252,68 +240,7 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="pro-admin">
-      <aside className="pro-sidebar">
-        <div className="pro-brand">
-          <div className="pro-logo">MAO</div>
-
-          <div>
-            <h3>Livestock Admin</h3>
-            <p>Veruela MAO</p>
-          </div>
-        </div>
-
-        <nav>
-          <p className="nav-group-label">Overview</p>
-          <Link className="active" to="/admin-dashboard">
-            <LayoutDashboard size={20} /> Dashboard
-          </Link>
-
-          <p className="nav-group-label">Management</p>
-          <Link to="/admin-users">
-            <Users size={20} /> Users
-          </Link>
-
-          <Link to="/admin-listings">
-            <ClipboardCheck size={20} /> Listings
-          </Link>
-
-          <Link to="/admin-verification">
-            <ShieldCheck size={20} /> Verification
-          </Link>
-
-          <Link to="/admin-transactions">
-            <FileCheck2 size={20} /> Transactions
-          </Link>
-
-          <p className="nav-group-label">Insights</p>
-          <Link to="/admin-map">
-            <MapPin size={20} /> Map Monitoring
-          </Link>
-
-          <Link to="/admin-reports">
-            <BarChart3 size={20} /> Reports
-          </Link>
-
-          <p className="nav-group-label">System</p>
-          <Link to="/admin-notifications">
-            <BellRing size={20} /> Notifications
-          </Link>
-
-          <Link to="/admin-settings">
-            <Settings size={20} /> Settings
-          </Link>
-        </nav>
-
-        <button className="pro-logout" onClick={handleLogout}>
-          <LogOut size={20} /> Logout
-        </button>
-
-        <div className="sidebar-status">
-          <span className="pulse-dot-sm"></span> System Online
-        </div>
-      </aside>
-
+    <>
       <main className="pro-main">
         <header className="pro-topbar">
           <div>
@@ -341,41 +268,7 @@ function AdminDashboard() {
               <RefreshCw size={19} />
             </button>
 
-            <div className="notif-wrap">
-              <button
-                onClick={() => setShowNotif(!showNotif)}
-                className="pro-icon-btn"
-              >
-                <Bell size={21} />
-                <i></i>
-              </button>
-
-              {showNotif && (
-                <div className="notif-panel">
-                  <h4>Notifications</h4>
-
-                  {dashboardData.activity.length === 0 ? (
-                    <div className="notif-item">
-                      <strong>No notifications</strong>
-                      <p>No recent system activity.</p>
-                    </div>
-                  ) : (
-                    dashboardData.activity.slice(0, 3).map((item, index) => (
-                      <div
-                        className={index === 0 ? "notif-item unread" : "notif-item"}
-                        key={index}
-                      >
-                        <strong>Listing update</strong>
-                        <p>
-                          {item.farmer_name} submitted {item.livestock_type}.
-                        </p>
-                        <small>Recently</small>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+            <NotificationBell role="admin" />
 
             <div className="admin-profile">
               <UserCircle size={34} />
@@ -771,7 +664,7 @@ function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 

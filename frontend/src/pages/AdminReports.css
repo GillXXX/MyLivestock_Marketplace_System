@@ -10,6 +10,16 @@
   --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
 }
 
+/* Every rule below is scoped under .reports-page — this page's CSS is
+   bundled globally alongside every other page's CSS (no CSS Modules /
+   scoping), so generic class names like .report-card, .card-title, or
+   .eyebrow would otherwise collide with same-named classes in other admin
+   pages and silently pick up whichever file's rule wins the cascade
+   (source order in the bundle). .report-card colliding with
+   AdminDashboard.css's own flex-row .report-card was a confirmed, visible
+   bug — this page's "Report Status" cards were rendering as an overflowing
+   horizontal row instead of stacked cards. */
+
 .reports-page {
   min-height: 100vh;
   background:
@@ -20,14 +30,14 @@
   color: #111827;
 }
 
-.reports-hero {
+.reports-page .reports-hero {
   display: flex;
   gap: 18px;
   align-items: flex-start;
   margin-bottom: 28px;
 }
 
-.back-btn {
+.reports-page .back-btn {
   width: 52px;
   height: 52px;
   background: #0f3d2e;
@@ -39,7 +49,7 @@
   flex-shrink: 0;
 }
 
-.eyebrow {
+.reports-page .eyebrow {
   display: inline-block;
   color: #d7a24d;
   font-size: 12px;
@@ -49,7 +59,7 @@
   margin-bottom: 8px;
 }
 
-.reports-hero h1 {
+.reports-page .reports-hero h1 {
   margin: 0;
   font-size: 44px;
   font-weight: 950;
@@ -57,14 +67,14 @@
   color: #071f16;
 }
 
-.reports-hero p {
+.reports-page .reports-hero p {
   max-width: 820px;
   margin: 8px 0 0;
   color: #667085;
   font-size: 16px;
 }
 
-.report-actions {
+.reports-page .report-actions {
   background: white;
   border: 1px solid #e8e2d4;
   border-radius: 22px;
@@ -76,7 +86,7 @@
   margin-bottom: 24px;
 }
 
-.filter-box {
+.reports-page .filter-box {
   height: 52px;
   min-width: 210px;
   border: 1px solid #e8e2d4;
@@ -88,16 +98,16 @@
   padding: 0 15px;
 }
 
-.filter-box select {
+.reports-page .filter-box select {
   border: none;
   outline: none;
   background: transparent;
   width: 100%;
 }
 
-.primary-action,
-.secondary-action,
-.print-action {
+.reports-page .primary-action,
+.reports-page .secondary-action,
+.reports-page .print-action {
   height: 52px;
   border: none;
   border-radius: 16px;
@@ -108,41 +118,42 @@
   gap: 8px;
 }
 
-.primary-action {
+.reports-page .primary-action {
   background: #0f3d2e;
   color: white;
 }
 
-.secondary-action {
+.reports-page .secondary-action {
   background: #eaf5ef;
   color: #0f3d2e;
 }
 
-.print-action {
+.reports-page .print-action {
   background: #fff7d6;
   color: #8a6500;
 }
 
-.analytics-grid {
+.reports-page .analytics-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 18px;
   margin-bottom: 24px;
 }
 
-.metric-card,
-.report-card {
+.reports-page .metric-card,
+.reports-page .report-card {
+  display: block;
   background: white;
   border: 1px solid #e8e2d4;
   border-radius: 22px;
   box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
 }
 
-.metric-card {
+.reports-page .metric-card {
   padding: 24px;
 }
 
-.metric-icon {
+.reports-page .metric-icon {
   width: 48px;
   height: 48px;
   background: #eaf5ef;
@@ -153,82 +164,82 @@
   justify-content: center;
 }
 
-.metric-card h2 {
+.reports-page .metric-card h2 {
   margin: 14px 0 0;
   font-size: 38px;
   font-weight: 950;
   color: #071f16;
 }
 
-.metric-card p {
+.reports-page .metric-card p {
   margin: 0;
   color: #667085;
   font-weight: 700;
 }
 
-.metric-card small {
+.reports-page .metric-card small {
   display: block;
   margin-top: 8px;
   color: #d7a24d;
   font-weight: 900;
 }
 
-.reports-layout {
+.reports-page .reports-layout {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 24px;
   margin-bottom: 24px;
 }
 
-.reports-layout.bottom {
+.reports-page .reports-layout.bottom {
   grid-template-columns: 0.9fr 1.5fr;
 }
 
-.report-card {
+.reports-page .report-card {
   padding: 24px;
 }
 
-.card-title {
+.reports-page .card-title {
   display: flex;
   justify-content: space-between;
   gap: 14px;
   margin-bottom: 22px;
 }
 
-.card-title h3 {
+.reports-page .card-title h3 {
   margin: 0;
   color: #071f16;
   font-weight: 950;
 }
 
-.card-title p {
+.reports-page .card-title p {
   margin: 5px 0 0;
   color: #667085;
 }
 
-.livestock-performance {
+.reports-page .livestock-performance {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.performance-row {
+.reports-page .performance-row {
   display: grid;
   grid-template-columns: 1fr 240px;
   gap: 20px;
   align-items: center;
 }
 
-.performance-row strong {
+.reports-page .performance-row strong {
   color: #071f16;
 }
 
-.performance-row p {
+.reports-page .performance-row p {
   margin: 5px 0 0;
   color: #667085;
 }
 
-.progress-area span {
+.reports-page .progress-area span {
   display: block;
   text-align: right;
   color: #d7a24d;
@@ -236,20 +247,20 @@
   margin-bottom: 6px;
 }
 
-.progress-bar {
+.reports-page .progress-bar {
   height: 10px;
   background: #e8e2d4;
   border-radius: 999px;
   overflow: hidden;
 }
 
-.progress-bar div {
+.reports-page .progress-bar div {
   height: 100%;
   background: #0f3d2e;
   border-radius: 999px;
 }
 
-.report-item {
+.reports-page .report-item {
   background: #f8f5ec;
   border: 1px solid #e8e2d4;
   padding: 16px;
@@ -260,28 +271,28 @@
   margin-bottom: 12px;
 }
 
-.report-item strong {
+.reports-page .report-item strong {
   color: #071f16;
 }
 
-.report-item p {
+.reports-page .report-item p {
   margin: 4px 0 0;
   color: #667085;
 }
 
-.report-item span {
+.reports-page .report-item span {
   font-weight: 900;
 }
 
-.report-item .ready {
+.reports-page .report-item .ready {
   color: #0f3d2e;
 }
 
-.report-item .draft {
+.reports-page .report-item .draft {
   color: #8a6500;
 }
 
-.status-summary {
+.reports-page .status-summary {
   display: flex;
   gap: 14px;
   align-items: center;
@@ -292,7 +303,7 @@
   margin-bottom: 14px;
 }
 
-.status-summary div {
+.reports-page .status-summary div {
   width: 46px;
   height: 46px;
   border-radius: 15px;
@@ -301,40 +312,40 @@
   justify-content: center;
 }
 
-.status-summary.success div {
+.reports-page .status-summary.success div {
   background: #eaf5ef;
   color: #0f3d2e;
 }
 
-.status-summary.warning div {
+.reports-page .status-summary.warning div {
   background: #fff7d6;
   color: #8a6500;
 }
 
-.status-summary.danger div {
+.reports-page .status-summary.danger div {
   background: #ffe5e5;
   color: #b42318;
 }
 
-.status-summary strong {
+.reports-page .status-summary strong {
   color: #071f16;
 }
 
-.status-summary p {
+.reports-page .status-summary p {
   margin: 4px 0 0;
   color: #667085;
 }
 
-.table-responsive {
+.reports-page .table-responsive {
   overflow-x: auto;
 }
 
-.professional-table {
+.reports-page .professional-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.professional-table th {
+.reports-page .professional-table th {
   text-align: left;
   color: #667085;
   font-size: 12px;
@@ -343,22 +354,22 @@
   border-bottom: 1px solid #e8e2d4;
 }
 
-.professional-table td {
+.reports-page .professional-table td {
   padding: 18px 10px;
   border-bottom: 1px solid #e8e2d4;
   font-weight: 700;
 }
 
-.professional-table td:last-child {
+.reports-page .professional-table td:last-child {
   color: #0f3d2e;
   font-weight: 900;
 }
 
 @media (max-width: 1100px) {
-  .analytics-grid,
-  .reports-layout,
-  .reports-layout.bottom,
-  .performance-row {
+  .reports-page .analytics-grid,
+  .reports-page .reports-layout,
+  .reports-page .reports-layout.bottom,
+  .reports-page .performance-row {
     grid-template-columns: 1fr;
   }
 

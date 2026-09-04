@@ -1,0 +1,225 @@
+.notification-bell {
+  position: relative;
+
+  --bell-primary: #0f3d2e;
+  --bell-primary-dark: #071f16;
+  --bell-accent: #d7a24d;
+  --bell-border: #e8e2d4;
+  --bell-muted: #667085;
+  --bell-soft: #eaf5ef;
+}
+
+.notification-bell .bell-trigger {
+  position: relative;
+
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  background: var(--bell-soft);
+  color: var(--bell-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.notification-bell .bell-trigger:hover {
+  background: #dcefe4;
+  transform: translateY(-1px);
+}
+
+.notification-bell .bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+
+  min-width: 19px;
+  height: 19px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 2px solid white;
+
+  background: #d92d20;
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-bell .bell-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+
+  width: 360px;
+  max-width: calc(100vw - 32px);
+
+  background: white;
+  border: 1px solid var(--bell-border);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(15, 61, 46, 0.18);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  animation: bell-panel-in 0.15s ease;
+}
+
+@keyframes bell-panel-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notification-bell .bell-panel-header {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--bell-border);
+}
+
+.notification-bell .bell-panel-header h4 {
+  margin: 0 0 10px;
+  color: var(--bell-primary-dark);
+  font-weight: 950;
+  font-size: 16px;
+}
+
+.notification-bell .bell-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.notification-bell .bell-tabs button {
+  border: none;
+  background: var(--bell-soft);
+  color: var(--bell-primary);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.notification-bell .bell-tabs button.active {
+  background: var(--bell-primary);
+  color: white;
+}
+
+.notification-bell .bell-list {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.notification-bell .bell-empty {
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--bell-muted);
+  font-size: 13px;
+}
+
+.notification-bell .bell-group-label {
+  display: block;
+  padding: 10px 18px 4px;
+  color: var(--bell-accent);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.notification-bell .bell-row {
+  position: relative;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: flex-start;
+
+  padding: 10px 18px;
+  cursor: default;
+  transition: background 0.15s ease;
+}
+
+.notification-bell .bell-row:hover {
+  background: #f8f5ec;
+}
+
+.notification-bell .bell-row.unread {
+  background: #fffdf7;
+}
+
+.notification-bell .bell-row-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--bell-soft);
+  color: var(--bell-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-bell .bell-row-content strong {
+  display: block;
+  color: var(--bell-primary-dark);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.notification-bell .bell-row-content p {
+  margin: 0 0 4px;
+  color: var(--bell-muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.notification-bell .bell-row-content small {
+  color: var(--bell-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.notification-bell .bell-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bell-accent);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.notification-bell .bell-see-all {
+  border: none;
+  border-top: 1px solid var(--bell-border);
+  background: white;
+  color: var(--bell-primary);
+  padding: 13px;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.notification-bell .bell-see-all:hover {
+  background: var(--bell-soft);
+}
+
+@media (max-width: 520px) {
+  .notification-bell .bell-panel {
+    position: fixed;
+    top: 70px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+}

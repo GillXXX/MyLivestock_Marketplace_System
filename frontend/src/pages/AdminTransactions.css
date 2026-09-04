@@ -10,6 +10,13 @@
   --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
 }
 
+/* Every rule below is scoped under .admin-transactions-page — this page's
+   CSS is bundled globally alongside every other page's CSS (no CSS Modules
+   / scoping), so generic class names like .transaction-stats or .card-header
+   would otherwise collide with the near-identical Buyer/Farmer Transactions
+   pages and silently pick up whichever file's rule happens to win the
+   cascade (source order in the bundle, not visit order). */
+
 .admin-transactions-page {
   min-height: 100vh;
   background:
@@ -20,7 +27,7 @@
   color: #111827;
 }
 
-.transactions-top {
+.admin-transactions-page .transactions-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -28,13 +35,13 @@
   gap: 20px;
 }
 
-.title-area {
+.admin-transactions-page .title-area {
   display: flex;
   gap: 18px;
   align-items: flex-start;
 }
 
-.back-btn {
+.admin-transactions-page .back-btn {
   width: 52px;
   height: 52px;
   background: #0f3d2e;
@@ -46,7 +53,7 @@
   flex-shrink: 0;
 }
 
-.title-area span {
+.admin-transactions-page .title-area span {
   color: #d7a24d;
   font-size: 12px;
   font-weight: 900;
@@ -54,7 +61,7 @@
   letter-spacing: 1px;
 }
 
-.title-area h1 {
+.admin-transactions-page .title-area h1 {
   margin: 6px 0;
   font-size: 44px;
   font-weight: 950;
@@ -62,13 +69,13 @@
   color: #071f16;
 }
 
-.title-area p {
+.admin-transactions-page .title-area p {
   margin: 0;
   color: #667085;
   max-width: 760px;
 }
 
-.export-btn {
+.admin-transactions-page .export-btn {
   height: 52px;
   border: none;
   background: #0f3d2e;
@@ -81,28 +88,28 @@
   gap: 8px;
 }
 
-.transaction-stats {
+.admin-transactions-page .transaction-stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 18px;
   margin-bottom: 24px;
 }
 
-.transaction-stat-card,
-.workflow-overview,
-.transaction-toolbar,
-.transactions-card {
+.admin-transactions-page .transaction-stat-card,
+.admin-transactions-page .workflow-overview,
+.admin-transactions-page .transaction-toolbar,
+.admin-transactions-page .transactions-card {
   background: white;
   border: 1px solid #e8e2d4;
   border-radius: 22px;
   box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
 }
 
-.transaction-stat-card {
+.admin-transactions-page .transaction-stat-card {
   padding: 24px;
 }
 
-.stat-icon {
+.admin-transactions-page .stat-icon {
   width: 48px;
   height: 48px;
   background: #eaf5ef;
@@ -113,49 +120,49 @@
   justify-content: center;
 }
 
-.transaction-stat-card h2 {
+.admin-transactions-page .transaction-stat-card h2 {
   font-size: 40px;
   font-weight: 950;
   margin: 14px 0 0;
   color: #071f16;
 }
 
-.transaction-stat-card p {
+.admin-transactions-page .transaction-stat-card p {
   margin: 0;
   color: #667085;
   font-weight: 800;
 }
 
-.transaction-stat-card small {
+.admin-transactions-page .transaction-stat-card small {
   display: block;
   margin-top: 8px;
   color: #d7a24d;
   font-weight: 800;
 }
 
-.workflow-overview {
+.admin-transactions-page .workflow-overview {
   padding: 24px;
   margin-bottom: 24px;
 }
 
-.workflow-overview h3 {
+.admin-transactions-page .workflow-overview h3 {
   margin: 0;
   font-weight: 950;
   color: #071f16;
 }
 
-.workflow-overview p {
+.admin-transactions-page .workflow-overview p {
   margin: 5px 0 18px;
   color: #667085;
 }
 
-.workflow-steps {
+.admin-transactions-page .workflow-steps {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
 
-.workflow-steps div {
+.admin-transactions-page .workflow-steps div {
   background: #f8f5ec;
   border: 1px solid #e8e2d4;
   padding: 16px;
@@ -165,7 +172,7 @@
   text-align: center;
 }
 
-.transaction-toolbar {
+.admin-transactions-page .transaction-toolbar {
   padding: 18px;
   display: grid;
   grid-template-columns: 1fr 180px 180px 150px;
@@ -173,7 +180,7 @@
   margin-bottom: 24px;
 }
 
-.transaction-search {
+.admin-transactions-page .transaction-search {
   height: 52px;
   border: 1px solid #e8e2d4;
   border-radius: 16px;
@@ -184,15 +191,15 @@
   gap: 10px;
 }
 
-.transaction-search input,
-.transaction-toolbar select {
+.admin-transactions-page .transaction-search input,
+.admin-transactions-page .transaction-toolbar select {
   border: none;
   outline: none;
   background: transparent;
   width: 100%;
 }
 
-.transaction-toolbar select {
+.admin-transactions-page .transaction-toolbar select {
   height: 52px;
   border: 1px solid #e8e2d4;
   border-radius: 16px;
@@ -200,7 +207,7 @@
   background: #f8f5ec;
 }
 
-.date-btn {
+.admin-transactions-page .date-btn {
   border: none;
   background: #0f3d2e;
   color: white;
@@ -212,37 +219,37 @@
   gap: 6px;
 }
 
-.transactions-card {
+.admin-transactions-page .transactions-card {
   padding: 24px;
 }
 
-.card-header {
+.admin-transactions-page .card-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 18px;
 }
 
-.card-header h3 {
+.admin-transactions-page .card-header h3 {
   margin: 0;
   font-weight: 950;
   color: #071f16;
 }
 
-.card-header p {
+.admin-transactions-page .card-header p {
   margin: 5px 0 0;
   color: #667085;
 }
 
-.table-responsive {
+.admin-transactions-page .table-responsive {
   overflow-x: auto;
 }
 
-.transactions-table {
+.admin-transactions-page .transactions-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.transactions-table th {
+.admin-transactions-page .transactions-table th {
   text-align: left;
   color: #667085;
   font-size: 12px;
@@ -251,86 +258,86 @@
   border-bottom: 1px solid #e8e2d4;
 }
 
-.transactions-table td {
+.admin-transactions-page .transactions-table td {
   padding: 18px 10px;
   border-bottom: 1px solid #e8e2d4;
   vertical-align: middle;
 }
 
-.transactions-table td strong {
+.admin-transactions-page .transactions-table td strong {
   display: block;
   color: #071f16;
 }
 
-.transactions-table td small {
+.admin-transactions-page .transactions-table td small {
   color: #667085;
 }
 
-.amount {
+.admin-transactions-page .amount {
   color: #0f3d2e;
   font-weight: 950;
 }
 
-.trx-status {
+.admin-transactions-page .trx-status {
   padding: 8px 13px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
 }
 
-.trx-status.completed {
+.admin-transactions-page .trx-status.completed {
   background: #eaf5ef;
   color: #0f3d2e;
 }
 
-.trx-status.pending {
+.admin-transactions-page .trx-status.pending {
   background: #fff7d6;
   color: #8a6500;
 }
 
-.trx-status.flagged {
+.admin-transactions-page .trx-status.flagged {
   background: #ffe5e5;
   color: #b42318;
 }
 
-.trx-status.declined,
-.trx-status.cancelled {
+.admin-transactions-page .trx-status.declined,
+.admin-transactions-page .trx-status.cancelled {
   background: #f1f1f1;
   color: #6b6b6b;
 }
 
-.workflow-box {
+.admin-transactions-page .workflow-box {
   display: flex;
   gap: 5px;
   margin-bottom: 6px;
 }
 
-.workflow-box span {
+.admin-transactions-page .workflow-box span {
   width: 24px;
   height: 7px;
   border-radius: 20px;
   background: #dfe4ea;
 }
 
-.workflow-box .done {
+.admin-transactions-page .workflow-box .done {
   background: #0f3d2e;
 }
 
-.workflow-box .active {
+.admin-transactions-page .workflow-box .active {
   background: #d7a24d;
 }
 
-.stage-label {
+.admin-transactions-page .stage-label {
   font-size: 12px;
   font-weight: 800;
 }
 
-.transaction-actions {
+.admin-transactions-page .transaction-actions {
   display: flex;
   gap: 8px;
 }
 
-.transaction-actions button {
+.admin-transactions-page .transaction-actions button {
   width: 38px;
   height: 38px;
   border: none;
@@ -339,24 +346,24 @@
   color: #0f3d2e;
 }
 
-.transaction-actions .danger {
+.admin-transactions-page .transaction-actions .danger {
   background: #ffe5e5;
   color: #b42318;
 }
 
-.transaction-actions .neutral {
+.admin-transactions-page .transaction-actions .neutral {
   background: #f1f1f1;
   color: #6b6b6b;
 }
 
 @media (max-width: 1100px) {
-  .transaction-stats,
-  .transaction-toolbar,
-  .workflow-steps {
+  .admin-transactions-page .transaction-stats,
+  .admin-transactions-page .transaction-toolbar,
+  .admin-transactions-page .workflow-steps {
     grid-template-columns: 1fr;
   }
 
-  .transactions-top {
+  .admin-transactions-page .transactions-top {
     flex-direction: column;
   }
 

@@ -346,7 +346,7 @@ function FarmerTransactions() {
                     </div>
 
                     <div className="premium-actions">
-                      <Link className="message-btn-premium" to="/messages">
+                      <Link className="message-btn-premium" to="/farmer-messages">
                         <MessageCircle size={17} />
                         Message Buyer
                       </Link>

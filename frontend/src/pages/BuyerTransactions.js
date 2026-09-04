@@ -499,7 +499,7 @@ function BuyerTransactions() {
                         View Details
                       </button>
 
-                      <Link className="message-btn-premium" to="/messages">
+                      <Link className="message-btn-premium" to="/buyer-messages">
                         <MessageCircle size={17} />
                         Contact Seller
                       </Link>
@@ -644,7 +644,7 @@ function BuyerTransactions() {
 
             <Link
               className="message-btn-premium transaction-modal-contact"
-              to="/messages"
+              to="/buyer-messages"
             >
               <MessageCircle size={17} />
               Contact Seller

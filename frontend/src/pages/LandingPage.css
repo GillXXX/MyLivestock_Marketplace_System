@@ -37,6 +37,7 @@ html {
 
 .premium-landing {
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top right, rgba(215, 162, 77, 0.13), transparent 28%),
     radial-gradient(circle at bottom left, rgba(15, 61, 46, 0.08), transparent 26%),

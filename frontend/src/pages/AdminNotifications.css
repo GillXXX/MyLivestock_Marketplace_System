@@ -15,7 +15,13 @@
     0 30px 60px rgba(15,61,46,0.08);
 }
 
-* {
+/* Every rule below is scoped under .admin-notifications-page — this page's
+   CSS is bundled globally alongside BuyerNotifications.css and
+   FarmerNotifications.css (no CSS Modules / scoping), so generic class
+   names like .notification-row, .notif-stat-card, or .notification-toolbar
+   would otherwise collide across the three notification pages. */
+
+.admin-notifications-page * {
   box-sizing: border-box;
 }
 
@@ -39,14 +45,14 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.notifications-header {
+.admin-notifications-page .notifications-header {
   display: flex;
   align-items: center;
   gap: 18px;
   margin-bottom: 28px;
 }
 
-.back-btn {
+.admin-notifications-page .back-btn {
   width: 58px;
   height: 58px;
   background: rgba(255,255,255,0.84);
@@ -62,19 +68,19 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.back-btn:hover {
+.admin-notifications-page .back-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(15,61,46,0.1);
 }
 
-.notif-eyebrow {
+.admin-notifications-page .notif-eyebrow {
   color: var(--accent);
   font-size: 12px;
   font-weight: 950;
   letter-spacing: 1.5px;
 }
 
-.notifications-header h1 {
+.admin-notifications-page .notifications-header h1 {
   margin: 6px 0;
   font-size: 42px;
   font-weight: 950;
@@ -82,22 +88,22 @@
   color: var(--primary-dark);
 }
 
-.notifications-header p {
+.admin-notifications-page .notifications-header p {
   margin: 0;
   color: var(--muted);
 }
 
-.notification-stats {
+.admin-notifications-page .notification-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 18px;
   margin-bottom: 24px;
 }
 
-.notif-stat-card,
-.notifications-list-card,
-.notification-side-panel,
-.notification-toolbar {
+.admin-notifications-page .notif-stat-card,
+.admin-notifications-page .notifications-list-card,
+.admin-notifications-page .notification-side-panel,
+.admin-notifications-page .notification-toolbar {
   background: rgba(255,255,255,0.8);
   border: 1px solid rgba(255,255,255,0.7);
   -webkit-backdrop-filter: blur(16px);
@@ -106,19 +112,19 @@
   box-shadow: var(--shadow);
 }
 
-.notif-stat-card {
+.admin-notifications-page .notif-stat-card {
   position: relative;
   padding: 24px;
   border-top: 3px solid var(--accent);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.notif-stat-card:hover {
+.admin-notifications-page .notif-stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 22px 45px rgba(15,61,46,0.14);
 }
 
-.notif-stat-icon {
+.admin-notifications-page .notif-stat-icon {
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -130,7 +136,7 @@
   box-shadow: 0 8px 16px rgba(15,61,46,0.24);
 }
 
-.notif-stat-card h2 {
+.admin-notifications-page .notif-stat-card h2 {
   font-size: 38px;
   font-weight: 950;
   margin: 14px 0 0;
@@ -138,13 +144,13 @@
   font-family: Georgia, serif;
 }
 
-.notif-stat-card p {
+.admin-notifications-page .notif-stat-card p {
   margin: 0;
   color: var(--muted);
   font-weight: 700;
 }
 
-.notification-toolbar {
+.admin-notifications-page .notification-toolbar {
   padding: 18px;
   display: grid;
   grid-template-columns: 1fr 210px 160px 120px;
@@ -152,7 +158,7 @@
   margin-bottom: 24px;
 }
 
-.notification-search {
+.admin-notifications-page .notification-search {
   height: 52px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -164,13 +170,13 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.notification-search:focus-within {
+.admin-notifications-page .notification-search:focus-within {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(15,61,46,0.1);
 }
 
-.notification-search input,
-.notification-toolbar select {
+.admin-notifications-page .notification-search input,
+.admin-notifications-page .notification-toolbar select {
   border: none;
   outline: none;
   background: transparent;
@@ -178,7 +184,7 @@
   font-family: inherit;
 }
 
-.notification-toolbar select {
+.admin-notifications-page .notification-toolbar select {
   height: 52px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -189,12 +195,12 @@
   transition: border-color 0.15s ease;
 }
 
-.notification-toolbar select:focus {
+.admin-notifications-page .notification-toolbar select:focus {
   border-color: var(--primary);
   outline: none;
 }
 
-.notification-toolbar button {
+.admin-notifications-page .notification-toolbar button {
   border: none;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
@@ -208,25 +214,25 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.notification-toolbar button:hover {
+.admin-notifications-page .notification-toolbar button:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(15,61,46,0.2);
 }
 
 /* Layout */
 
-.notifications-layout {
+.admin-notifications-page .notifications-layout {
   display: grid;
   grid-template-columns: 1.5fr 0.8fr;
   gap: 24px;
 }
 
-.notifications-list-card,
-.notification-side-panel {
+.admin-notifications-page .notifications-list-card,
+.admin-notifications-page .notification-side-panel {
   padding: 24px;
 }
 
-.notifications-card-header {
+.admin-notifications-page .notifications-card-header {
   display: flex;
   justify-content: space-between;
   gap: 18px;
@@ -234,19 +240,19 @@
   margin-bottom: 22px;
 }
 
-.notifications-card-header h3,
-.notification-side-panel h3 {
+.admin-notifications-page .notifications-card-header h3,
+.admin-notifications-page .notification-side-panel h3 {
   margin: 0;
   color: var(--primary-dark);
   font-weight: 950;
 }
 
-.notifications-card-header p {
+.admin-notifications-page .notifications-card-header p {
   margin: 5px 0 0;
   color: var(--muted);
 }
 
-.notifications-card-header button {
+.admin-notifications-page .notifications-card-header button {
   border: none;
   background: var(--soft);
   color: var(--primary);
@@ -257,18 +263,18 @@
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.notifications-card-header button:hover {
+.admin-notifications-page .notifications-card-header button:hover {
   background: var(--primary);
   color: white;
 }
 
-.notification-list {
+.admin-notifications-page .notification-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.notification-row {
+.admin-notifications-page .notification-row {
   background: var(--soft);
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -280,16 +286,16 @@
   transition: border-color 0.2s ease;
 }
 
-.notification-row:hover {
+.admin-notifications-page .notification-row:hover {
   border-color: var(--accent);
 }
 
-.notification-row.unread {
+.admin-notifications-page .notification-row.unread {
   border-left: 5px solid var(--accent);
   background: #fffdf7;
 }
 
-.notification-icon {
+.admin-notifications-page .notification-icon {
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, var(--accent), #b8842c);
@@ -301,63 +307,63 @@
   box-shadow: 0 8px 16px rgba(184,132,44,0.28);
 }
 
-.notification-meta {
+.admin-notifications-page .notification-meta {
   display: flex;
   justify-content: space-between;
   gap: 12px;
 }
 
-.notification-meta span {
+.admin-notifications-page .notification-meta span {
   color: var(--primary);
   font-size: 12px;
   font-weight: 950;
   text-transform: uppercase;
 }
 
-.notification-meta small {
+.admin-notifications-page .notification-meta small {
   color: var(--accent);
   font-weight: 800;
 }
 
-.notification-content h4 {
+.admin-notifications-page .notification-content h4 {
   margin: 8px 0 4px;
   color: var(--primary-dark);
   font-weight: 950;
 }
 
-.notification-content p {
+.admin-notifications-page .notification-content p {
   margin: 0;
   color: var(--muted);
 }
 
-.notification-tags {
+.admin-notifications-page .notification-tags {
   margin-top: 12px;
 }
 
-.tag-unread,
-.tag-read {
+.admin-notifications-page .tag-unread,
+.admin-notifications-page .tag-read {
   padding: 7px 11px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
 }
 
-.tag-unread {
+.admin-notifications-page .tag-unread {
   background: #fff7d6;
   color: #8a6500;
 }
 
-.tag-read {
+.admin-notifications-page .tag-read {
   background: var(--soft);
   color: var(--primary);
 }
 
-.notification-actions {
+.admin-notifications-page .notification-actions {
   display: flex;
   gap: 8px;
 }
 
-.notification-actions button {
+.admin-notifications-page .notification-actions button {
   width: 38px;
   height: 38px;
   border: none;
@@ -368,22 +374,22 @@
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.notification-actions button:hover {
+.admin-notifications-page .notification-actions button:hover {
   transform: translateY(-2px);
 }
 
-.notification-actions .danger {
+.admin-notifications-page .notification-actions .danger {
   background: #ffe5e5;
   color: #b42318;
 }
 
 /* Side panel */
 
-.notification-side-panel h3 {
+.admin-notifications-page .notification-side-panel h3 {
   margin-bottom: 18px;
 }
 
-.notif-category {
+.admin-notifications-page .notif-category {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 14px;
@@ -394,15 +400,15 @@
   transition: background 0.2s ease;
 }
 
-.notif-category:hover {
+.admin-notifications-page .notif-category:hover {
   background: var(--soft);
 }
 
-.notif-category:last-child {
+.admin-notifications-page .notif-category:last-child {
   border-bottom: none;
 }
 
-.notif-category-icon {
+.admin-notifications-page .notif-category-icon {
   width: 44px;
   height: 44px;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -414,16 +420,16 @@
   box-shadow: 0 8px 16px rgba(15,61,46,0.2);
 }
 
-.notif-category strong {
+.admin-notifications-page .notif-category strong {
   color: var(--primary-dark);
 }
 
-.notif-category p {
+.admin-notifications-page .notif-category p {
   margin: 4px 0 0;
   color: var(--muted);
 }
 
-.notif-category span {
+.admin-notifications-page .notif-category span {
   background: #fff7d6;
   color: #8a6500;
   padding: 7px 11px;
@@ -432,9 +438,9 @@
 }
 
 @media (max-width: 1000px) {
-  .notification-stats,
-  .notification-toolbar,
-  .notifications-layout {
+  .admin-notifications-page .notification-stats,
+  .admin-notifications-page .notification-toolbar,
+  .admin-notifications-page .notifications-layout {
     grid-template-columns: 1fr;
   }
 
@@ -442,7 +448,7 @@
     padding: 22px;
   }
 
-  .notification-row {
+  .admin-notifications-page .notification-row {
     grid-template-columns: 1fr;
   }
 }

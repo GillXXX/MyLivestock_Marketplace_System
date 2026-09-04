@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
 
 import {
-  Bell,
-  Menu,
-  X,
-  Home,
-  List,
-  PlusCircle,
   MessageCircle,
-  User,
-  LogOut,
   TrendingUp,
   CheckCircle,
   ClipboardList,
@@ -17,21 +9,16 @@ import {
   Clock,
   BadgeCheck,
   Wallet,
-  FileCheck2,
-  Settings,
-  Tractor,
 } from "lucide-react";
 
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import NotificationBell from "../components/NotificationBell";
 import { API_URL } from "../config";
 import "./FarmerDashboard.css";
 
 function FarmerDashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -76,12 +63,6 @@ function FarmerDashboard() {
     fetchDashboard();
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
-
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading farmer dashboard...</h2>;
   }
@@ -94,109 +75,10 @@ function FarmerDashboard() {
   const firstLetter = userName.charAt(0).toUpperCase();
 
   return (
-    <div className="farmer-shell">
-      <aside className={sidebarOpen ? "farmer-sidebar" : "farmer-sidebar collapsed"}>
-        <div className="farmer-brand">
-          <div className="farmer-logo">
-            <Tractor size={26} />
-          </div>
-
-          {sidebarOpen && (
-            <div>
-              <h3>HerdMarket</h3>
-              <p>Farmer Portal</p>
-            </div>
-          )}
-        </div>
-
-        <nav className="farmer-nav">
-          <Link
-            className={location.pathname === "/farmer-dashboard" ? "active" : ""}
-            to="/farmer-dashboard"
-          >
-            <Home size={20} />
-            <span>Dashboard</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/listings" ? "active" : ""}
-            to="/listings"
-          >
-            <List size={20} />
-            <span>My Listings</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/post" ? "active" : ""}
-            to="/post"
-          >
-            <PlusCircle size={20} />
-            <span>Post Livestock</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/messages" ? "active" : ""}
-            to="/messages"
-          >
-            <MessageCircle size={20} />
-            <span>Messages</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/farmer-transactions" ? "active" : ""}
-            to="/farmer-transactions"
-          >
-            <FileCheck2 size={20} />
-            <span>Transactions</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/farmer-notifications" ? "active" : ""}
-            to="/farmer-notifications"
-          >
-            <Bell size={20} />
-            <span>Notifications</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/profile" ? "active" : ""}
-            to="/profile"
-          >
-            <User size={20} />
-            <span>Profile</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/farmer-settings" ? "active" : ""}
-            to="/farmer-settings"
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </Link>
-        </nav>
-
-        <div className="sidebar-status">
-          <p>Account Status</p>
-          <strong>Verified Farmer</strong>
-          <span>MAO approved</span>
-        </div>
-
-        <button className="farmer-logout" onClick={handleLogout}>
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </aside>
-
+    <>
       <main className="farmer-main">
         <header className="farmer-topbar">
           <div className="topbar-left">
-            <button
-              className="menu-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-
             <div>
               <span className="eyebrow">Farmer Dashboard</span>
               <h1>Welcome back, {userName}</h1>
@@ -205,47 +87,7 @@ function FarmerDashboard() {
           </div>
 
           <div className="topbar-actions">
-            <div className="notification-wrapper">
-              <button
-                className="notification-btn"
-                onClick={() => setShowNotifications(!showNotifications)}
-              >
-                <Bell size={22} />
-                <i></i>
-              </button>
-
-              {showNotifications && (
-                <div className="notification-dropdown">
-                  <h4>Notifications</h4>
-
-                  {dashboardData.activities.length === 0 ? (
-                    <div className="notification-item">
-                      <strong>No notifications</strong>
-                      <p>No recent activity yet.</p>
-                    </div>
-                  ) : (
-                    dashboardData.activities.slice(0, 3).map((item, index) => (
-                      <div
-                        className={index === 0 ? "notification-item unread" : "notification-item"}
-                        key={index}
-                      >
-                        <strong>{item.title}</strong>
-                        <p>{item.text}</p>
-                        <small>Recently</small>
-                      </div>
-                    ))
-                  )}
-
-                  <Link
-                    to="/farmer-notifications"
-                    className="notification-view-all"
-                    onClick={() => setShowNotifications(false)}
-                  >
-                    View all notifications
-                  </Link>
-                </div>
-              )}
-            </div>
+            <NotificationBell role="farmer" />
 
             <div className="farmer-profile-chip">
               <div className="profile-avatar">{firstLetter}</div>
@@ -275,7 +117,7 @@ function FarmerDashboard() {
                 <ArrowUpRight size={18} />
               </Link>
 
-              <Link className="secondary" to="/messages">
+              <Link className="secondary" to="/farmer-messages">
                 View Messages
               </Link>
             </div>
@@ -386,7 +228,7 @@ function FarmerDashboard() {
           </div>
         </section>
       </main>
-    </div>
+    </>
   );
 }
 

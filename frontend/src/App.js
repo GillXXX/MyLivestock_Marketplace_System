@@ -10,6 +10,8 @@ import {
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 
@@ -23,7 +25,8 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import FarmerTransactions from "./pages/FarmerTransactions";
 import FarmerNotifications from "./pages/FarmerNotifications";
-import FarmerSettings from "./pages/FarmerSettings";
+import AccountSettings from "./pages/AccountSettings";
+import FarmerLayout from "./components/FarmerLayout";
 
 /* =========================
    ADMIN PAGES
@@ -37,6 +40,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminSettings from "./pages/AdminSettings";
 import AdminMapMonitoring from "./pages/AdminMapMonitoring";
+import AdminLayout from "./components/AdminLayout";
 
 /* =========================
    BUYER PAGES
@@ -50,7 +54,7 @@ import BuyerTransactions from "./pages/BuyerTransactions";
 import BuyerNotifications from "./pages/BuyerNotifications";
 import BuyerMapExplorer from "./pages/BuyerMap";
 import BuyerProfile from "./pages/BuyerProfile";
-import BuyerSettings from "./pages/BuyerSettings";
+import BuyerLayout from "./components/BuyerLayout";
 
 function App() {
 
@@ -79,147 +83,174 @@ function App() {
           element={<Register />}
         />
 
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
         {/* =========================
             FARMER ROUTES
+            (nested under FarmerLayout so the sidebar persists
+            across navigation instead of remounting per page)
         ========================= */}
 
-        <Route
-          path="/farmer-dashboard"
-          element={<FarmerDashboard />}
-        />
+        <Route element={<FarmerLayout />}>
+          <Route
+            path="/farmer-dashboard"
+            element={<FarmerDashboard />}
+          />
 
-        <Route
-          path="/listings"
-          element={<Listings />}
-        />
+          <Route
+            path="/listings"
+            element={<Listings />}
+          />
 
-        <Route
-          path="/post"
-          element={<Post />}
-        />
+          <Route
+            path="/post"
+            element={<Post />}
+          />
 
-        <Route
-          path="/post/:id"
-          element={<Post />}
-        />
+          <Route
+            path="/post/:id"
+            element={<Post />}
+          />
 
-        <Route
-          path="/messages"
-          element={<Messages />}
-        />
+          <Route
+            path="/profile"
+            element={<Profile />}
+          />
 
-        <Route
-          path="/profile"
-          element={<Profile />}
-        />
+          <Route
+            path="/farmer-messages"
+            element={<Messages />}
+          />
 
-        <Route
-          path="/farmer-transactions"
-          element={<FarmerTransactions />}
-        />
+          <Route
+            path="/farmer-transactions"
+            element={<FarmerTransactions />}
+          />
 
-        <Route
-          path="/farmer-notifications"
-          element={<FarmerNotifications />}
-        />
+          <Route
+            path="/farmer-notifications"
+            element={<FarmerNotifications />}
+          />
 
-        <Route
-          path="/farmer-settings"
-          element={<FarmerSettings />}
-        />
+          <Route
+            path="/farmer-settings"
+            element={<AccountSettings role="farmer" />}
+          />
+        </Route>
 
         {/* =========================
             ADMIN ROUTES
+            (nested under AdminLayout so the sidebar persists
+            across navigation instead of remounting per page)
         ========================= */}
 
-        <Route
-          path="/admin-dashboard"
-          element={<AdminDashboard />}
-        />
+        <Route element={<AdminLayout />}>
+          <Route
+            path="/admin-dashboard"
+            element={<AdminDashboard />}
+          />
 
-        <Route
-          path="/admin-users"
-          element={<AdminUsers />}
-        />
+          <Route
+            path="/admin-users"
+            element={<AdminUsers />}
+          />
 
-        <Route
-          path="/admin-listings"
-          element={<AdminListings />}
-        />
+          <Route
+            path="/admin-listings"
+            element={<AdminListings />}
+          />
 
-        <Route
-          path="/admin-verification"
-          element={<AdminVerification />}
-        />
+          <Route
+            path="/admin-verification"
+            element={<AdminVerification />}
+          />
 
-        <Route
-          path="/admin-transactions"
-          element={<AdminTransactions />}
-        />
+          <Route
+            path="/admin-transactions"
+            element={<AdminTransactions />}
+          />
 
-        <Route
-          path="/admin-reports"
-          element={<AdminReports />}
-        />
+          <Route
+            path="/admin-reports"
+            element={<AdminReports />}
+          />
 
-        <Route
-          path="/admin-notifications"
-          element={<AdminNotifications />}
-        />
+          <Route
+            path="/admin-notifications"
+            element={<AdminNotifications />}
+          />
 
-        <Route
-          path="/admin-settings"
-          element={<AdminSettings />}
-        />
+          <Route
+            path="/admin-settings"
+            element={<AdminSettings />}
+          />
 
-        <Route
-          path="/admin-map"
-          element={<AdminMapMonitoring />}
-        />
+          <Route
+            path="/admin-map"
+            element={<AdminMapMonitoring />}
+          />
+        </Route>
 
         {/* =========================
             BUYER ROUTES
+            (nested under BuyerLayout so the sidebar persists
+            across navigation instead of remounting per page)
         ========================= */}
 
-        <Route
-          path="/buyer-dashboard"
-          element={<BuyerDashboard />}
-        />
+        <Route element={<BuyerLayout />}>
+          <Route
+            path="/buyer-dashboard"
+            element={<BuyerDashboard />}
+          />
 
-        <Route
-          path="/marketplace"
-          element={<Marketplace />}
-        />
+          <Route
+            path="/marketplace"
+            element={<Marketplace />}
+          />
 
-        <Route
-          path="/buyer-favorites"
-          element={<BuyerFavorites />}
-        />
+          <Route
+            path="/buyer-favorites"
+            element={<BuyerFavorites />}
+          />
 
-        <Route
-          path="/buyer-transactions"
-          element={<BuyerTransactions />}
-        />
+          <Route
+            path="/buyer-messages"
+            element={<Messages />}
+          />
 
-        <Route
-          path="/buyer-notifications"
-          element={<BuyerNotifications />}
-        />
+          <Route
+            path="/buyer-transactions"
+            element={<BuyerTransactions />}
+          />
 
-        <Route
-          path="/buyer-map"
-          element={<BuyerMapExplorer />}
-        />
+          <Route
+            path="/buyer-notifications"
+            element={<BuyerNotifications />}
+          />
 
-        <Route
-          path="/buyer-profile"
-          element={<BuyerProfile />}
-        />
+          <Route
+            path="/buyer-map"
+            element={<BuyerMapExplorer />}
+          />
 
-        <Route
-          path="/buyer-settings"
-          element={<BuyerSettings />}
-        />
+          <Route
+            path="/buyer-profile"
+            element={<BuyerProfile />}
+          />
+
+          <Route
+            path="/buyer-settings"
+            element={<AccountSettings role="buyer" />}
+          />
+        </Route>
 
         {/* =========================
             FALLBACK

@@ -12,11 +12,19 @@
   --shadow: 0 16px 45px rgba(15, 61, 46, 0.08);
 }
 
-* {
+/* Every rule below is scoped under .account-settings-page — this page's CSS
+   is bundled globally alongside every other page's CSS (no CSS Modules /
+   scoping), so generic class names like .settings-header, .settings-card,
+   or .back-btn would otherwise collide with same-named classes in
+   AdminSettings.css, which defines different values for the same
+   selectors (e.g. .settings-header used flex-start + 30px margin here vs
+   center + 28px margin there). */
+
+.account-settings-page * {
   box-sizing: border-box;
 }
 
-.farmer-settings-page {
+.account-settings-page {
   min-height: 100vh;
   background:
     radial-gradient(circle at top right, rgba(215, 162, 77, 0.08), transparent 25%),
@@ -32,14 +40,14 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.settings-header {
+.account-settings-page .settings-header {
   display: flex;
   align-items: flex-start;
   gap: 18px;
   margin-bottom: 30px;
 }
 
-.back-btn {
+.account-settings-page .back-btn {
   width: 58px;
   height: 58px;
   border-radius: 20px;
@@ -55,19 +63,19 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.back-btn:hover {
+.account-settings-page .back-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(15, 61, 46, 0.1);
 }
 
-.page-tag {
+.account-settings-page .page-tag {
   color: var(--accent);
   font-size: 12px;
   font-weight: 950;
   letter-spacing: 1.5px;
 }
 
-.settings-header h1 {
+.account-settings-page .settings-header h1 {
   margin: 8px 0;
   font-size: 42px;
   font-weight: 950;
@@ -75,21 +83,21 @@
   color: var(--primary-dark);
 }
 
-.settings-header p {
+.account-settings-page .settings-header p {
   margin: 0;
   color: var(--muted);
   max-width: 700px;
   line-height: 1.7;
 }
 
-.settings-layout {
+.account-settings-page .settings-layout {
   display: grid;
   grid-template-columns: 1.3fr 0.8fr;
   gap: 24px;
   align-items: start;
 }
 
-.settings-card {
+.account-settings-page .settings-card {
   background: rgba(255,255,255,0.8);
   border: 1px solid rgba(255,255,255,0.7);
   -webkit-backdrop-filter: blur(16px);
@@ -99,23 +107,23 @@
   padding: 28px;
 }
 
-.settings-card h3 {
+.account-settings-page .settings-card h3 {
   margin: 0;
   color: var(--primary-dark);
   font-weight: 950;
 }
 
-.settings-card > p {
+.account-settings-page .settings-card > p {
   margin: 6px 0 22px;
   color: var(--muted);
   line-height: 1.6;
 }
 
-.settings-form-group {
+.account-settings-page .settings-form-group {
   margin-bottom: 18px;
 }
 
-.settings-form-group label {
+.account-settings-page .settings-form-group label {
   display: block;
   margin-bottom: 8px;
   font-size: 14px;
@@ -123,7 +131,7 @@
   color: var(--text);
 }
 
-.settings-input-wrapper {
+.account-settings-page .settings-input-wrapper {
   height: 54px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -135,17 +143,17 @@
   transition: 0.2s;
 }
 
-.settings-input-wrapper:focus-within {
+.account-settings-page .settings-input-wrapper:focus-within {
   border-color: var(--primary);
   background: white;
   box-shadow: 0 0 0 4px rgba(15, 61, 46, 0.08);
 }
 
-.settings-input-wrapper svg {
+.account-settings-page .settings-input-wrapper svg {
   color: var(--muted);
 }
 
-.settings-input-wrapper input {
+.account-settings-page .settings-input-wrapper input {
   border: none;
   background: transparent;
   width: 100%;
@@ -154,7 +162,7 @@
   color: var(--text);
 }
 
-.settings-save-btn {
+.account-settings-page .settings-save-btn {
   height: 52px;
   padding: 0 24px;
   border: none;
@@ -170,17 +178,17 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.settings-save-btn:hover:not(:disabled) {
+.account-settings-page .settings-save-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(15, 61, 46, 0.22);
 }
 
-.settings-save-btn:disabled {
+.account-settings-page .settings-save-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-.settings-feedback {
+.account-settings-page .settings-feedback {
   margin: 0 0 18px;
   padding: 13px 16px;
   border-radius: 14px;
@@ -188,25 +196,25 @@
   font-weight: 700;
 }
 
-.settings-feedback.error {
+.account-settings-page .settings-feedback.error {
   background: rgba(180, 35, 24, 0.08);
   border: 1px solid rgba(180, 35, 24, 0.22);
   color: var(--danger);
 }
 
-.settings-feedback.success {
+.account-settings-page .settings-feedback.success {
   background: var(--soft);
   border: 1px solid rgba(15, 61, 46, 0.18);
   color: var(--primary);
 }
 
-.settings-side {
+.account-settings-page .settings-side {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-.settings-link-row {
+.account-settings-page .settings-link-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -220,21 +228,21 @@
   transition: background 0.2s ease;
 }
 
-.settings-link-row:hover {
+.account-settings-page .settings-link-row:hover {
   background: var(--soft);
 }
 
-.settings-link-row:last-child {
+.account-settings-page .settings-link-row:last-child {
   border-bottom: none;
 }
 
-.settings-link-left {
+.account-settings-page .settings-link-left {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-.settings-link-icon {
+.account-settings-page .settings-link-icon {
   width: 44px;
   height: 44px;
   background: var(--soft);
@@ -246,18 +254,18 @@
   flex-shrink: 0;
 }
 
-.settings-link-row strong {
+.account-settings-page .settings-link-row strong {
   display: block;
   color: var(--primary-dark);
 }
 
-.settings-link-row p {
+.account-settings-page .settings-link-row p {
   margin: 3px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
 
-.settings-logout-btn {
+.account-settings-page .settings-logout-btn {
   width: 100%;
   height: 52px;
   border: 1px solid rgba(180, 35, 24, 0.3);
@@ -273,21 +281,21 @@
   transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.settings-logout-btn:hover {
+.account-settings-page .settings-logout-btn:hover {
   background: rgba(180, 35, 24, 0.12);
   transform: translateY(-2px);
 }
 
 @media (max-width: 950px) {
-  .settings-layout {
+  .account-settings-page .settings-layout {
     grid-template-columns: 1fr;
   }
 
-  .farmer-settings-page {
+  .account-settings-page {
     padding: 22px;
   }
 
-  .settings-header h1 {
+  .account-settings-page .settings-header h1 {
     font-size: 32px;
   }
 }

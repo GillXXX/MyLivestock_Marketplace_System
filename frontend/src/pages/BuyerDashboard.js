@@ -1,35 +1,24 @@
 import { useEffect, useState } from "react";
 
 import {
-  Bell,
-  Menu,
-  X,
-  Home,
   Store,
   Heart,
   MessageCircle,
-  FileCheck2,
   MapPin,
-  User,
-  Settings,
-  LogOut,
   ShoppingBag,
   TrendingUp,
   ArrowUpRight,
-  ShoppingCart,
 } from "lucide-react";
 
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InquiryModal from "../components/InquiryModal";
+import NotificationBell from "../components/NotificationBell";
 import { API_URL } from "../config";
 import "./BuyerDashboard.css";
 
 function BuyerDashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -73,12 +62,6 @@ function BuyerDashboard() {
 
     fetchBuyerDashboard();
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
 
   const addToFavorites = async (listingId) => {
     try {
@@ -127,117 +110,10 @@ function BuyerDashboard() {
   const firstLetter = buyerName.charAt(0).toUpperCase();
 
   return (
-    <div className="buyer-shell">
-      <aside className={sidebarOpen ? "buyer-sidebar" : "buyer-sidebar collapsed"}>
-        <div className="buyer-brand">
-          <div className="buyer-logo">
-            <ShoppingCart size={26} />
-          </div>
-
-          {sidebarOpen && (
-            <div>
-              <h3>HerdMarket</h3>
-              <p>Buyer Portal</p>
-            </div>
-          )}
-        </div>
-
-        <nav className="buyer-nav">
-          <Link
-            className={location.pathname === "/buyer-dashboard" ? "active" : ""}
-            to="/buyer-dashboard"
-          >
-            <Home size={20} />
-            <span>Dashboard</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/marketplace" ? "active" : ""}
-            to="/marketplace"
-          >
-            <Store size={20} />
-            <span>Marketplace</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/buyer-favorites" ? "active" : ""}
-            to="/buyer-favorites"
-          >
-            <Heart size={20} />
-            <span>Saved Listings</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/messages" ? "active" : ""}
-            to="/messages"
-          >
-            <MessageCircle size={20} />
-            <span>Messages</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/buyer-transactions" ? "active" : ""}
-            to="/buyer-transactions"
-          >
-            <FileCheck2 size={20} />
-            <span>Transactions</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/buyer-notifications" ? "active" : ""}
-            to="/buyer-notifications"
-          >
-            <Bell size={20} />
-            <span>Notifications</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/buyer-map" ? "active" : ""}
-            to="/buyer-map"
-          >
-            <MapPin size={20} />
-            <span>Map Explorer</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/buyer-profile" ? "active" : ""}
-            to="/buyer-profile"
-          >
-            <User size={20} />
-            <span>Profile</span>
-          </Link>
-
-          <Link
-            className={location.pathname === "/buyer-settings" ? "active" : ""}
-            to="/buyer-settings"
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </Link>
-        </nav>
-
-        <div className="buyer-sidebar-card">
-          <p>Buyer Status</p>
-          <strong>Verified Buyer</strong>
-          <span>Ready to inquire</span>
-        </div>
-
-        <button className="buyer-logout" onClick={handleLogout}>
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </aside>
-
+    <>
       <main className="buyer-main">
         <header className="buyer-topbar">
           <div className="topbar-left">
-            <button
-              className="menu-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-
             <div>
               <span className="eyebrow">Buyer Dashboard</span>
               <h1>Find livestock with confidence</h1>
@@ -246,41 +122,7 @@ function BuyerDashboard() {
           </div>
 
           <div className="topbar-actions">
-            <div className="notification-wrapper">
-              <button
-                className="notification-btn"
-                onClick={() => setShowNotifications(!showNotifications)}
-              >
-                <Bell size={22} />
-                <i></i>
-              </button>
-
-              {showNotifications && (
-                <div className="notification-dropdown">
-                  <h4>Notifications</h4>
-
-                  {dashboardData.activity.length === 0 ? (
-                    <div className="notification-item">
-                      <strong>No notifications</strong>
-                      <p>No marketplace updates yet.</p>
-                    </div>
-                  ) : (
-                    dashboardData.activity.slice(0, 3).map((item, index) => (
-                      <div
-                        className={index === 0 ? "notification-item unread" : "notification-item"}
-                        key={index}
-                      >
-                        <strong>New listing available</strong>
-                        <p>
-                          {item.breed} posted in {item.location}.
-                        </p>
-                        <small>Recently</small>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+            <NotificationBell role="buyer" />
 
             <div className="buyer-profile-chip">
               <div className="profile-avatar">{firstLetter}</div>
@@ -449,7 +291,7 @@ function BuyerDashboard() {
           onClose={() => setInquiryListing(null)}
         />
       )}
-    </div>
+    </>
   );
 }
 

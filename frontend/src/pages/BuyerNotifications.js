@@ -124,7 +124,7 @@ function BuyerNotifications() {
   const getNotificationLink = (notif) => {
     if (notif.type === "Inquiry Status") {
       return {
-        path: "/messages",
+        path: "/buyer-messages",
         state: notif.conversationId ? { conversationId: notif.conversationId } : undefined,
       };
     }

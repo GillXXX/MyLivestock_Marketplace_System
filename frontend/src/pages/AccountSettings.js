@@ -11,10 +11,34 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
-import "./BuyerSettings.css";
+import "./AccountSettings.css";
 
-function BuyerSettings() {
+const ROLE_CONFIG = {
+  buyer: {
+    portalTag: "BUYER PORTAL",
+    dashboardPath: "/buyer-dashboard",
+    changePasswordEndpoint: "/api/buyer/change-password",
+    profilePath: "/buyer-profile",
+    profileText: "Name, contact info, and preferences",
+    notificationsPath: "/buyer-notifications",
+    notificationsText: "Review inquiry and transaction alerts",
+    statusText: "Verified Buyer",
+  },
+  farmer: {
+    portalTag: "FARMER PORTAL",
+    dashboardPath: "/farmer-dashboard",
+    changePasswordEndpoint: "/api/farmer/change-password",
+    profilePath: "/profile",
+    profileText: "Name, contact info, and farm location",
+    notificationsPath: "/farmer-notifications",
+    notificationsText: "Review listing and transaction alerts",
+    statusText: "Verified Farmer • MAO approved",
+  },
+};
+
+function AccountSettings({ role }) {
   const navigate = useNavigate();
+  const config = ROLE_CONFIG[role];
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -45,7 +69,7 @@ function BuyerSettings() {
         return;
       }
 
-      const res = await fetch(`${API_URL}/api/buyer/change-password`, {
+      const res = await fetch(`${API_URL}${config.changePasswordEndpoint}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -78,14 +102,14 @@ function BuyerSettings() {
   };
 
   return (
-    <div className="buyer-settings-page">
+    <div className="account-settings-page">
       <div className="settings-header">
-        <Link to="/buyer-dashboard" className="back-btn">
+        <Link to={config.dashboardPath} className="back-btn">
           <ArrowLeft size={20} />
         </Link>
 
         <div>
-          <span className="page-tag">BUYER PORTAL</span>
+          <span className="page-tag">{config.portalTag}</span>
           <h1>Account Settings</h1>
           <p>Manage your account security and access your other settings.</p>
         </div>
@@ -159,26 +183,26 @@ function BuyerSettings() {
             <h3>Quick Links</h3>
             <p>Other places to manage your account.</p>
 
-            <Link to="/buyer-profile" className="settings-link-row">
+            <Link to={config.profilePath} className="settings-link-row">
               <div className="settings-link-left">
                 <div className="settings-link-icon">
                   <User size={20} />
                 </div>
                 <div>
                   <strong>Edit Profile</strong>
-                  <p>Name, contact info, and preferences</p>
+                  <p>{config.profileText}</p>
                 </div>
               </div>
             </Link>
 
-            <Link to="/buyer-notifications" className="settings-link-row">
+            <Link to={config.notificationsPath} className="settings-link-row">
               <div className="settings-link-left">
                 <div className="settings-link-icon">
                   <Bell size={20} />
                 </div>
                 <div>
                   <strong>Notifications</strong>
-                  <p>Review inquiry and transaction alerts</p>
+                  <p>{config.notificationsText}</p>
                 </div>
               </div>
             </Link>
@@ -190,7 +214,7 @@ function BuyerSettings() {
                 </div>
                 <div>
                   <strong>Account Status</strong>
-                  <p>Verified Buyer</p>
+                  <p>{config.statusText}</p>
                 </div>
               </div>
             </div>
@@ -211,4 +235,4 @@ function BuyerSettings() {
   );
 }
 
-export default BuyerSettings;
+export default AccountSettings;
