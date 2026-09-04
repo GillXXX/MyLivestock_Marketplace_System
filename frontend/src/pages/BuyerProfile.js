@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
-import { API_URL } from "../config";
+import { API_URL, DEFAULT_AVATAR } from "../config";
 import "./Profile.css";
 
 function BuyerProfile() {
@@ -39,8 +39,7 @@ function BuyerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const defaultImage =
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43?w=500";
+  const defaultImage = DEFAULT_AVATAR;
 
   const imageUrl = profile?.profile_image
     ? profile.profile_image.startsWith("http")

@@ -14,7 +14,7 @@ import {
   findBarangay,
   isInsideVeruela,
 } from "../utils/veruelaGeo";
-import { API_URL } from "../config";
+import { API_URL, DEFAULT_AVATAR } from "../config";
 import "./Profile.css";
 
 function Profile() {
@@ -60,7 +60,7 @@ function Profile() {
     ? profile.profile_image.startsWith("http")
       ? profile.profile_image
       : `${API_URL}${profile.profile_image}`
-    : "https://images.unsplash.com/photo-1500648767791-00dcc994a43?w=500";
+    : DEFAULT_AVATAR;
 
   const fetchProfile = async () => {
     try {
