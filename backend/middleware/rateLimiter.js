@@ -18,4 +18,15 @@ const registerLimiter = rateLimit({
   message: { message: "Too many accounts created from this network. Please try again later." },
 });
 
-module.exports = { loginLimiter, registerLimiter };
+// Forgot/reset password: tight enough to stop inbox-spamming or token
+// brute-forcing, loose enough that a user who fumbles the form isn't
+// locked out for typos.
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  limit: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many password reset attempts. Please try again in an hour." },
+});
+
+module.exports = { loginLimiter, registerLimiter, resetLimiter };

@@ -196,7 +196,7 @@ function Login() {
               <div className="password-label">
                 <label>Password</label>
 
-                <Link to="/">Forgot password?</Link>
+                <Link to="/forgot-password">Forgot password?</Link>
               </div>
 
               <div className="input-wrapper">

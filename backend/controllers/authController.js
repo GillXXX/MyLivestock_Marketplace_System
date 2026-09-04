@@ -1,7 +1,9 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const { createNotification } = require("../utils/notify");
+const { sendPasswordResetEmail } = require("../utils/mailer");
 
 const issueSession = (res, user) => {
   const token = jwt.sign(
@@ -183,4 +185,90 @@ const googleLogin = async (req, res) => {
   }
 };
 
-module.exports = { register, login, googleLogin };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const [users] = await db.query(
+      "SELECT id, full_name, email FROM users WHERE email = ?",
+      [email]
+    );
+
+    // Always respond the same way whether or not the email exists, so this
+    // endpoint can't be used to check which emails are registered.
+    if (users.length > 0) {
+      const user = users[0];
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await db.query(
+        "UPDATE users SET reset_token_hash = ?, reset_token_expires = ? WHERE id = ?",
+        [tokenHash, expires, user.id]
+      );
+
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+      try {
+        await sendPasswordResetEmail(user.email, resetUrl);
+      } catch (emailError) {
+        console.error("Failed to send password reset email:", emailError);
+      }
+    }
+
+    res.json({
+      message: "If that email is registered, a password reset link has been sent.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Server error requesting password reset" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token || !password || !confirmPassword) {
+      return res.status(400).json({ message: "Please fill in all fields" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const [users] = await db.query(
+      "SELECT id FROM users WHERE reset_token_hash = ? AND reset_token_expires > NOW()",
+      [tokenHash]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ message: "This reset link is invalid or has expired." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.query(
+      "UPDATE users SET password = ?, reset_token_hash = NULL, reset_token_expires = NULL WHERE id = ?",
+      [hashedPassword, users[0].id]
+    );
+
+    res.json({ message: "Password reset successfully. You can now log in." });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server error resetting password" });
+  }
+};
+
+module.exports = { register, login, googleLogin, forgotPassword, resetPassword };

@@ -144,6 +144,25 @@ backdrop-filter: blur(14px);
   box-shadow: 0 8px 16px rgba(215, 162, 77, 0.3);
 }
 
+.feature-card > div:last-child {
+  min-width: 0;
+}
+
+/* Variant for use on the light card panel instead of the dark showcase
+   column — the default text colors below are only legible on dark. */
+.feature-card.on-light {
+  background: var(--soft);
+  border-color: var(--border);
+}
+
+.feature-card.on-light strong {
+  color: var(--primary-dark);
+}
+
+.feature-card.on-light p {
+  color: var(--muted);
+}
+
 .feature-card strong {
   display: block;
   margin-bottom: 6px;
