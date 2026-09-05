@@ -1,14 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #ffffff;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
-  --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
-}
+@import "./AdminTheme.css";
 
 /* Every rule below is scoped under .admin-transactions-page — this page's
    CSS is bundled globally alongside every other page's CSS (no CSS Modules
@@ -95,7 +85,6 @@
   margin-bottom: 24px;
 }
 
-.admin-transactions-page .transaction-stat-card,
 .admin-transactions-page .workflow-overview,
 .admin-transactions-page .transaction-toolbar,
 .admin-transactions-page .transactions-card {
@@ -103,41 +92,6 @@
   border: 1px solid #e8e2d4;
   border-radius: 22px;
   box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
-}
-
-.admin-transactions-page .transaction-stat-card {
-  padding: 24px;
-}
-
-.admin-transactions-page .stat-icon {
-  width: 48px;
-  height: 48px;
-  background: #eaf5ef;
-  color: #0f3d2e;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.admin-transactions-page .transaction-stat-card h2 {
-  font-size: 40px;
-  font-weight: 950;
-  margin: 14px 0 0;
-  color: #071f16;
-}
-
-.admin-transactions-page .transaction-stat-card p {
-  margin: 0;
-  color: #667085;
-  font-weight: 800;
-}
-
-.admin-transactions-page .transaction-stat-card small {
-  display: block;
-  margin-top: 8px;
-  color: #d7a24d;
-  font-weight: 800;
 }
 
 .admin-transactions-page .workflow-overview {
@@ -157,19 +111,108 @@
 }
 
 .admin-transactions-page .workflow-steps {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
 }
 
-.admin-transactions-page .workflow-steps div {
+.admin-transactions-page .workflow-step {
+  /* LandingPage.css also defines an unscoped .workflow-step (its "how it
+     works" cards) with display:flex + gap — since page CSS isn't scoped,
+     that rule leaks in here too. Explicitly override the flex axis/gap so
+     this card stacks its rows instead of laying them out side by side. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
   background: #f8f5ec;
   border: 1px solid #e8e2d4;
-  padding: 16px;
   border-radius: 16px;
+  padding: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-transactions-page .workflow-step::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--step-color), transparent 140%);
+  box-shadow: 0 0 14px 0 var(--step-color);
+  opacity: 0.75;
+}
+
+.admin-transactions-page .workflow-step:hover {
+  transform: translateY(-3px);
+  border-color: var(--step-color);
+  box-shadow: 0 14px 28px -16px var(--step-color);
+}
+
+.admin-transactions-page .workflow-step.accent-blue { --step-color: #2563eb; --step-tint: rgba(37, 99, 235, 0.1); }
+.admin-transactions-page .workflow-step.accent-amber { --step-color: #b3790f; --step-tint: rgba(215, 162, 77, 0.16); }
+.admin-transactions-page .workflow-step.accent-purple { --step-color: #7c3aed; --step-tint: rgba(124, 58, 237, 0.1); }
+.admin-transactions-page .workflow-step.accent-teal { --step-color: #00897a; --step-tint: rgba(0, 200, 176, 0.12); }
+.admin-transactions-page .workflow-step.accent-green { --step-color: #0f3d2e; --step-tint: rgba(15, 61, 46, 0.1); }
+
+.admin-transactions-page .workflow-step-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.admin-transactions-page .workflow-step-number {
+  margin: 0;
+  font-family: "JetBrains Mono", "Segoe UI", monospace;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--step-color);
+  opacity: 0.7;
+}
+
+.admin-transactions-page .workflow-step-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: linear-gradient(150deg, var(--step-tint), transparent);
+  border: 1px solid var(--step-tint);
+  color: var(--step-color);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -8px var(--step-color);
+  transition: transform 0.2s ease;
+}
+
+.admin-transactions-page .workflow-step:hover .workflow-step-icon {
+  transform: scale(1.07) rotate(-3deg);
+}
+
+.admin-transactions-page .workflow-step strong {
+  display: block;
+  color: #071f16;
+  font-size: 14px;
   font-weight: 900;
-  color: #0f3d2e;
-  text-align: center;
+}
+
+.admin-transactions-page .workflow-step p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-transactions-page .workflow-chevron {
+  flex-shrink: 0;
+  align-self: center;
+  color: #c9c2ad;
 }
 
 .admin-transactions-page .transaction-toolbar {
@@ -358,9 +401,16 @@
 
 @media (max-width: 1100px) {
   .admin-transactions-page .transaction-stats,
-  .admin-transactions-page .transaction-toolbar,
-  .admin-transactions-page .workflow-steps {
+  .admin-transactions-page .transaction-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .admin-transactions-page .workflow-steps {
+    flex-direction: column;
+  }
+
+  .admin-transactions-page .workflow-chevron {
+    display: none;
   }
 
   .admin-transactions-page .transactions-top {

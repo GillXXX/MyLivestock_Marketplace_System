@@ -19,6 +19,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminReports.css";
 
@@ -160,32 +161,36 @@ function AdminReports() {
       </section>
 
       <section className="analytics-grid">
-        <MetricCard
+        <AdminStatCard
+          accent="green"
           icon={<Users />}
           label="Total Farmers"
           value={metrics.totalFarmers}
-          change="Registered farmer accounts"
+          note="Registered farmer accounts"
         />
 
-        <MetricCard
+        <AdminStatCard
+          accent="blue"
           icon={<ShoppingBag />}
           label="Total Buyers"
           value={metrics.totalBuyers}
-          change="Registered buyer accounts"
+          note="Registered buyer accounts"
         />
 
-        <MetricCard
+        <AdminStatCard
+          accent="amber"
           icon={<BarChart3 />}
           label="Livestock Sold"
           value={metrics.livestockSold}
-          change="Completed transactions"
+          note="Completed transactions"
         />
 
-        <MetricCard
+        <AdminStatCard
+          accent="purple"
           icon={<TrendingUp />}
           label="Trade Value"
           value={`₱${Number(metrics.tradeValue).toLocaleString()}`}
-          change="Recorded completed sales"
+          note="Recorded completed sales"
         />
       </section>
 
@@ -314,17 +319,6 @@ function AdminReports() {
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function MetricCard({ icon, label, value, change }) {
-  return (
-    <div className="metric-card">
-      <div className="metric-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{change}</small>
     </div>
   );
 }

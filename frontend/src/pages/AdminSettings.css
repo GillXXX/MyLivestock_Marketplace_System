@@ -1,19 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-
-  --background: #f4f1e8;
-  --card: #ffffff;
-
-  --border: #e8e2d4;
-  --muted: #667085;
-  --soft: #eaf5ef;
-
-  --shadow:
-    0 10px 30px rgba(15,61,46,0.06),
-    0 30px 60px rgba(15,61,46,0.08);
-}
+@import "./AdminTheme.css";
 
 /* Every rule below is scoped under .admin-settings-page — see the same note
    in AccountSettings.css. This page shares generic class names
@@ -210,7 +195,7 @@
 }
 
 .admin-settings-page .setting-toggle {
-  background: var(--soft);
+  background: var(--green-soft);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 18px;

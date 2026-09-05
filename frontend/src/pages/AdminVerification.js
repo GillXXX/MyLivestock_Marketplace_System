@@ -15,6 +15,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminVerification.css";
 
@@ -184,32 +185,32 @@ function AdminVerification() {
       </header>
 
       <section className="verification-kpis">
-        <KpiCard
+        <AdminStatCard
           icon={<Clock />}
           value={stats.pending}
           label="Pending Review"
-          tone="warning"
+          accent="amber"
         />
 
-        <KpiCard
+        <AdminStatCard
           icon={<CheckCircle />}
           value={stats.approved}
           label="Approved Documents"
-          tone="success"
+          accent="green"
         />
 
-        <KpiCard
+        <AdminStatCard
           icon={<AlertTriangle />}
           value={stats.rejected}
           label="Rejected / Flagged"
-          tone="danger"
+          accent="red"
         />
 
-        <KpiCard
+        <AdminStatCard
           icon={<ShieldCheck />}
           value={stats.total}
           label="Total Submissions"
-          tone="primary"
+          accent="blue"
         />
       </section>
 
@@ -378,24 +379,61 @@ function AdminVerification() {
       </section>
 
       <section className="verification-guide">
-        <div>
-          <h3>Livestock Verification Requirements</h3>
-          <p>
-            These requirements help standardize the verification stage of the
-            livestock trading workflow.
-          </p>
+        <div className="verification-guide-header">
+          <div>
+            <h3>Livestock Verification Requirements</h3>
+            <p>
+              Standard documentation MAO expects for each livestock category
+              before verification can be approved.
+            </p>
+          </div>
+
+          <span className="guide-count-pill">
+            <ShieldCheck size={14} />
+            {VERIFICATION_REQUIREMENTS.length} categories
+          </span>
         </div>
 
         <div className="guide-grid">
-          <GuideCard title="Swine" text="Veterinary certificate or MAO health clearance." />
-          <GuideCard title="Cattle" text="Health certificate and BAI livestock transport permit." />
-          <GuideCard title="Goat" text="Vaccination record and MAO clearance." />
-          <GuideCard title="Poultry" text="Flock health declaration or health clearance." />
+          {VERIFICATION_REQUIREMENTS.map((req) => (
+            <GuideCard key={req.type} {...req} />
+          ))}
         </div>
       </section>
     </div>
   );
 }
+
+const VERIFICATION_REQUIREMENTS = [
+  {
+    type: "Swine",
+    icon: "🐖",
+    accent: "amber",
+    logic: "either",
+    documents: ["Veterinary certificate", "MAO health clearance"],
+  },
+  {
+    type: "Cattle",
+    icon: "🐄",
+    accent: "blue",
+    logic: "both",
+    documents: ["Health certificate", "BAI livestock transport permit"],
+  },
+  {
+    type: "Goat",
+    icon: "🐐",
+    accent: "green",
+    logic: "both",
+    documents: ["Vaccination record", "MAO clearance"],
+  },
+  {
+    type: "Poultry",
+    icon: "🐔",
+    accent: "purple",
+    logic: "either",
+    documents: ["Flock health declaration", "Health clearance"],
+  },
+];
 
 function getDocumentType(type) {
   if (type === "Swine") return "Health Certificate";
@@ -405,24 +443,26 @@ function getDocumentType(type) {
   return "Health Certificate";
 }
 
-function KpiCard({ icon, value, label, tone }) {
+function GuideCard({ icon, accent, type, documents, logic }) {
   return (
-    <div className={`verify-kpi ${tone}`}>
-      <div className="kpi-icon">{icon}</div>
-
-      <div>
-        <h2>{value}</h2>
-        <p>{label}</p>
+    <div className={`guide-card accent-${accent}`}>
+      <div className="guide-card-top">
+        <div className="guide-card-icon">{icon}</div>
+        <span className="guide-logic-pill">
+          {logic === "both" ? "Requires both" : "Requires either"}
+        </span>
       </div>
-    </div>
-  );
-}
 
-function GuideCard({ title, text }) {
-  return (
-    <div className="guide-card">
-      <strong>{title}</strong>
-      <p>{text}</p>
+      <strong>{type}</strong>
+
+      <ul className="guide-doc-list">
+        {documents.map((doc) => (
+          <li key={doc}>
+            <FileText size={13} />
+            {doc}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 
 import {
   Search,
@@ -6,9 +6,15 @@ import {
   ArrowLeft,
   Download,
   CheckCircle,
+  CheckCircle2,
+  ChevronRight,
   Clock,
+  ClipboardCheck,
   FileCheck2,
   Flag,
+  Handshake,
+  MessageCircle,
+  ShieldCheck,
   TrendingUp,
   XCircle,
   RotateCcw,
@@ -16,6 +22,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminTransactions.css";
 
@@ -180,39 +187,44 @@ function AdminTransactions() {
       </header>
 
       <section className="transaction-stats">
-        <StatCard
+        <AdminStatCard
+          accent="green"
           icon={<FileCheck2 />}
           value={stats.completed}
           label="Completed"
-          trend="Completed transactions"
+          note="Completed transactions"
         />
 
-        <StatCard
+        <AdminStatCard
+          accent="amber"
           icon={<Clock />}
           value={stats.pending}
           label="Pending"
-          trend="Awaiting verification"
+          note="Awaiting verification"
         />
 
-        <StatCard
+        <AdminStatCard
+          accent="red"
           icon={<AlertTriangle />}
           value={stats.flagged}
           label="Flagged"
-          trend="Needs MAO review"
+          note="Needs MAO review"
         />
 
-        <StatCard
+        <AdminStatCard
+          accent="purple"
           icon={<XCircle />}
           value={stats.declinedCancelled}
           label="Declined/Cancelled"
-          trend="Rejected or withdrawn"
+          note="Rejected or withdrawn"
         />
 
-        <StatCard
+        <AdminStatCard
+          accent="blue"
           icon={<TrendingUp />}
           value={`₱${Number(stats.tradeValue).toLocaleString()}`}
           label="Trade Value"
-          trend="Recorded sales"
+          note="Recorded sales"
         />
       </section>
 
@@ -223,11 +235,23 @@ function AdminTransactions() {
         </div>
 
         <div className="workflow-steps">
-          <div>Inquiry</div>
-          <div>Negotiation</div>
-          <div>Verification</div>
-          <div>Confirmation</div>
-          <div>Completed</div>
+          {WORKFLOW_STAGES.map((stage, index) => (
+            <Fragment key={stage.title}>
+              <div className={`workflow-step accent-${stage.accent}`}>
+                <div className="workflow-step-top">
+                  <span className="workflow-step-number">{index + 1}</span>
+                  <div className="workflow-step-icon">{stage.icon}</div>
+                </div>
+
+                <strong>{stage.title}</strong>
+                <p>{stage.text}</p>
+              </div>
+
+              {index < WORKFLOW_STAGES.length - 1 && (
+                <ChevronRight className="workflow-chevron" size={18} />
+              )}
+            </Fragment>
+          ))}
         </div>
       </section>
 
@@ -374,16 +398,38 @@ function AdminTransactions() {
   );
 }
 
-function StatCard({ icon, value, label, trend }) {
-  return (
-    <div className="transaction-stat-card">
-      <div className="stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{trend}</small>
-    </div>
-  );
-}
+const WORKFLOW_STAGES = [
+  {
+    title: "Inquiry",
+    text: "Buyer expresses interest in a listing",
+    icon: <MessageCircle size={18} />,
+    accent: "blue",
+  },
+  {
+    title: "Negotiation",
+    text: "Price and terms are discussed",
+    icon: <Handshake size={18} />,
+    accent: "amber",
+  },
+  {
+    title: "Verification",
+    text: "MAO reviews documents and details",
+    icon: <ShieldCheck size={18} />,
+    accent: "purple",
+  },
+  {
+    title: "Confirmation",
+    text: "Both parties confirm the deal",
+    icon: <ClipboardCheck size={18} />,
+    accent: "teal",
+  },
+  {
+    title: "Completed",
+    text: "Trade is finalized and recorded",
+    icon: <CheckCircle2 size={18} />,
+    accent: "green",
+  },
+];
 
 function Workflow({ stage }) {
   const steps = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];

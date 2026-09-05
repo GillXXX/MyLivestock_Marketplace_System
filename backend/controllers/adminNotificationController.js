@@ -17,12 +17,13 @@ const getAdminNotifications = async (req, res) => {
       message: row.message,
       time: row.created_at,
       status: row.is_read ? "Read" : "Unread",
+      relatedId: row.related_id,
     }));
 
     const totalAlerts = notifications.length;
     const unreadAlerts = notifications.filter((n) => n.status === "Unread").length;
     const verificationRequests = notifications.filter(
-      (n) => n.type === "Listing Approval" && n.status === "Unread"
+      (n) => n.type === "Verification Request" && n.status === "Unread"
     ).length;
     const resolvedToday = notifications.filter((n) => n.status === "Read").length;
 
@@ -36,7 +37,7 @@ const getAdminNotifications = async (req, res) => {
       },
       categories: {
         listingApprovals: notifications.filter((n) => n.type === "Listing Approval").length,
-        documentVerification: verificationRequests,
+        documentVerification: notifications.filter((n) => n.type === "Verification Request").length,
         transactionAlerts: notifications.filter((n) => n.type === "Transaction Alert").length,
         userReports: notifications.filter((n) => n.type === "User Registration").length,
       },

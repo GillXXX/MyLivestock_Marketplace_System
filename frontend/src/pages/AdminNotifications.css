@@ -1,24 +1,9 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-
-  --background: #f4f1e8;
-  --card: #ffffff;
-
-  --border: #e8e2d4;
-  --muted: #667085;
-  --soft: #eaf5ef;
-
-  --shadow:
-    0 10px 30px rgba(15,61,46,0.06),
-    0 30px 60px rgba(15,61,46,0.08);
-}
+@import "./AdminTheme.css";
 
 /* Every rule below is scoped under .admin-notifications-page — this page's
    CSS is bundled globally alongside BuyerNotifications.css and
    FarmerNotifications.css (no CSS Modules / scoping), so generic class
-   names like .notification-row, .notif-stat-card, or .notification-toolbar
+   names like .notification-row, .notification-list, or .notification-toolbar
    would otherwise collide across the three notification pages. */
 
 .admin-notifications-page * {
@@ -100,9 +85,8 @@
   margin-bottom: 24px;
 }
 
-.admin-notifications-page .notif-stat-card,
 .admin-notifications-page .notifications-list-card,
-.admin-notifications-page .notification-side-panel,
+.admin-notifications-page .notification-categories-panel,
 .admin-notifications-page .notification-toolbar {
   background: rgba(255,255,255,0.8);
   border: 1px solid rgba(255,255,255,0.7);
@@ -112,42 +96,23 @@
   box-shadow: var(--shadow);
 }
 
-.admin-notifications-page .notif-stat-card {
+.admin-notifications-page .notifications-list-card,
+.admin-notifications-page .notification-categories-panel {
   position: relative;
-  padding: 24px;
-  border-top: 3px solid var(--accent);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
 }
 
-.admin-notifications-page .notif-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 22px 45px rgba(15,61,46,0.14);
-}
-
-.admin-notifications-page .notif-stat-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 16px rgba(15,61,46,0.24);
-}
-
-.admin-notifications-page .notif-stat-card h2 {
-  font-size: 38px;
-  font-weight: 950;
-  margin: 14px 0 0;
-  color: var(--primary-dark);
-  font-family: Georgia, serif;
-}
-
-.admin-notifications-page .notif-stat-card p {
-  margin: 0;
-  color: var(--muted);
-  font-weight: 700;
+.admin-notifications-page .notifications-list-card::after,
+.admin-notifications-page .notification-categories-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent 140%);
+  box-shadow: 0 0 16px 0 var(--accent);
+  opacity: 0.75;
 }
 
 .admin-notifications-page .notification-toolbar {
@@ -221,14 +186,12 @@
 
 /* Layout */
 
-.admin-notifications-page .notifications-layout {
-  display: grid;
-  grid-template-columns: 1.5fr 0.8fr;
-  gap: 24px;
+.admin-notifications-page .notification-categories-panel {
+  padding: 16px 20px;
+  margin-bottom: 24px;
 }
 
-.admin-notifications-page .notifications-list-card,
-.admin-notifications-page .notification-side-panel {
+.admin-notifications-page .notifications-list-card {
   padding: 24px;
 }
 
@@ -241,7 +204,7 @@
 }
 
 .admin-notifications-page .notifications-card-header h3,
-.admin-notifications-page .notification-side-panel h3 {
+.admin-notifications-page .notification-categories-panel h3 {
   margin: 0;
   color: var(--primary-dark);
   font-weight: 950;
@@ -254,7 +217,7 @@
 
 .admin-notifications-page .notifications-card-header button {
   border: none;
-  background: var(--soft);
+  background: var(--green-soft);
   color: var(--primary);
   padding: 10px 15px;
   border-radius: 14px;
@@ -275,7 +238,7 @@
 }
 
 .admin-notifications-page .notification-row {
-  background: var(--soft);
+  background: var(--green-soft);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 18px;
@@ -283,11 +246,17 @@
   grid-template-columns: auto 1fr auto;
   gap: 16px;
   align-items: flex-start;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.admin-notifications-page .notification-row:hover {
+.admin-notifications-page .notification-row.clickable {
+  cursor: pointer;
+}
+
+.admin-notifications-page .notification-row.clickable:hover {
   border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -16px rgba(184, 132, 44, 0.5);
 }
 
 .admin-notifications-page .notification-row.unread {
@@ -298,13 +267,19 @@
 .admin-notifications-page .notification-icon {
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
   background: linear-gradient(135deg, var(--accent), #b8842c);
   color: var(--primary-dark);
   border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 16px rgba(184,132,44,0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 16px rgba(184,132,44,0.28);
+  transition: transform 0.2s ease;
+}
+
+.admin-notifications-page .notification-row:hover .notification-icon {
+  transform: scale(1.06) rotate(-3deg);
 }
 
 .admin-notifications-page .notification-meta {
@@ -354,7 +329,7 @@
 }
 
 .admin-notifications-page .tag-read {
-  background: var(--soft);
+  background: var(--green-soft);
   color: var(--primary);
 }
 
@@ -368,7 +343,7 @@
   height: 38px;
   border: none;
   border-radius: 12px;
-  background: var(--soft);
+  background: var(--green-soft);
   color: var(--primary);
   cursor: pointer;
   transition: transform 0.15s ease, background 0.15s ease;
@@ -385,62 +360,121 @@
 
 /* Side panel */
 
-.admin-notifications-page .notification-side-panel h3 {
-  margin-bottom: 18px;
-}
-
-.admin-notifications-page .notif-category {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 14px;
-  transition: background 0.2s ease;
-}
-
-.admin-notifications-page .notif-category:hover {
-  background: var(--soft);
-}
-
-.admin-notifications-page .notif-category:last-child {
-  border-bottom: none;
-}
-
-.admin-notifications-page .notif-category-icon {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  border-radius: 14px;
+.admin-notifications-page .notif-category-header {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 16px rgba(15,61,46,0.2);
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
-.admin-notifications-page .notif-category strong {
-  color: var(--primary-dark);
+.admin-notifications-page .notif-category-header h3 {
+  margin: 0;
 }
 
-.admin-notifications-page .notif-category p {
-  margin: 4px 0 0;
+.admin-notifications-page .notif-category-header p {
+  margin: 5px 0 0;
   color: var(--muted);
 }
 
-.admin-notifications-page .notif-category span {
-  background: #fff7d6;
-  color: #8a6500;
-  padding: 7px 11px;
+.admin-notifications-page .notif-category-count-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-soft);
+  color: var(--primary);
+  border: 1px solid rgba(15, 61, 46, 0.12);
   border-radius: 999px;
-  font-weight: 950;
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.admin-notifications-page .notif-category-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.admin-notifications-page .notif-category {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 6px 18px;
+  border-left: 1px solid var(--border);
+  border-radius: 12px;
+  transition: background 0.18s ease;
+}
+
+.admin-notifications-page .notif-category:first-child {
+  border-left: none;
+  padding-left: 2px;
+}
+
+.admin-notifications-page .notif-category:hover {
+  background: var(--cat-tint);
+}
+
+.admin-notifications-page .notif-category.accent-blue { --cat-color: #2563eb; --cat-tint: rgba(37, 99, 235, 0.08); }
+.admin-notifications-page .notif-category.accent-amber { --cat-color: #b3790f; --cat-tint: rgba(215, 162, 77, 0.12); }
+.admin-notifications-page .notif-category.accent-green { --cat-color: #0f3d2e; --cat-tint: rgba(15, 61, 46, 0.08); }
+.admin-notifications-page .notif-category.accent-purple { --cat-color: #7c3aed; --cat-tint: rgba(124, 58, 237, 0.08); }
+
+.admin-notifications-page .notif-category-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  background: var(--cat-tint);
+  color: var(--cat-color);
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-notifications-page .notif-category-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-notifications-page .notif-category-count {
+  font-family: "JetBrains Mono", "Segoe UI", monospace;
+  color: var(--primary-dark);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.admin-notifications-page .notif-category-title {
+  color: var(--muted);
+  font-weight: 750;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 1000px) {
-  .admin-notifications-page .notification-stats,
-  .admin-notifications-page .notification-toolbar,
-  .admin-notifications-page .notifications-layout {
+  .admin-notifications-page .notification-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-notifications-page .notif-category-strip {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 12px;
+  }
+
+  .admin-notifications-page .notif-category:nth-child(odd) {
+    border-left: none;
+    padding-left: 2px;
+  }
+
+  .admin-notifications-page .notification-toolbar {
     grid-template-columns: 1fr;
   }
 
@@ -450,5 +484,20 @@
 
   .admin-notifications-page .notification-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-notifications-page .notification-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-notifications-page .notif-category-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-notifications-page .notif-category {
+    border-left: none;
+    padding-left: 2px;
   }
 }

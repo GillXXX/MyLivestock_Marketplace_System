@@ -15,6 +15,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminUsers.css";
 
@@ -275,28 +276,32 @@ function AdminUsers() {
       </header>
 
       <section className="user-kpi-grid">
-        <KpiCard
+        <AdminStatCard
+          accent="green"
           icon={<Tractor size={24} />}
           value={stats.farmers}
           label="Registered Farmers"
           note="Total farmer accounts"
         />
 
-        <KpiCard
+        <AdminStatCard
+          accent="blue"
           icon={<ShoppingBag size={24} />}
           value={stats.buyers}
           label="Registered Buyers"
           note="Total buyer accounts"
         />
 
-        <KpiCard
+        <AdminStatCard
+          accent="amber"
           icon={<Clock size={24} />}
           value={stats.pendingVerification}
           label="Pending Verification"
           note="Requires MAO review"
         />
 
-        <KpiCard
+        <AdminStatCard
+          accent="purple"
           icon={<ShieldCheck size={24} />}
           value={stats.verifiedRate}
           label="Verified Accounts"
@@ -527,18 +532,6 @@ function AdminUsers() {
           )}
         </div>
       </section>
-    </div>
-  );
-}
-
-function KpiCard({ icon, value, label, note }) {
-  return (
-    <div className="user-kpi-card">
-      <div className="kpi-icon">{icon}</div>
-
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{note}</small>
     </div>
   );
 }

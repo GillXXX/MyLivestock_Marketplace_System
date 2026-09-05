@@ -15,6 +15,7 @@ const getAdminListings = async (req, res) => {
         l.location,
         l.status,
         l.image_url,
+        l.review_note,
         l.created_at,
         u.full_name AS farmer_name
       FROM livestock_listings l
@@ -52,16 +53,18 @@ const updateListingStatus = async (req, res) => {
       return res.status(403).json({ message: "Admin access only" });
     }
 
-    const { status } = req.body;
+    const { status, reason } = req.body;
 
     if (!["Available", "Pending", "Flagged", "Rejected"].includes(status)) {
       return res.status(400).json({ message: "Invalid listing status" });
     }
 
-    await db.query("UPDATE livestock_listings SET status = ? WHERE id = ?", [
-      status,
-      req.params.id,
-    ]);
+    const isReviewOutcome = status === "Flagged" || status === "Rejected";
+
+    await db.query(
+      "UPDATE livestock_listings SET status = ?, review_note = ? WHERE id = ?",
+      [status, isReviewOutcome && reason ? reason : null, req.params.id]
+    );
 
     res.json({ message: "Listing status updated successfully" });
   } catch (error) {

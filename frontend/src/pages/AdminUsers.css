@@ -1,18 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #fbfaf5;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
-  --green-soft: #eef6f1;
-  --blue-soft: #e8f1ff;
-  --warning-soft: #fff7d6;
-  --danger-soft: #ffe5e5;
-  --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
-}
+@import "./AdminTheme.css";
 
 .enterprise-users-page {
   min-height: 100vh;
@@ -93,44 +79,6 @@
   margin-bottom: 24px;
 }
 
-.user-kpi-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: var(--shadow);
-}
-
-.kpi-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: var(--green-soft);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-kpi-card h2 {
-  font-size: 40px;
-  font-weight: 950;
-  color: var(--primary-dark);
-  margin: 14px 0 0;
-}
-
-.user-kpi-card p {
-  margin: 0;
-  color: var(--muted);
-  font-weight: 750;
-}
-
-.user-kpi-card small {
-  display: block;
-  margin-top: 8px;
-  color: var(--accent);
-  font-weight: 850;
-}
 
 .user-management-card,
 .verification-summary {

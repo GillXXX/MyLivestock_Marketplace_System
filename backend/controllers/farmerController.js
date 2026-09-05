@@ -467,7 +467,7 @@ exports.getFarmerNotifications = async (req, res) => {
 
     const [listings] = await db.query(
       `
-      SELECT id, livestock_type, breed, status, created_at
+      SELECT id, livestock_type, breed, status, review_note, created_at
       FROM livestock_listings
       WHERE farmer_id = ?
       ORDER BY created_at DESC
@@ -477,16 +477,25 @@ exports.getFarmerNotifications = async (req, res) => {
     );
 
     listings.forEach((item) => {
+      const title =
+        item.status === "Available"
+          ? "Listing approved"
+          : item.status === "Rejected"
+          ? "Listing rejected"
+          : item.status === "Flagged"
+          ? "Listing flagged for review"
+          : "Listing submitted";
+
+      const base = `Your ${item.livestock_type} (${item.breed || "No breed"}) listing is ${item.status}.`;
+
       notifications.push({
         id: `L-${item.id}`,
         type: "Listing Status",
-        title:
-          item.status === "Available"
-            ? "Listing approved"
-            : item.status === "Rejected"
-            ? "Listing rejected"
-            : "Listing submitted",
-        message: `Your ${item.livestock_type} (${item.breed || "No breed"}) listing is ${item.status}.`,
+        title,
+        message:
+          (item.status === "Rejected" || item.status === "Flagged") && item.review_note
+            ? `${base} Reason: ${item.review_note}`
+            : base,
         time: item.created_at,
         status: item.status === "Pending" ? "Unread" : "Read",
       });

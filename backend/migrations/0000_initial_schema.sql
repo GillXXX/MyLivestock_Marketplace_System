@@ -52,6 +52,7 @@ CREATE TABLE `livestock_listings` (
   `description` text DEFAULT NULL,
   `image_url` text DEFAULT NULL,
   `documents` text DEFAULT NULL,
+  `review_note` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `farmer_id` (`farmer_id`),
   CONSTRAINT `livestock_listings_ibfk_1` FOREIGN KEY (`farmer_id`) REFERENCES `users` (`id`)

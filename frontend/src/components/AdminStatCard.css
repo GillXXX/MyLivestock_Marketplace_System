@@ -1,0 +1,98 @@
+.admin-stat-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.admin-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(160deg, var(--stat-tint) 0%, transparent 55%),
+    radial-gradient(circle at 4px 4px, rgba(15, 23, 42, 0.05) 1px, transparent 1.4px);
+  background-size: auto, 15px 15px;
+  pointer-events: none;
+}
+
+.admin-stat-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--stat-color), transparent 140%);
+  box-shadow: 0 0 16px 0 var(--stat-color);
+  opacity: 0.7;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--stat-color);
+  box-shadow: var(--shadow-lg, 0 22px 55px rgba(15, 61, 46, 0.14)), 0 0 0 1px var(--stat-tint), 0 16px 32px -12px var(--stat-color);
+}
+
+.admin-stat-card.accent-green { --stat-color: #0f3d2e; --stat-tint: rgba(15, 61, 46, 0.1); }
+.admin-stat-card.accent-blue { --stat-color: #2563eb; --stat-tint: rgba(37, 99, 235, 0.1); }
+.admin-stat-card.accent-amber { --stat-color: #b3790f; --stat-tint: rgba(215, 162, 77, 0.16); }
+.admin-stat-card.accent-purple { --stat-color: #7c3aed; --stat-tint: rgba(124, 58, 237, 0.1); }
+.admin-stat-card.accent-red { --stat-color: #b42318; --stat-tint: rgba(180, 35, 24, 0.1); }
+
+.admin-stat-top {
+  display: flex;
+  position: relative;
+}
+
+.admin-stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(150deg, var(--stat-tint), transparent);
+  border: 1px solid var(--stat-tint);
+  color: var(--stat-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -6px var(--stat-color);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.admin-stat-card:hover .admin-stat-icon {
+  transform: scale(1.06) rotate(-3deg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 20px -6px var(--stat-color);
+}
+
+.admin-stat-card h2 {
+  font-family: "JetBrains Mono", "Segoe UI", monospace;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin: 16px 0 0;
+  position: relative;
+  color: var(--primary-dark, #071f16);
+}
+
+.admin-stat-card p {
+  margin: 4px 0 0;
+  color: var(--muted, #667085);
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.admin-stat-card small {
+  display: block;
+  margin-top: 6px;
+  color: var(--stat-color);
+  font-weight: 700;
+  font-size: 12px;
+  position: relative;
+}

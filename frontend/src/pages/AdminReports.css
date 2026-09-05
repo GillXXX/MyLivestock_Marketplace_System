@@ -1,14 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #ffffff;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
-  --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
-}
+@import "./AdminTheme.css";
 
 /* Every rule below is scoped under .reports-page — this page's CSS is
    bundled globally alongside every other page's CSS (no CSS Modules /
@@ -140,48 +130,12 @@
   margin-bottom: 24px;
 }
 
-.reports-page .metric-card,
 .reports-page .report-card {
   display: block;
   background: white;
   border: 1px solid #e8e2d4;
   border-radius: 22px;
   box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
-}
-
-.reports-page .metric-card {
-  padding: 24px;
-}
-
-.reports-page .metric-icon {
-  width: 48px;
-  height: 48px;
-  background: #eaf5ef;
-  color: #0f3d2e;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.reports-page .metric-card h2 {
-  margin: 14px 0 0;
-  font-size: 38px;
-  font-weight: 950;
-  color: #071f16;
-}
-
-.reports-page .metric-card p {
-  margin: 0;
-  color: #667085;
-  font-weight: 700;
-}
-
-.reports-page .metric-card small {
-  display: block;
-  margin-top: 8px;
-  color: #d7a24d;
-  font-weight: 900;
 }
 
 .reports-page .reports-layout {

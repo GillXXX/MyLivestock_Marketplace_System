@@ -13,13 +13,15 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminListings.css";
 
 function AdminListings() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [listings, setListings] = useState([]);
   const [stats, setStats] = useState({
@@ -30,10 +32,11 @@ function AdminListings() {
   });
 
   const [searchText, setSearchText] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All Livestock Types");
-  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [typeFilter, setTypeFilter] = useState(location.state?.typeFilter || "All Livestock Types");
+  const [statusFilter, setStatusFilter] = useState(location.state?.statusFilter || "All Status");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -71,7 +74,7 @@ function AdminListings() {
     fetchListings();
   }, [fetchListings]);
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id, status, reason) => {
     try {
       const token = localStorage.getItem("token");
 
@@ -81,7 +84,7 @@ function AdminListings() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, reason }),
       });
 
       const data = await res.json();
@@ -95,6 +98,24 @@ function AdminListings() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const handleFlag = (item) => {
+    const reason = window.prompt(
+      `Reason for flagging this ${item.livestock_type} listing? (optional)`,
+      item.review_note || ""
+    );
+    if (reason === null) return;
+    updateStatus(item.id, "Flagged", reason);
+  };
+
+  const handleReject = (item) => {
+    const reason = window.prompt(
+      `Reason for rejecting this ${item.livestock_type} listing? (optional)`,
+      item.review_note || ""
+    );
+    if (reason === null) return;
+    updateStatus(item.id, "Rejected", reason);
   };
 
   const deleteListing = async (id) => {
@@ -122,6 +143,101 @@ function AdminListings() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const visibleIds = filteredListings.map((item) => item.id);
+    const allSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+    setSelectedIds(allSelected ? [] : visibleIds);
+  };
+
+  const bulkUpdateStatus = async (status, reason) => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`${API_URL}/api/admin/listings/${id}/status`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ status, reason }),
+          })
+        )
+      );
+
+      setSelectedIds([]);
+      fetchListings();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Approve ${selectedIds.length} selected listing(s)?`)) return;
+    bulkUpdateStatus("Available");
+  };
+
+  const handleBulkFlag = () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt(
+      `Reason for flagging ${selectedIds.length} selected listing(s)? (optional)`
+    );
+    if (reason === null) return;
+    bulkUpdateStatus("Flagged", reason);
+  };
+
+  const handleBulkReject = () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt(
+      `Reason for rejecting ${selectedIds.length} selected listing(s)? (optional)`
+    );
+    if (reason === null) return;
+    bulkUpdateStatus("Rejected", reason);
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Delete ${selectedIds.length} selected listing(s)? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`${API_URL}/api/admin/listings/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
+
+      setSelectedIds([]);
+      fetchListings();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const getDaysPending = (createdAt) => {
+    return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
   };
 
   const handleExport = () => {
@@ -191,10 +307,10 @@ function AdminListings() {
       </header>
 
       <section className="listing-kpi-grid">
-        <Kpi tone="blue" icon={<ClipboardCheck />} value={stats.totalListings} label="Total Listings" />
-        <Kpi tone="amber" icon={<Clock />} value={stats.pendingReview} label="Pending Review" />
-        <Kpi tone="green" icon={<BadgeCheck />} value={stats.approved} label="Approved" />
-        <Kpi tone="red" icon={<AlertTriangle />} value={stats.flagged} label="Flagged" />
+        <AdminStatCard accent="blue" icon={<ClipboardCheck />} value={stats.totalListings} label="Total Listings" />
+        <AdminStatCard accent="amber" icon={<Clock />} value={stats.pendingReview} label="Pending Review" />
+        <AdminStatCard accent="green" icon={<BadgeCheck />} value={stats.approved} label="Approved" />
+        <AdminStatCard accent="red" icon={<AlertTriangle />} value={stats.flagged} label="Flagged" />
       </section>
 
       <section className="listing-toolbar">
@@ -233,10 +349,62 @@ function AdminListings() {
             </div>
           </div>
 
+          {selectedIds.length > 0 && (
+            <div className="bulk-action-bar">
+              <span>{selectedIds.length} selected</span>
+
+              <div className="bulk-actions">
+                <button type="button" className="bulk-approve" onClick={handleBulkApprove}>
+                  <CheckCircle size={15} /> Approve
+                </button>
+
+                <button type="button" className="bulk-flag" onClick={handleBulkFlag}>
+                  <AlertTriangle size={15} /> Flag
+                </button>
+
+                <button type="button" className="bulk-reject" onClick={handleBulkReject}>
+                  <XCircle size={15} /> Reject
+                </button>
+
+                <button type="button" className="bulk-delete" onClick={bulkDelete}>
+                  <Trash2 size={15} /> Delete
+                </button>
+
+                <button
+                  type="button"
+                  className="bulk-clear"
+                  onClick={() => setSelectedIds([])}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="table-responsive">
             <table className="professional-table">
               <thead>
                 <tr>
+                  <th className="checkbox-col">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredListings.length > 0 &&
+                        filteredListings.every((item) => selectedIds.includes(item.id))
+                      }
+                      ref={(el) => {
+                        if (el) {
+                          const visibleIds = filteredListings.map((item) => item.id);
+                          const selectedVisible = visibleIds.filter((id) =>
+                            selectedIds.includes(id)
+                          ).length;
+                          el.indeterminate =
+                            selectedVisible > 0 && selectedVisible < visibleIds.length;
+                        }
+                      }}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th>Listing</th>
                   <th>Farmer</th>
                   <th>Location</th>
@@ -250,15 +418,25 @@ function AdminListings() {
               <tbody>
                 {filteredListings.length === 0 ? (
                   <tr>
-                    <td colSpan="7">No listings found.</td>
+                    <td colSpan="8">No listings found.</td>
                   </tr>
                 ) : (
                   filteredListings.map((item) => {
                     const displayStatus =
                       item.status === "Available" ? "Approved" : item.status;
 
+                    const daysPending = getDaysPending(item.created_at);
+
                     return (
-                      <tr key={item.id}>
+                      <tr key={item.id} className={selectedIds.includes(item.id) ? "row-selected" : ""}>
+                        <td className="checkbox-col">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelect(item.id)}
+                          />
+                        </td>
+
                         <td>
                           <div className="listing-cell">
                             {item.image_url ? (
@@ -298,16 +476,34 @@ function AdminListings() {
                           </div>
                         </td>
 
-                        <td>
-                          <strong>₱{Number(item.price).toLocaleString()}</strong>
+                        <td className="price-cell">
+                          ₱{Number(item.price).toLocaleString()}
                         </td>
 
-                        <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                        <td className="date-cell">{new Date(item.created_at).toLocaleDateString()}</td>
 
                         <td>
-                          <span className={`status-pill ${displayStatus.toLowerCase()}`}>
-                            {displayStatus}
-                          </span>
+                          <div className="status-cell">
+                            <span
+                              className={`status-pill ${displayStatus.toLowerCase()}`}
+                              title={item.review_note || undefined}
+                            >
+                              {displayStatus}
+                            </span>
+
+                            {(displayStatus === "Flagged" || displayStatus === "Rejected") &&
+                              item.review_note && (
+                                <small className="review-note" title={item.review_note}>
+                                  {item.review_note}
+                                </small>
+                              )}
+
+                            {displayStatus === "Pending" && (
+                              <small className={`pending-age ${daysPending >= 3 ? "stale" : ""}`}>
+                                {daysPending <= 0 ? "Today" : `${daysPending}d pending`}
+                              </small>
+                            )}
+                          </div>
                         </td>
 
                         <td>
@@ -325,7 +521,7 @@ function AdminListings() {
                               className="flag"
                               title="Flag Listing"
                               type="button"
-                              onClick={() => updateStatus(item.id, "Flagged")}
+                              onClick={() => handleFlag(item)}
                             >
                               <AlertTriangle size={17} />
                             </button>
@@ -334,7 +530,7 @@ function AdminListings() {
                               className="reject"
                               title="Reject Listing"
                               type="button"
-                              onClick={() => updateStatus(item.id, "Rejected")}
+                              onClick={() => handleReject(item)}
                             >
                               <XCircle size={17} />
                             </button>
@@ -357,57 +553,7 @@ function AdminListings() {
             </table>
           </div>
         </div>
-
-        <aside className="approval-panel">
-          <h3>Review Guidelines</h3>
-          <p>
-            Before approving a listing, ensure that the livestock details are
-            complete and valid.
-          </p>
-
-          <div className="guideline">
-            <CheckCircle size={18} />
-            Complete livestock type, breed, age, and weight
-          </div>
-
-          <div className="guideline">
-            <CheckCircle size={18} />
-            Clear livestock photo uploaded
-          </div>
-
-          <div className="guideline">
-            <CheckCircle size={18} />
-            Reasonable price and valid seller location
-          </div>
-
-          <div className="guideline warning">
-            <AlertTriangle size={18} />
-            Flag listings with suspicious details
-          </div>
-
-          <div className="approval-summary">
-            <div>
-              <strong>Today’s Reviews</strong>
-              <span>{stats.pendingReview} pending listings</span>
-            </div>
-
-            <div>
-              <strong>Average Approval Time</strong>
-              <span>12 minutes</span>
-            </div>
-          </div>
-        </aside>
       </section>
-    </div>
-  );
-}
-
-function Kpi({ icon, value, label, tone = "green" }) {
-  return (
-    <div className={`listing-kpi-card tone-${tone}`}>
-      <div className="listing-kpi-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
     </div>
   );
 }

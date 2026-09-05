@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import AdminStatCard from "../components/AdminStatCard";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
 import {
@@ -145,8 +146,11 @@ function AdminMapMonitoring() {
         id: item.id,
         lat: Number(item.farm_lat),
         lng: Number(item.farm_lng),
-        color: item.status === "Pending" ? "#e3b463" : "#b8842c",
+        // Matches the legend dots exactly — neon teal for active, neon
+        // gold for pending so it visually demands review.
+        color: item.status === "Pending" ? "#FFD60A" : "#00F5D4",
         shape: "pin",
+        pulse: item.status === "Pending",
         popupHtml: `
           <div class="map-popup">
             <strong>${escapeHtml(item.farmer || "Unknown farmer")}</strong>
@@ -208,32 +212,36 @@ function AdminMapMonitoring() {
       </header>
 
       <section className="map-kpi-grid">
-        <MapStat
+        <AdminStatCard
+          accent="blue"
           icon={<Users />}
           value={stats.sellerLocations}
           label="Seller Locations"
-          trend="Registered farmers"
+          note="Registered farmers"
         />
 
-        <MapStat
+        <AdminStatCard
+          accent="green"
           icon={<LocateFixed />}
           value={`${stats.pinnedLocations}/${stats.sellerLocations}`}
           label="Pinned on Map"
-          trend="Farmers with exact coordinates"
+          note="Farmers with exact coordinates"
         />
 
-        <MapStat
+        <AdminStatCard
+          accent="amber"
           icon={<ClipboardCheck />}
           value={stats.mappedListings}
           label="Mapped Listings"
-          trend="Marketplace records"
+          note="Marketplace records"
         />
 
-        <MapStat
+        <AdminStatCard
+          accent="purple"
           icon={<Layers />}
           value={stats.livestockTypes}
           label="Livestock Types"
-          trend="Swine, cattle, goat, poultry"
+          note="Swine, cattle, goat, poultry"
         />
       </section>
 
@@ -270,7 +278,7 @@ function AdminMapMonitoring() {
       </section>
 
       <section className="map-main-grid">
-        <div className="map-card map-card-large">
+        <div className="map-card map-card-large accent-teal">
           <div className="card-heading">
             <div>
               <h3>Seller Location Overview</h3>
@@ -278,6 +286,7 @@ function AdminMapMonitoring() {
             </div>
 
             <span className="live-badge">
+              <i className="live-dot"></i>
               <Activity size={15} />
               Live &middot; auto-refreshing
             </span>
@@ -310,7 +319,7 @@ function AdminMapMonitoring() {
           </div>
         </div>
 
-        <aside className="map-card">
+        <aside className="map-card accent-blue">
           <div className="card-heading">
             <div>
               <h3>Seller Records</h3>
@@ -332,7 +341,7 @@ function AdminMapMonitoring() {
                   key={item.id}
                   onClick={() => handleRecordClick(item)}
                 >
-                  <div className="record-icon">
+                  <div className={`record-icon ${item.status === "Pending" ? "pending" : ""}`}>
                     <MapPin size={20} />
                   </div>
 
@@ -368,7 +377,7 @@ function AdminMapMonitoring() {
       </section>
 
       <section className="map-insights-grid">
-        <div className="map-card">
+        <div className="map-card accent-green">
           <h3>Livestock Distribution</h3>
 
           {distribution.length === 0 ? (
@@ -383,6 +392,7 @@ function AdminMapMonitoring() {
               return (
                 <Distribution
                   key={item.livestock_type}
+                  icon={getAnimalIcon(item.livestock_type)}
                   label={item.livestock_type}
                   value={item.total}
                   width={percent}
@@ -392,11 +402,13 @@ function AdminMapMonitoring() {
           )}
         </div>
 
-        <div className="map-card">
+        <div className="map-card accent-amber">
           <h3>Monitoring Alerts</h3>
 
           <div className="alert-row">
-            <AlertTriangle size={20} />
+            <div className="alert-icon warning">
+              <AlertTriangle size={20} />
+            </div>
             <div>
               <strong>Pending location review</strong>
               <p>{stats.pendingReview} seller/listing record(s) need MAO validation.</p>
@@ -404,7 +416,9 @@ function AdminMapMonitoring() {
           </div>
 
           <div className="alert-row normal">
-            <MapPin size={20} />
+            <div className="alert-icon">
+              <MapPin size={20} />
+            </div>
             <div>
               <strong>Coverage status</strong>
               <p>All current listings are within Veruela scope.</p>
@@ -416,23 +430,23 @@ function AdminMapMonitoring() {
   );
 }
 
-function MapStat({ icon, value, label, trend }) {
-  return (
-    <div className="map-stat-card">
-      <div className="map-stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{trend}</small>
-    </div>
-  );
+function getAnimalIcon(type) {
+  if (type === "Swine") return "🐖";
+  if (type === "Cattle") return "🐄";
+  if (type === "Goat") return "🐐";
+  if (type === "Poultry") return "🐔";
+  return "🐾";
 }
 
-function Distribution({ label, value, width }) {
+function Distribution({ icon, label, value, width }) {
   return (
     <div className="distribution-item">
       <div>
-        <strong>{label}</strong>
-        <span>{value}</span>
+        <span className="distribution-label">
+          <i className="distribution-icon">{icon}</i>
+          <strong>{label}</strong>
+        </span>
+        <span className="distribution-value">{value}</span>
       </div>
 
       <div className="distribution-track">
