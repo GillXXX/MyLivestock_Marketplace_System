@@ -4,15 +4,14 @@ import {
   ArrowLeft,
   Heart,
   Search,
-  Filter,
   MapPin,
-  Eye,
   MessageCircle,
   Trash2,
   ShieldCheck,
   TrendingUp,
   Wallet,
   Clock3,
+  Store,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -36,6 +35,7 @@ function BuyerFavorites() {
   const [searchText, setSearchText] = useState("");
   const [livestockType, setLivestockType] = useState("All Livestock");
   const [status, setStatus] = useState("All Status");
+  const [sortBy, setSortBy] = useState("Recently Saved");
   const [detailsListing, setDetailsListing] = useState(null);
   const [inquiryListing, setInquiryListing] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +43,18 @@ function BuyerFavorites() {
 
   const defaultImage =
     "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
+
+  const formatSavedTime = (time) => {
+    if (!time) return "Saved recently";
+
+    const diffDays = Math.floor((Date.now() - new Date(time).getTime()) / 86400000);
+
+    if (diffDays <= 0) return "Saved today";
+    if (diffDays === 1) return "Saved yesterday";
+    if (diffDays < 30) return `Saved ${diffDays}d ago`;
+
+    return `Saved ${new Date(time).toLocaleDateString()}`;
+  };
 
   const fetchFavorites = useCallback(async () => {
     try {
@@ -104,8 +116,20 @@ function BuyerFavorites() {
       results = results.filter((item) => item.status === status);
     }
 
+    if (sortBy === "Lowest Price") {
+      results.sort((a, b) => Number(a.price) - Number(b.price));
+    }
+
+    if (sortBy === "Highest Price") {
+      results.sort((a, b) => Number(b.price) - Number(a.price));
+    }
+
+    if (sortBy === "Recently Saved") {
+      results.sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at));
+    }
+
     setFilteredListings(results);
-  }, [searchText, livestockType, status, savedListings]);
+  }, [searchText, livestockType, status, sortBy, savedListings]);
 
   const removeFavorite = async (listingId) => {
     try {
@@ -129,6 +153,17 @@ function BuyerFavorites() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const getStatusClass = (itemStatus) => {
+    if (itemStatus === "Available") return "saved-status available";
+    if (itemStatus === "Sold") return "saved-status sold";
+    return "saved-status pending";
+  };
+
+  const goToSellerProfile = (item) => {
+    if (!item.seller_id) return;
+    navigate(`/seller/${item.seller_id}`);
   };
 
   const handleViewDetails = (item) => {
@@ -229,15 +264,34 @@ function BuyerFavorites() {
           <option>Sold</option>
         </select>
 
-        <button type="button">
-          <Filter size={17} />
-          Filter
-        </button>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option>Recently Saved</option>
+          <option>Lowest Price</option>
+          <option>Highest Price</option>
+        </select>
       </section>
 
       <section className="saved-grid">
         {filteredListings.length === 0 ? (
-          <h3>No saved livestock yet.</h3>
+          <div className="saved-empty">
+            <Heart size={32} />
+            <h3>
+              {savedListings.length === 0
+                ? "No saved livestock yet"
+                : "No saved listings match your filters"}
+            </h3>
+            <p>
+              {savedListings.length === 0
+                ? "Listings you favorite in the Marketplace will show up here."
+                : "Try adjusting your search or filters."}
+            </p>
+            {savedListings.length === 0 && (
+              <Link to="/marketplace" className="saved-empty-cta">
+                <Store size={16} />
+                Browse Marketplace
+              </Link>
+            )}
+          </div>
         ) : (
           filteredListings.map((item) => (
             <div className="saved-card" key={item.id}>
@@ -259,7 +313,14 @@ function BuyerFavorites() {
                 <div className="saved-title">
                   <div>
                     <h3>{item.breed}</h3>
-                    <p>{item.seller_name}</p>
+                    <button
+                      type="button"
+                      className="saved-seller-link"
+                      onClick={() => goToSellerProfile(item)}
+                      disabled={!item.seller_id}
+                    >
+                      {item.seller_name}
+                    </button>
                   </div>
 
                   <strong>₱{Number(item.price).toLocaleString()}</strong>
@@ -273,20 +334,12 @@ function BuyerFavorites() {
 
                   <div>
                     <Clock3 size={16} />
-                    <span>Saved recently</span>
+                    <span>{formatSavedTime(item.saved_at)}</span>
                   </div>
                 </div>
 
                 <div className="saved-status-row">
-                  <span
-                    className={
-                      item.status === "Available"
-                        ? "saved-status available"
-                        : "saved-status pending"
-                    }
-                  >
-                    {item.status}
-                  </span>
+                  <span className={getStatusClass(item.status)}>{item.status}</span>
 
                   {item.seller_verified ? (
                     <span className="verified-seller">
@@ -307,7 +360,6 @@ function BuyerFavorites() {
                     type="button"
                     onClick={() => handleViewDetails(item)}
                   >
-                    <Eye size={17} />
                     View Details
                   </button>
 
@@ -316,8 +368,7 @@ function BuyerFavorites() {
                     type="button"
                     onClick={() => setInquiryListing(item)}
                   >
-                    <MessageCircle size={17} />
-                    Inquire
+                    <MessageCircle size={16} />
                   </button>
 
                   <button
@@ -325,7 +376,7 @@ function BuyerFavorites() {
                     type="button"
                     onClick={() => removeFavorite(item.id)}
                   >
-                    <Trash2 size={17} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>

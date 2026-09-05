@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Search,
@@ -34,7 +34,8 @@ function Marketplace() {
   const [priceRange, setPriceRange] = useState("Price Range");
   const [sortBy, setSortBy] = useState("Sort by Newest");
   const [docsOnly, setDocsOnly] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const filtersRef = useRef(null);
   const [selectedListing, setSelectedListing] = useState(null);
   const [inquiryListing, setInquiryListing] = useState(null);
   const [offerListing, setOfferListing] = useState(null);
@@ -139,6 +140,19 @@ function Marketplace() {
   }, [navigate]);
 
   useEffect(() => {
+    if (!showFilters) return undefined;
+
+    const handleClickOutside = (e) => {
+      if (filtersRef.current && !filtersRef.current.contains(e.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showFilters]);
+
+  useEffect(() => {
     let results = [...listings];
 
     if (searchText.trim() !== "") {
@@ -232,17 +246,6 @@ function Marketplace() {
         </div>
 
         <select
-          value={livestockType}
-          onChange={(e) => setLivestockType(e.target.value)}
-        >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
-        </select>
-
-        <select
           value={priceRange}
           onChange={(e) => setPriceRange(e.target.value)}
         >
@@ -252,95 +255,68 @@ function Marketplace() {
           <option>₱30,000 above</option>
         </select>
 
-        <button type="button" onClick={() => setShowFilters((prev) => !prev)}>
-          <SlidersHorizontal size={18} />
-          {showFilters ? "Hide Filters" : "Filters"}
-        </button>
+        <div className="filter-dropdown-wrap" ref={filtersRef}>
+          <button
+            type="button"
+            className={docsOnly || livestockType !== "All Livestock" ? "active" : ""}
+            onClick={() => setShowFilters((prev) => !prev)}
+          >
+            <SlidersHorizontal size={18} />
+            Filters
+            {(docsOnly || livestockType !== "All Livestock") && (
+              <span className="filter-active-dot" />
+            )}
+          </button>
+
+          {showFilters && (
+            <div className="filter-dropdown">
+              <div className="filter-title">
+                <Filter size={18} />
+                <h3>Filters</h3>
+              </div>
+
+              <div className="filter-group">
+                <label>Livestock Type</label>
+
+                <div className="filter-chip-row">
+                  {["Swine", "Cattle", "Goat", "Poultry"].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`filter-chip ${livestockType === type ? "active" : ""}`}
+                      onClick={() =>
+                        setLivestockType(livestockType === type ? "All Livestock" : type)
+                      }
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="filter-group">
+                <label>Verification</label>
+                <p className="filter-note">
+                  <ShieldCheck size={14} />
+                  Sellers verified by MAO are marked with a badge below.
+                </p>
+
+                <button
+                  type="button"
+                  className={`filter-toggle-row ${docsOnly ? "active" : ""}`}
+                  onClick={() => setDocsOnly(!docsOnly)}
+                  aria-pressed={docsOnly}
+                >
+                  <span>With health documents</span>
+                  <span className="filter-switch" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
-      <section className="market-layout">
-        {showFilters && (
-        <aside className="filter-panel">
-          <div className="filter-title">
-            <Filter size={20} />
-            <h3>Filters</h3>
-          </div>
-
-          <div className="filter-group">
-            <label>Livestock Type</label>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Swine"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Swine" ? "All Livestock" : "Swine"
-                  )
-                }
-              />{" "}
-              Swine
-            </div>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Cattle"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Cattle" ? "All Livestock" : "Cattle"
-                  )
-                }
-              />{" "}
-              Cattle
-            </div>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Goat"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Goat" ? "All Livestock" : "Goat"
-                  )
-                }
-              />{" "}
-              Goat
-            </div>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Poultry"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Poultry" ? "All Livestock" : "Poultry"
-                  )
-                }
-              />{" "}
-              Poultry
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <label>Verification</label>
-            <p className="filter-note">
-              <ShieldCheck size={14} />
-              Sellers verified by MAO are marked with a badge below.
-            </p>
-            <div>
-              <input
-                type="checkbox"
-                checked={docsOnly}
-                onChange={(e) => setDocsOnly(e.target.checked)}
-              />{" "}
-              With health documents
-            </div>
-          </div>
-        </aside>
-        )}
-
-        <main className="market-content">
+      <main className="market-content">
           <div className="market-section-header">
             <div>
               <h2>Available Livestock</h2>
@@ -449,8 +425,7 @@ function Marketplace() {
               ))
             )}
           </div>
-        </main>
-      </section>
+      </main>
 
       {selectedListing && (
         <ListingDetailsModal

@@ -54,6 +54,7 @@ import BuyerTransactions from "./pages/BuyerTransactions";
 import BuyerNotifications from "./pages/BuyerNotifications";
 import BuyerMapExplorer from "./pages/BuyerMap";
 import BuyerProfile from "./pages/BuyerProfile";
+import SellerProfile from "./pages/SellerProfile";
 import BuyerLayout from "./components/BuyerLayout";
 
 function App() {
@@ -249,6 +250,11 @@ function App() {
           <Route
             path="/buyer-settings"
             element={<AccountSettings role="buyer" />}
+          />
+
+          <Route
+            path="/seller/:id"
+            element={<SellerProfile />}
           />
         </Route>
 

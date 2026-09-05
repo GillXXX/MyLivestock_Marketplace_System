@@ -21,6 +21,7 @@ const getMarketplaceListings = async (req, res) => {
         u.id AS seller_id,
         u.full_name AS seller_name,
         u.is_verified AS seller_verified,
+        u.profile_image AS seller_avatar,
         u.farm_lat,
         u.farm_lng
       FROM livestock_listings l
@@ -33,6 +34,40 @@ const getMarketplaceListings = async (req, res) => {
   } catch (error) {
     console.error("Marketplace listings error:", error);
     res.status(500).json({ message: "Server error loading marketplace" });
+  }
+};
+
+const getSellerProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [sellerRows] = await db.query(
+      `SELECT id, full_name, location, farm_location, about, profile_image, is_verified, created_at, farm_lat, farm_lng
+       FROM users
+       WHERE id = ? AND role = 'farmer'`,
+      [id]
+    );
+
+    if (sellerRows.length === 0) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    const [listings] = await db.query(
+      `SELECT id, livestock_type, breed, age, weight, price, health_status, location,
+        description, image_url, documents, status, created_at
+       FROM livestock_listings
+       WHERE farmer_id = ? AND status = 'Available'
+       ORDER BY created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      seller: sellerRows[0],
+      listings,
+    });
+  } catch (error) {
+    console.error("Seller profile error:", error);
+    res.status(500).json({ message: "Server error loading seller profile" });
   }
 };
 
@@ -185,4 +220,10 @@ const createTransaction = async (req, res) => {
   }
 };
 
-module.exports = { getMarketplaceListings, createInquiry, recordListingView, createTransaction };
+module.exports = {
+  getMarketplaceListings,
+  getSellerProfile,
+  createInquiry,
+  recordListingView,
+  createTransaction,
+};

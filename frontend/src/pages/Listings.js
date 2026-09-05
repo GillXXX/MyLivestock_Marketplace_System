@@ -11,7 +11,6 @@ import {
   MapPin,
   X,
   FileText,
-  Eye,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -78,6 +77,18 @@ function Listings() {
     fetchListings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
+
+  const formatPostedTime = (time) => {
+    if (!time) return "";
+
+    const diffDays = Math.floor((Date.now() - new Date(time).getTime()) / 86400000);
+
+    if (diffDays <= 0) return "Posted today";
+    if (diffDays === 1) return "Posted yesterday";
+    if (diffDays < 30) return `Posted ${diffDays} days ago`;
+
+    return `Posted ${new Date(time).toLocaleDateString()}`;
+  };
 
   const parseDocuments = (documents) => {
     if (!documents) return [];
@@ -240,18 +251,16 @@ function Listings() {
                 <span className={`premium-badge status-${item.status?.toLowerCase()}`}>
                   {item.status}
                 </span>
-
-                <div className="premium-image-overlay">
-                  <div className="premium-overlay-text">
-                    <h3>{item.breed}</h3>
-                    <span className="premium-price-tag">
-                      ₱{Number(item.price).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
               </div>
 
               <div className="premium-card-body">
+                <div className="premium-card-heading">
+                  <h3>{item.breed}</h3>
+                  <span className="premium-price-tag">
+                    ₱{Number(item.price).toLocaleString()}
+                  </span>
+                </div>
+
                 <div className="premium-meta-row">
                   <span>
                     <MapPin size={14} />
@@ -260,8 +269,6 @@ function Listings() {
                   <span className="meta-divider">•</span>
                   <span>{item.age}</span>
                 </div>
-
-                <div className="premium-divider" />
 
                 <div className="premium-card-actions">
                   <button
@@ -293,82 +300,87 @@ function Listings() {
       {selectedListing && (
         <div className="listing-modal-overlay" onClick={() => setSelectedListing(null)}>
           <div className="listing-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="listing-modal-close"
-              type="button"
-              onClick={() => setSelectedListing(null)}
-            >
-              <X size={20} />
-            </button>
-
-            <img
-              src={selectedListing.image_url || defaultImage}
-              alt={selectedListing.breed}
-            />
-
-            <div className="listing-modal-body">
-              <div className="listing-modal-head">
-                <div>
-                  <h2>{selectedListing.breed}</h2>
-                  <p>
-                    {selectedListing.livestock_type} • {selectedListing.age}
-                  </p>
-                </div>
-
-                <strong>₱{Number(selectedListing.price).toLocaleString()}</strong>
+            <div className="listing-modal-media">
+              <div className="listing-modal-media-scroll">
+                <img
+                  src={selectedListing.image_url || defaultImage}
+                  alt={selectedListing.breed}
+                />
               </div>
 
-              <div className="listing-modal-info">
+              <button
+                className="listing-modal-close"
+                type="button"
+                onClick={() => setSelectedListing(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="listing-modal-body">
+              <div className="listing-modal-top-row">
+                <span
+                  className={`listing-modal-status status-${selectedListing.status?.toLowerCase()}`}
+                >
+                  {selectedListing.status}
+                </span>
+
+                <strong className="listing-modal-price-inline">
+                  ₱{Number(selectedListing.price).toLocaleString()}
+                </strong>
+              </div>
+
+              <h2 className="listing-modal-title">{selectedListing.breed}</h2>
+
+              <div className="listing-modal-meta-line">
+                <MapPin size={13} />
+                {selectedListing.location}
+                {selectedListing.created_at && (
+                  <>
+                    <span className="meta-divider">·</span>
+                    {formatPostedTime(selectedListing.created_at)}
+                  </>
+                )}
+              </div>
+
+              <div className="listing-modal-stats-bar">
+                <div>
+                  <span>Age</span>
+                  <strong>{selectedListing.age || "N/A"}</strong>
+                </div>
+
                 <div>
                   <span>Weight</span>
                   <strong>{selectedListing.weight || "N/A"}</strong>
                 </div>
 
                 <div>
-                  <span>Health Status</span>
-                  <strong>{selectedListing.health_status || "N/A"}</strong>
-                </div>
-
-                <div>
-                  <span>Status</span>
-                  <strong>{selectedListing.status}</strong>
-                </div>
-
-                <div>
-                  <span>Location</span>
-                  <strong>{selectedListing.location}</strong>
-                </div>
-
-                <div>
-                  <span>
-                    <Eye size={12} style={{ verticalAlign: "-2px" }} /> Views
-                  </span>
-                  <strong>{selectedListing.views || 0}</strong>
+                  <span>Breed</span>
+                  <strong>{selectedListing.breed || "N/A"}</strong>
                 </div>
               </div>
 
               {selectedListing.description && (
-                <div className="listing-modal-description">
-                  <h4>Description</h4>
-                  <p>{selectedListing.description}</p>
-                </div>
+                <p className="listing-modal-description">{selectedListing.description}</p>
               )}
 
               {parseDocuments(selectedListing.documents).length > 0 && (
                 <div className="listing-modal-documents">
                   <h4>Supporting Documents</h4>
 
-                  {parseDocuments(selectedListing.documents).map((docUrl, index) => (
-                    <a
-                      key={index}
-                      href={docUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FileText size={16} />
-                      Document {index + 1}
-                    </a>
-                  ))}
+                  <div className="listing-modal-documents-list">
+                    {parseDocuments(selectedListing.documents).map((docUrl, index) => (
+                      <a
+                        key={index}
+                        href={docUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <FileText size={16} />
+                        Document {index + 1}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
