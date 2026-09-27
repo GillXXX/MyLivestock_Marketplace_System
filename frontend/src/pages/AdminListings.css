@@ -113,10 +113,10 @@
 .listings-table-card {
   position: relative;
   overflow: hidden;
-  background: rgba(255,255,255,0.8);
-  border: 1px solid rgba(255,255,255,0.7);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
   box-shadow: var(--shadow);
 }
 
@@ -211,18 +211,23 @@
 
 .listings-table-card {
   border-radius: 24px;
-  padding: 24px;
+  padding: 26px;
+  box-shadow: 0 20px 48px rgba(15, 61, 46, 0.1);
 }
 
 .card-title {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.09);
 }
 
 .card-title h3 {
   margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.2px;
   color: var(--primary-dark);
   font-weight: 950;
 }
@@ -230,6 +235,7 @@
 .card-title p {
   margin: 5px 0 0;
   color: var(--muted);
+  font-size: 13px;
 }
 
 .more-btn {
@@ -253,25 +259,27 @@
 
 .professional-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .professional-table th {
   text-align: left;
-  color: var(--muted);
+  color: #8b9a92;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  padding: 14px 12px;
-  border-bottom: 2px solid var(--border);
+  padding: 0 12px 12px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
   white-space: nowrap;
 }
 
 .professional-table td {
-  padding: 18px 12px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.06);
   vertical-align: middle;
+  transition: background 0.15s ease;
 }
 
 .professional-table tbody tr {
@@ -279,9 +287,8 @@
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.professional-table tbody tr:hover {
-  background: var(--green-soft);
-  box-shadow: inset 3px 0 0 var(--accent);
+.professional-table tbody tr:hover td {
+  background: rgba(15, 61, 46, 0.03);
 }
 
 .professional-table tbody tr:last-child td {
@@ -317,7 +324,7 @@
   align-items: center;
   justify-content: center;
   font-size: 23px;
-  box-shadow: 0 8px 16px rgba(184,132,44,0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 16px rgba(184, 132, 44, 0.28);
 }
 
 /* Real listing photo, shown instead of the emoji fallback — click to
@@ -329,7 +336,7 @@
   height: 52px;
   flex-shrink: 0;
   padding: 0;
-  border: none;
+  border: 1px solid rgba(15, 61, 46, 0.12);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
@@ -441,6 +448,15 @@
   background: #6b6b6b;
 }
 
+.status-pill.draft {
+  background: #e8e2d4;
+  color: #52514e;
+}
+
+.status-pill.draft::before {
+  background: #8b8578;
+}
+
 .status-cell {
   display: flex;
   flex-direction: column;
@@ -481,8 +497,12 @@
   accent-color: var(--primary);
 }
 
-.professional-table tbody tr.row-selected {
-  background: var(--green-soft);
+.professional-table tbody tr.row-selected td {
+  background: rgba(22, 163, 74, 0.07);
+}
+
+.professional-table tbody tr.row-selected td:first-child {
+  box-shadow: inset 3px 0 0 #16a34a;
 }
 
 .bulk-action-bar {
@@ -490,11 +510,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: white;
   border-radius: 16px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   margin-bottom: 16px;
+  box-shadow: 0 14px 32px -12px rgba(15, 61, 46, 0.5);
   animation: listings-fade-in 0.2s ease;
 }
 
@@ -514,88 +535,97 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  border: none;
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-weight: 750;
-  font-size: 12.5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   background: rgba(255, 255, 255, 0.12);
   color: white;
 }
 
 .bulk-actions button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.35);
 }
 
 .bulk-actions .bulk-approve {
-  background: #0f3d2e;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  background: #16a34a;
 }
 
 .bulk-actions .bulk-flag {
-  background: #8a6500;
+  background: #b3790f;
 }
 
 .bulk-actions .bulk-reject,
 .bulk-actions .bulk-delete {
-  background: #b42318;
+  background: #dc2626;
 }
 
 .bulk-actions .bulk-clear {
   background: transparent;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
 }
 
 .action-set {
   display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .action-set button {
+  --action-color: #64748b;
+  --action-tint: rgba(100, 116, 139, 0.14);
+  --action-shadow: rgba(100, 116, 139, 0.45);
   width: 38px;
   height: 38px;
-  border: none;
-  border-radius: 12px;
-  background: #f1f5f9;
-  color: var(--primary);
+  border: 1.5px solid var(--action-tint);
+  border-radius: 11px;
+  background: var(--action-tint);
+  color: var(--action-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.action-set button svg {
+  stroke-width: 2.25;
 }
 
 .action-set button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(15,61,46,0.14);
+  transform: translateY(-2px) scale(1.05);
+  background: var(--action-color);
+  color: #fff;
+  box-shadow: 0 10px 20px -8px var(--action-shadow);
+}
+
+.action-set button:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .action-set .approve {
-  background: var(--green-soft);
-}
-
-.action-set .approve:hover {
-  box-shadow: 0 8px 16px rgba(15,61,46,0.28);
+  --action-color: #16a34a;
+  --action-tint: rgba(22, 163, 74, 0.12);
+  --action-shadow: rgba(22, 163, 74, 0.5);
 }
 
 .action-set .flag {
-  background: #fff7d6;
-  color: #8a6500;
-}
-
-.action-set .flag:hover {
-  box-shadow: 0 8px 16px rgba(138,101,0,0.28);
+  --action-color: #b3790f;
+  --action-tint: rgba(215, 162, 77, 0.18);
+  --action-shadow: rgba(179, 121, 15, 0.5);
 }
 
 .action-set .reject,
 .action-set .delete {
-  background: #ffe5e5;
-  color: #b42318;
-}
-
-.action-set .reject:hover,
-.action-set .delete:hover {
-  box-shadow: 0 8px 16px rgba(180,35,24,0.28);
+  --action-color: #dc2626;
+  --action-tint: rgba(220, 38, 38, 0.12);
+  --action-shadow: rgba(220, 38, 38, 0.5);
 }
 
 @media (max-width: 1200px) {
@@ -610,18 +640,85 @@
 
 @media (max-width: 768px) {
   .admin-listings-page {
-    padding: 22px;
+    padding: 14px;
+  }
+
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .eyebrow {
+    font-size: 10.5px;
   }
 
   .listings-header {
     flex-direction: column;
-  }
-
-  .listing-kpi-grid {
-    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
   }
 
   .listings-header h1 {
-    font-size: 32px;
+    font-size: 22px;
+    margin: 4px 0;
+  }
+
+  .listings-header p {
+    font-size: 13px;
+  }
+
+  .export-btn {
+    height: 42px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .listing-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .admin-stat-card h2 {
+    font-size: 19px;
+    margin: 8px 0 0;
+  }
+
+  .admin-stat-card p {
+    font-size: 9.5px;
+  }
+
+  .listing-toolbar {
+    grid-template-columns: 1fr;
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+
+  .listing-search,
+  .listing-toolbar select {
+    height: 42px;
+  }
+
+  .listings-table-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .admin-listings-page .professional-table th,
+  .admin-listings-page .professional-table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
   }
 }

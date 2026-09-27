@@ -11,16 +11,26 @@ import {
   ShieldCheck,
   AlertTriangle,
   Clock,
+  X,
+  Mail,
+  Phone,
+  MapPin,
+  UserCircle,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
 import AdminStatCard from "../components/AdminStatCard";
+import { getDocumentRequirement } from "../utils/livestockDocRequirements";
+import { LIVESTOCK_TYPES, getProductIcon } from "../utils/productCatalog";
 import { API_URL } from "../config";
 import "./AdminVerification.css";
 
 function AdminVerification() {
   const navigate = useNavigate();
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isStaff = currentUser.role === "mao_staff";
 
   const [documents, setDocuments] = useState([]);
   const [stats, setStats] = useState({
@@ -35,6 +45,7 @@ function AdminVerification() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [selectedFarmer, setSelectedFarmer] = useState(null);
 
   const fetchVerification = useCallback(async () => {
     try {
@@ -116,7 +127,7 @@ function AdminVerification() {
       { label: "Document ID", value: (d) => `DOC-${d.id}` },
       { label: "Farmer", value: (d) => d.farmer_name },
       { label: "Livestock", value: (d) => d.livestock_type },
-      { label: "Document Type", value: (d) => getDocumentType(d.livestock_type) },
+      { label: "Document Type", value: (d) => getDocumentType(d.livestock_type, d.category) },
       { label: "Files", value: (d) => getDocumentUrls(d).length },
       { label: "Date Submitted", value: (d) => new Date(d.created_at).toLocaleDateString() },
       {
@@ -128,7 +139,7 @@ function AdminVerification() {
 
   const filteredDocuments = documents.filter((doc) => {
     const search = searchText.toLowerCase();
-    const documentType = getDocumentType(doc.livestock_type);
+    const documentType = getDocumentType(doc.livestock_type, doc.category);
 
     const displayStatus =
       doc.status === "Available"
@@ -172,8 +183,8 @@ function AdminVerification() {
             <span>MAO Document Control</span>
             <h1>Document Verification</h1>
             <p>
-              Review livestock health certificates, BAI permits, vaccination
-              records, and MAO clearance files.
+              Review barangay health certificates submitted with each
+              livestock listing. Farm products may attach optional documents.
             </p>
           </div>
         </div>
@@ -238,10 +249,8 @@ function AdminVerification() {
             onChange={(e) => setDocumentFilter(e.target.value)}
           >
             <option>All Document Types</option>
-            <option>Health Certificate</option>
-            <option>BAI Transport Permit</option>
-            <option>Vaccination Record</option>
-            <option>MAO Clearance</option>
+            <option>Barangay health certificate</option>
+          <option>{OPTIONAL_DOCUMENT_LABEL}</option>
           </select>
 
           <select
@@ -277,8 +286,9 @@ function AdminVerification() {
                 </tr>
               ) : (
                 filteredDocuments.map((doc) => {
-                  const documentType = getDocumentType(doc.livestock_type);
+                  const documentType = getDocumentType(doc.livestock_type, doc.category);
                   const docUrls = getDocumentUrls(doc);
+                  const requirement = getDocumentRequirement(doc.livestock_type, doc.category);
                   const displayStatus =
                     doc.status === "Available"
                       ? "Approved"
@@ -293,14 +303,26 @@ function AdminVerification() {
                       </td>
 
                       <td>
-                        <div className="farmer-cell">
-                          <div className="avatar">{doc.farmer_name.charAt(0)}</div>
+                        <button
+                          type="button"
+                          className="farmer-cell farmer-cell-link"
+                          onClick={() => setSelectedFarmer(doc)}
+                        >
+                          {doc.farmer_profile_image ? (
+                            <img
+                              className="avatar"
+                              src={getAvatarUrl(doc.farmer_profile_image)}
+                              alt={doc.farmer_name}
+                            />
+                          ) : (
+                            <div className="avatar">{doc.farmer_name.charAt(0)}</div>
+                          )}
 
                           <div>
                             <strong>{doc.farmer_name}</strong>
                             <p>Registered Farmer</p>
                           </div>
-                        </div>
+                        </button>
                       </td>
 
                       <td>
@@ -319,6 +341,16 @@ function AdminVerification() {
                             {docUrls.length > 1 ? ` (+${docUrls.length - 1} more)` : ""}
                           </span>
                         </div>
+
+                        {requirement && (
+                          <span
+                            className={`doc-completeness ${
+                              docUrls.length >= requirement.minDocuments ? "complete" : "incomplete"
+                            }`}
+                          >
+                            {docUrls.length}/{requirement.minDocuments} required
+                          </span>
+                        )}
                       </td>
 
                       <td>{new Date(doc.created_at).toLocaleDateString()}</td>
@@ -334,6 +366,7 @@ function AdminVerification() {
                           {docUrls.length > 0 && (
                             <>
                               <button
+                                className="neutral"
                                 title="View Document"
                                 type="button"
                                 onClick={() => window.open(docUrls[0], "_blank")}
@@ -342,6 +375,7 @@ function AdminVerification() {
                               </button>
 
                               <button
+                                className="neutral"
                                 title="Download File"
                                 type="button"
                                 onClick={() => window.open(docUrls[0], "_blank")}
@@ -352,6 +386,7 @@ function AdminVerification() {
                           )}
 
                           <button
+                            className="approve"
                             title="Approve Document"
                             type="button"
                             onClick={() => updateStatus(doc.id, "Available")}
@@ -400,56 +435,160 @@ function AdminVerification() {
           ))}
         </div>
       </section>
+
+      {selectedFarmer && (
+        <div className="doc-modal-overlay" onClick={() => setSelectedFarmer(null)}>
+          <div className="doc-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="doc-modal-close"
+              type="button"
+              onClick={() => setSelectedFarmer(null)}
+            >
+              <X size={20} />
+            </button>
+
+            <div className="doc-modal-head">
+              {selectedFarmer.farmer_profile_image ? (
+                <img
+                  className="doc-modal-avatar-img"
+                  src={getAvatarUrl(selectedFarmer.farmer_profile_image)}
+                  alt={selectedFarmer.farmer_name}
+                />
+              ) : (
+                <span className="doc-modal-avatar">{initials(selectedFarmer.farmer_name)}</span>
+              )}
+
+              <div>
+                <h3>{selectedFarmer.farmer_name}</h3>
+                <span
+                  className={`doc-modal-pill ${
+                    selectedFarmer.farmer_is_verified ? "verified" : "pending"
+                  }`}
+                >
+                  {selectedFarmer.farmer_is_verified ? "Verified Farmer" : "Unverified Farmer"}
+                </span>
+              </div>
+            </div>
+
+            <div className="doc-modal-info">
+              <div>
+                <Mail size={16} />
+                <span>{selectedFarmer.farmer_email || "No email on file"}</span>
+              </div>
+              <div>
+                <Phone size={16} />
+                <span>{selectedFarmer.farmer_phone || "No phone on file"}</span>
+              </div>
+              <div>
+                <MapPin size={16} />
+                <span>
+                  {selectedFarmer.farmer_farm_location ||
+                    selectedFarmer.farmer_location ||
+                    "No location on file"}
+                </span>
+              </div>
+              <div>
+                <Clock size={16} />
+                <span>
+                  Member since{" "}
+                  {selectedFarmer.farmer_joined_at
+                    ? new Date(selectedFarmer.farmer_joined_at).toLocaleDateString()
+                    : "Unknown"}
+                </span>
+              </div>
+            </div>
+
+            <div className="doc-modal-listing">
+              <h4>Document under review</h4>
+              <div className="doc-modal-listing-row">
+                <span className="doc-modal-tag">{selectedFarmer.livestock_type}</span>
+                <span
+                  className={
+                    selectedFarmer.status === "Available"
+                      ? "doc-modal-badge approved"
+                      : selectedFarmer.status === "Pending"
+                      ? "doc-modal-badge pending"
+                      : "doc-modal-badge flagged"
+                  }
+                >
+                  <span className="doc-modal-badge-dot"></span>
+                  {selectedFarmer.status === "Available"
+                    ? "Approved"
+                    : selectedFarmer.status === "Flagged"
+                    ? "Rejected"
+                    : selectedFarmer.status}
+                </span>
+              </div>
+              <p>{getDocumentType(selectedFarmer.livestock_type, selectedFarmer.category)}</p>
+            </div>
+
+            {!isStaff && (
+              <button
+                className="doc-modal-view-all"
+                type="button"
+                onClick={() => navigate("/admin-users")}
+              >
+                <UserCircle size={16} /> View Full Profile in User Management
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-const VERIFICATION_REQUIREMENTS = [
-  {
-    type: "Swine",
-    icon: "🐖",
-    accent: "amber",
-    logic: "either",
-    documents: ["Veterinary certificate", "MAO health clearance"],
-  },
-  {
-    type: "Cattle",
-    icon: "🐄",
-    accent: "blue",
-    logic: "both",
-    documents: ["Health certificate", "BAI livestock transport permit"],
-  },
-  {
-    type: "Goat",
-    icon: "🐐",
-    accent: "green",
-    logic: "both",
-    documents: ["Vaccination record", "MAO clearance"],
-  },
-  {
-    type: "Poultry",
-    icon: "🐔",
-    accent: "purple",
-    logic: "either",
-    documents: ["Flock health declaration", "Health clearance"],
-  },
-];
+// Only live animals have a required document; farm products don't, so
+// they have no guide card.
+const GUIDE_PRESENTATION = LIVESTOCK_TYPES.map((type, index) => ({
+  type,
+  icon: getProductIcon(type),
+  accent: index % 2 === 0 ? "amber" : "green",
+}));
 
-function getDocumentType(type) {
-  if (type === "Swine") return "Health Certificate";
-  if (type === "Cattle") return "BAI Transport Permit";
-  if (type === "Goat") return "Vaccination Record";
-  if (type === "Poultry") return "MAO Clearance";
-  return "Health Certificate";
+const OPTIONAL_DOCUMENT_LABEL = "Optional (farm product)";
+
+// Doc lists/logic come from the shared requirement config (also enforced
+// server-side at listing submission) so this guide can't drift from what's
+// actually required.
+const VERIFICATION_REQUIREMENTS = GUIDE_PRESENTATION.map((item) => ({
+  ...item,
+  ...getDocumentRequirement(item.type),
+}));
+
+function getAvatarUrl(image) {
+  if (!image) return null;
+  return image.startsWith("http") ? image : `${API_URL}${image}`;
 }
 
-function GuideCard({ icon, accent, type, documents, logic }) {
+function initials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+}
+
+function getDocumentType(type, category) {
+  const requirement = getDocumentRequirement(type, category);
+  return requirement ? requirement.documents[0] : OPTIONAL_DOCUMENT_LABEL;
+}
+
+function GuideCard({ icon: Icon, accent, type, documents, logic }) {
   return (
     <div className={`guide-card accent-${accent}`}>
       <div className="guide-card-top">
-        <div className="guide-card-icon">{icon}</div>
+        <div className="guide-card-icon">
+          <Icon size={20} strokeWidth={2.25} />
+        </div>
         <span className="guide-logic-pill">
-          {logic === "both" ? "Requires both" : "Requires either"}
+          {logic === "both"
+            ? "Requires both"
+            : logic === "single"
+            ? "Required"
+            : "Requires either"}
         </span>
       </div>
 

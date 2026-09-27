@@ -2,28 +2,25 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 
 import {
   Search,
-  AlertTriangle,
   ArrowLeft,
   Download,
-  CheckCircle,
   CheckCircle2,
   ChevronRight,
   Clock,
   ClipboardCheck,
   FileCheck2,
-  Flag,
   Handshake,
   MessageCircle,
-  ShieldCheck,
   TrendingUp,
   XCircle,
-  RotateCcw,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
 import AdminStatCard from "../components/AdminStatCard";
+import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
+import { formatQuantity } from "../utils/productCatalog";
 import "./AdminTransactions.css";
 
 function AdminTransactions() {
@@ -33,14 +30,13 @@ function AdminTransactions() {
   const [stats, setStats] = useState({
     completed: 0,
     pending: 0,
-    flagged: 0,
     declinedCancelled: 0,
     tradeValue: 0,
   });
 
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [livestockFilter, setLivestockFilter] = useState("All Livestock");
+  const [livestockFilter, setLivestockFilter] = useState("All Types");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -80,51 +76,10 @@ function AdminTransactions() {
     fetchTransactions();
   }, [fetchTransactions]);
 
-  const STATUS_CONFIRM_MESSAGES = {
-    Completed:
-      "Force-complete this transaction? This marks the listing as Sold and declines every other pending offer on it.",
-    Declined: "Decline this transaction?",
-    Flagged: "Flag this transaction for review?",
-    Pending: "Reset this transaction back to Pending?",
-  };
-
-  const updateStatus = async (id, status) => {
-    if (!window.confirm(STATUS_CONFIRM_MESSAGES[status] || `Set this transaction to ${status}?`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `${API_URL}/api/admin/transactions/${id}/status`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to update transaction");
-        return;
-      }
-
-      fetchTransactions();
-    } catch (error) {
-      alert("Cannot connect to backend server");
-    }
-  };
-
   const handleExport = () => {
     exportToCsv("transactions.csv", [
       { label: "Transaction", value: (t) => `TRX-${t.id}` },
-      { label: "Livestock", value: (t) => t.livestock_type },
+      { label: "Product", value: (t) => t.livestock_type },
       { label: "Seller", value: (t) => t.seller_name },
       { label: "Buyer", value: (t) => t.buyer_name },
       { label: "Amount", value: (t) => t.amount },
@@ -148,8 +103,8 @@ function AdminTransactions() {
       statusFilter === "All Status" || trx.status === statusFilter;
 
     const matchesLivestock =
-      livestockFilter === "All Livestock" ||
-      trx.livestock_type === livestockFilter;
+      livestockFilter === "All Types" ||
+      matchesTypeFilter(trx.livestock_type, livestockFilter);
 
     return matchesSearch && matchesStatus && matchesLivestock;
   });
@@ -174,7 +129,7 @@ function AdminTransactions() {
             <span>MAO Transaction Monitoring</span>
             <h1>Transaction Management</h1>
             <p>
-              Track livestock trades from inquiry to completion and monitor
+              Track livestock and farm product trades from inquiry to completion and monitor
               suspicious or pending transactions.
             </p>
           </div>
@@ -200,15 +155,7 @@ function AdminTransactions() {
           icon={<Clock />}
           value={stats.pending}
           label="Pending"
-          note="Awaiting verification"
-        />
-
-        <AdminStatCard
-          accent="red"
-          icon={<AlertTriangle />}
-          value={stats.flagged}
-          label="Flagged"
-          note="Needs MAO review"
+          note="Awaiting negotiation/confirmation"
         />
 
         <AdminStatCard
@@ -231,7 +178,7 @@ function AdminTransactions() {
       <section className="workflow-overview">
         <div>
           <h3>Structured Trading Workflow</h3>
-          <p>Every livestock transaction must pass these required stages.</p>
+          <p>Every transaction must pass these required stages.</p>
         </div>
 
         <div className="workflow-steps">
@@ -240,7 +187,7 @@ function AdminTransactions() {
               <div className={`workflow-step accent-${stage.accent}`}>
                 <div className="workflow-step-top">
                   <span className="workflow-step-number">{index + 1}</span>
-                  <div className="workflow-step-icon">{stage.icon}</div>
+                  <div className={`workflow-step-icon icon-${stage.iconColor}`}>{stage.icon}</div>
                 </div>
 
                 <strong>{stage.title}</strong>
@@ -273,7 +220,6 @@ function AdminTransactions() {
           <option>All Status</option>
           <option>Completed</option>
           <option>Pending</option>
-          <option>Flagged</option>
           <option>Declined</option>
           <option>Cancelled</option>
         </select>
@@ -282,11 +228,8 @@ function AdminTransactions() {
           value={livestockFilter}
           onChange={(e) => setLivestockFilter(e.target.value)}
         >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option>All Types</option>
+          <ProductTypeOptions />
         </select>
       </section>
 
@@ -303,38 +246,43 @@ function AdminTransactions() {
             <thead>
               <tr>
                 <th>Transaction</th>
-                <th>Livestock</th>
+                <th>Product</th>
                 <th>Parties</th>
                 <th>Amount</th>
                 <th>Date</th>
                 <th>Workflow</th>
                 <th>Status</th>
-                <th>Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="8">No transaction records found.</td>
+                  <td colSpan="7">No transaction records found.</td>
                 </tr>
               ) : (
                 filteredTransactions.map((trx) => (
                   <tr key={trx.id}>
                     <td>
-                      <strong>TRX-{trx.id}</strong>
+                      <strong className="trx-id">TRX-{trx.id}</strong>
                       <small>Marketplace trade</small>
                     </td>
 
                     <td>{trx.livestock_type}</td>
 
                     <td>
-                      <strong>{trx.seller_name}</strong>
-                      <small>Buyer: {trx.buyer_name}</small>
+                      <div className="party-cell">
+                        <span className="party-avatar">{initials(trx.seller_name)}</span>
+                        <div>
+                          <strong>{trx.seller_name}</strong>
+                          <small>Buyer: {trx.buyer_name}</small>
+                        </div>
+                      </div>
                     </td>
 
                     <td className="amount">
                       ₱{Number(trx.amount).toLocaleString()}
+                      <small className="amount-qty">Qty: {formatQuantity(trx.quantity || 1, trx.unit)}</small>
                     </td>
 
                     <td>{new Date(trx.created_at).toLocaleDateString()}</td>
@@ -346,46 +294,9 @@ function AdminTransactions() {
 
                     <td>
                       <span className={`trx-status ${trx.status.toLowerCase()}`}>
+                        <span className="trx-status-dot"></span>
                         {trx.status}
                       </span>
-                    </td>
-
-                    <td>
-                      <div className="transaction-actions">
-                        <button
-                          title="Approve"
-                          type="button"
-                          onClick={() => updateStatus(trx.id, "Completed")}
-                        >
-                          <CheckCircle size={17} />
-                        </button>
-
-                        <button
-                          title="Flag"
-                          type="button"
-                          onClick={() => updateStatus(trx.id, "Flagged")}
-                        >
-                          <Flag size={17} />
-                        </button>
-
-                        <button
-                          className="danger"
-                          title="Decline"
-                          type="button"
-                          onClick={() => updateStatus(trx.id, "Declined")}
-                        >
-                          <XCircle size={17} />
-                        </button>
-
-                        <button
-                          className="neutral"
-                          title="Reset to Pending"
-                          type="button"
-                          onClick={() => updateStatus(trx.id, "Pending")}
-                        >
-                          <RotateCcw size={17} />
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))
@@ -403,36 +314,44 @@ const WORKFLOW_STAGES = [
     title: "Inquiry",
     text: "Buyer expresses interest in a listing",
     icon: <MessageCircle size={18} />,
-    accent: "blue",
+    accent: "green",
+    iconColor: "blue",
   },
   {
     title: "Negotiation",
-    text: "Price and terms are discussed",
+    text: "Delivery, pickup, and other details are discussed",
     icon: <Handshake size={18} />,
-    accent: "amber",
-  },
-  {
-    title: "Verification",
-    text: "MAO reviews documents and details",
-    icon: <ShieldCheck size={18} />,
-    accent: "purple",
+    accent: "green",
+    iconColor: "amber",
   },
   {
     title: "Confirmation",
     text: "Both parties confirm the deal",
     icon: <ClipboardCheck size={18} />,
-    accent: "teal",
+    accent: "green",
+    iconColor: "teal",
   },
   {
     title: "Completed",
     text: "Trade is finalized and recorded",
     icon: <CheckCircle2 size={18} />,
     accent: "green",
+    iconColor: "green",
   },
 ];
 
+function initials(name) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+}
+
 function Workflow({ stage }) {
-  const steps = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];
+  const steps = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
   const activeIndex = steps.indexOf(stage);
 
   return (

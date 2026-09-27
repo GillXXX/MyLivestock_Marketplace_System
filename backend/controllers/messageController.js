@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { getFileUrl } = require("../middleware/uploadMiddleware");
 
 const TYPING_TIMEOUT_MS = 3000;
 const typingState = new Map();
@@ -29,6 +30,8 @@ const getConversations = async (req, res) => {
         c.farmer_last_read_at,
         c.buyer_last_read_at,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         farmer.full_name AS farmer_name,
         farmer.is_verified AS farmer_is_verified,
@@ -53,7 +56,21 @@ const getConversations = async (req, res) => {
           WHERE m.conversation_id = c.id
           ORDER BY m.created_at DESC
           LIMIT 1
-        ) AS last_time
+        ) AS last_time,
+        (
+          SELECT m.attachment_type
+          FROM messages m
+          WHERE m.conversation_id = c.id
+          ORDER BY m.created_at DESC
+          LIMIT 1
+        ) AS last_attachment_type,
+        (
+          SELECT m.deleted_at
+          FROM messages m
+          WHERE m.conversation_id = c.id
+          ORDER BY m.created_at DESC
+          LIMIT 1
+        ) AS last_deleted_at
       FROM conversations c
       JOIN livestock_listings l ON c.listing_id = l.id
       JOIN users farmer ON c.farmer_id = farmer.id
@@ -113,10 +130,15 @@ const getMessages = async (req, res) => {
         m.id,
         m.sender_id,
         m.message,
+        m.attachment_url,
+        m.attachment_type,
+        m.deleted_at,
         m.created_at,
         u.full_name AS sender_name,
         l.id AS listing_id,
         l.livestock_type AS listing_livestock_type,
+        l.category AS listing_category,
+        l.unit AS listing_unit,
         l.breed AS listing_breed,
         l.price AS listing_price,
         l.image_url AS listing_image_url,
@@ -155,10 +177,11 @@ const sendMessage = async (req, res) => {
   try {
     const senderId = req.user.id;
     const { conversationId } = req.params;
-    const { message } = req.body;
+    const message = req.body.message?.trim() || null;
+    const file = req.file;
 
-    if (!message) {
-      return res.status(400).json({ message: "Message is required" });
+    if (!message && !file) {
+      return res.status(400).json({ message: "Message or attachment is required" });
     }
 
     const access = await verifyConversationAccess(conversationId, senderId);
@@ -167,9 +190,12 @@ const sendMessage = async (req, res) => {
       return res.status(access.status).json({ message: access.message });
     }
 
+    const attachmentUrl = file ? getFileUrl(file, req) : null;
+    const attachmentType = file ? (file.mimetype.startsWith("video/") ? "video" : "image") : null;
+
     await db.query(
-      "INSERT INTO messages (conversation_id, sender_id, message) VALUES (?, ?, ?)",
-      [conversationId, senderId, message]
+      "INSERT INTO messages (conversation_id, sender_id, message, attachment_url, attachment_type) VALUES (?, ?, ?, ?, ?)",
+      [conversationId, senderId, message, attachmentUrl, attachmentType]
     );
 
     await db.query(
@@ -221,6 +247,97 @@ const deleteConversation = async (req, res) => {
   }
 };
 
+const deleteMessage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { conversationId, messageId } = req.params;
+
+    const access = await verifyConversationAccess(conversationId, userId);
+
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const [[targetMessage]] = await db.query(
+      "SELECT sender_id FROM messages WHERE id = ? AND conversation_id = ?",
+      [messageId, conversationId]
+    );
+
+    if (!targetMessage) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    if (targetMessage.sender_id !== userId) {
+      return res.status(403).json({ message: "You can only delete your own messages" });
+    }
+
+    await db.query(
+      "UPDATE messages SET message = NULL, attachment_url = NULL, attachment_type = NULL, listing_id = NULL, deleted_at = NOW() WHERE id = ?",
+      [messageId]
+    );
+
+    res.json({ message: "Message deleted" });
+  } catch (error) {
+    console.error("Delete message error:", error);
+    res.status(500).json({ message: "Server error deleting message" });
+  }
+};
+
+const forwardMessage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { conversationId, messageId } = req.params;
+    const { targetConversationIds } = req.body;
+
+    if (!Array.isArray(targetConversationIds) || targetConversationIds.length === 0) {
+      return res.status(400).json({ message: "Select at least one conversation to forward to" });
+    }
+
+    const access = await verifyConversationAccess(conversationId, userId);
+
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const [[original]] = await db.query(
+      "SELECT message, attachment_url, attachment_type, deleted_at FROM messages WHERE id = ? AND conversation_id = ?",
+      [messageId, conversationId]
+    );
+
+    if (!original || original.deleted_at) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    let forwardedCount = 0;
+
+    for (const targetId of targetConversationIds) {
+      const targetAccess = await verifyConversationAccess(targetId, userId);
+      if (!targetAccess.ok) continue;
+
+      await db.query(
+        "INSERT INTO messages (conversation_id, sender_id, message, attachment_url, attachment_type) VALUES (?, ?, ?, ?, ?)",
+        [targetId, userId, original.message, original.attachment_url, original.attachment_type]
+      );
+
+      await db.query(
+        "UPDATE conversations SET farmer_deleted_at = NULL, buyer_deleted_at = NULL WHERE id = ?",
+        [targetId]
+      );
+
+      forwardedCount += 1;
+    }
+
+    if (forwardedCount === 0) {
+      return res.status(403).json({ message: "Not authorized for the selected conversations" });
+    }
+
+    res.status(201).json({ message: "Message forwarded" });
+  } catch (error) {
+    console.error("Forward message error:", error);
+    res.status(500).json({ message: "Server error forwarding message" });
+  }
+};
+
 const pingTyping = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -245,6 +362,8 @@ module.exports = {
   getConversations,
   getMessages,
   sendMessage,
+  deleteMessage,
+  forwardMessage,
   deleteConversation,
   pingTyping,
 };

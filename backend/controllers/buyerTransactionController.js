@@ -1,21 +1,34 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
+const { getSystemSettings } = require("../utils/systemSettings");
 
 const getBuyerTransactions = async (req, res) => {
   try {
     const buyerId = req.user.id;
 
     const [transactions] = await db.query(
-      `SELECT 
+      `SELECT
         t.id,
         t.amount,
+        t.quantity,
         t.workflow_step,
         t.status,
         t.created_at,
+        t.updated_at,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         l.location,
-        u.full_name AS seller_name
+        l.image_url,
+        u.full_name AS seller_name,
+        (
+          SELECT c.id FROM conversations c
+          WHERE c.listing_id = t.listing_id
+            AND c.farmer_id = t.farmer_id
+            AND c.buyer_id = t.buyer_id
+          LIMIT 1
+        ) AS conversation_id
       FROM transactions t
       JOIN livestock_listings l ON t.listing_id = l.id
       JOIN users u ON t.farmer_id = u.id
@@ -29,11 +42,14 @@ const getBuyerTransactions = async (req, res) => {
         COUNT(*) AS totalTransactions,
         SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingDeals,
         SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN status IN ('Declined', 'Cancelled') THEN 1 ELSE 0 END) AS declined,
         COALESCE(SUM(CASE WHEN status = 'Completed' THEN amount ELSE 0 END), 0) AS purchaseValue
       FROM transactions
       WHERE buyer_id = ?`,
       [buyerId]
     );
+
+    const settings = await getSystemSettings();
 
     res.json({
       transactions,
@@ -41,8 +57,13 @@ const getBuyerTransactions = async (req, res) => {
         totalTransactions: statsRows[0].totalTransactions || 0,
         pendingDeals: statsRows[0].pendingDeals || 0,
         completed: statsRows[0].completed || 0,
+        declined: statsRows[0].declined || 0,
         purchaseValue: statsRows[0].purchaseValue || 0,
       },
+      // Tells the frontend whether a deal can be confirmed as soon as
+      // negotiation/verification is underway (Flexible) or only once it has
+      // formally reached the Confirmation stage (Strict, the default).
+      workflowMode: settings.transaction_workflow === "Flexible Workflow" ? "Flexible" : "Strict",
     });
   } catch (error) {
     console.error("Buyer transactions error:", error);
@@ -80,8 +101,19 @@ const confirmTransaction = async (req, res) => {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
-    if (transaction.workflow_step !== "Confirmation") {
+    // Strict Workflow requires the deal to have formally reached the
+    // Confirmation stage before it can be closed. Flexible Workflow trusts
+    // the buyer/farmer to close whenever they've agreed, skipping the
+    // formal stage-by-stage gate (as long as it isn't still just an Inquiry).
+    const settings = await getSystemSettings();
+    const isStrict = settings.transaction_workflow !== "Flexible Workflow";
+
+    if (isStrict && transaction.workflow_step !== "Confirmation") {
       return res.status(400).json({ message: "Transaction isn't ready to be confirmed yet" });
+    }
+
+    if (!isStrict && transaction.workflow_step === "Inquiry") {
+      return res.status(400).json({ message: "Negotiate with the seller before completing this deal" });
     }
 
     await db.query(
@@ -89,15 +121,10 @@ const confirmTransaction = async (req, res) => {
       [id]
     );
 
-    await db.query(
-      "UPDATE livestock_listings SET status = 'Sold' WHERE id = ?",
-      [transaction.listing_id]
-    );
-
-    await db.query(
-      "UPDATE transactions SET status = 'Declined' WHERE listing_id = ? AND id != ? AND status = 'Pending'",
-      [transaction.listing_id, id]
-    );
+    // Stock for this order was already reserved off the listing's quantity
+    // when it was placed, and other pending orders may legitimately be for
+    // separate remaining head — so completing this one shouldn't touch the
+    // listing or cancel siblings.
 
     await createNotification(
       "Transaction Alert",
@@ -119,7 +146,7 @@ const cancelTransaction = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await db.query(
-      `SELECT t.id, t.buyer_id, t.status, l.livestock_type, farmer.full_name AS farmer_name
+      `SELECT t.id, t.buyer_id, t.listing_id, t.quantity, t.status, l.livestock_type, farmer.full_name AS farmer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users farmer ON t.farmer_id = farmer.id
@@ -142,6 +169,12 @@ const cancelTransaction = async (req, res) => {
     }
 
     await db.query("UPDATE transactions SET status = 'Cancelled' WHERE id = ?", [id]);
+
+    // Return the reserved stock to the listing now that the order fell through.
+    await db.query(
+      "UPDATE livestock_listings SET quantity = quantity + ?, status = IF(status = 'Sold', 'Available', status) WHERE id = ?",
+      [transaction.quantity, transaction.listing_id]
+    );
 
     await createNotification(
       "Transaction Alert",

@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 
-import { ArrowLeft, MapPin, BadgeCheck, PawPrint, Navigation } from "lucide-react";
+import { ArrowLeft, MapPin, BadgeCheck, Navigation } from "lucide-react";
+import { getProductIcon, formatPrice } from "../utils/productCatalog";
 
 import { useNavigate, useParams } from "react-router-dom";
 import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
+import BuyNowModal from "../components/BuyNowModal";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
-import { API_URL } from "../config";
+import { haversineDistanceKm, formatDistance, useBuyerLocation } from "../utils/geo";
+import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
 import "./SellerProfile.css";
 
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
+const DEFAULT_IMAGE = DEFAULT_LISTING_IMAGE;
 
 function SellerProfile() {
   const { id } = useParams();
@@ -21,8 +23,10 @@ function SellerProfile() {
   const [listings, setListings] = useState([]);
   const [selectedListing, setSelectedListing] = useState(null);
   const [inquiryListing, setInquiryListing] = useState(null);
+  const [buyNowListing, setBuyNowListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { location: buyerLocation } = useBuyerLocation();
 
   useEffect(() => {
     const fetchSellerProfile = async () => {
@@ -77,6 +81,16 @@ function SellerProfile() {
 
   const hasPin = seller.farm_lat != null && seller.farm_lng != null;
 
+  const distanceFromYou =
+    hasPin && buyerLocation
+      ? haversineDistanceKm(
+          buyerLocation.lat,
+          buyerLocation.lng,
+          Number(seller.farm_lat),
+          Number(seller.farm_lng)
+        )
+      : null;
+
   return (
     <div className="seller-profile-page">
       <div className="seller-profile-header">
@@ -127,6 +141,11 @@ function SellerProfile() {
         <h2>
           <Navigation size={16} />
           Farm Location
+          {distanceFromYou != null && (
+            <span className="seller-distance-badge">
+              {formatDistance(distanceFromYou)}
+            </span>
+          )}
         </h2>
 
         {hasPin ? (
@@ -148,6 +167,11 @@ function SellerProfile() {
                     <div class="map-popup">
                       <strong>${escapeHtml(seller.full_name)}</strong>
                       <span>${escapeHtml(seller.farm_location || seller.location || "")}</span>
+                      ${
+                        distanceFromYou != null
+                          ? `<span>${escapeHtml(formatDistance(distanceFromYou))} from you</span>`
+                          : ""
+                      }
                     </div>
                   `,
                 },
@@ -168,28 +192,35 @@ function SellerProfile() {
           <p className="seller-listings-empty">No active listings right now.</p>
         ) : (
           <div className="seller-listings-grid">
-            {listings.map((item) => (
+            {listings.map((item) => {
+              const TypeIcon = getProductIcon(item.livestock_type, item.category);
+
+              return (
               <div className="seller-listing-card" key={item.id}>
                 <div className="seller-listing-image">
-                  <img src={item.image_url || DEFAULT_IMAGE} alt={item.breed} />
+                  <img src={item.image_url || DEFAULT_IMAGE} alt={item.breed || item.livestock_type} />
 
                   <span className="seller-listing-type">
-                    <PawPrint size={12} />
+                    <TypeIcon size={12} />
                     {item.livestock_type}
                   </span>
                 </div>
 
                 <div className="seller-listing-body">
                   <div className="seller-listing-heading">
-                    <h3>{item.breed}</h3>
-                    <span>₱{Number(item.price).toLocaleString()}</span>
+                    <h3>{item.breed || item.livestock_type}</h3>
+                    <span>{formatPrice(item.price, item.unit)}</span>
                   </div>
 
                   <p className="seller-listing-meta">
                     <MapPin size={12} />
                     {item.location}
-                    <span className="meta-divider">•</span>
-                    {item.age}
+                    {item.age && (
+                      <>
+                        <span className="meta-divider">•</span>
+                        {item.age}
+                      </>
+                    )}
                   </p>
 
                   <button
@@ -201,7 +232,8 @@ function SellerProfile() {
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -211,11 +243,16 @@ function SellerProfile() {
           listing={selectedListing}
           onClose={() => setSelectedListing(null)}
           onInquire={(item) => setInquiryListing(item)}
+          onBuyNow={(item) => setBuyNowListing(item)}
         />
       )}
 
       {inquiryListing && (
         <InquiryModal listing={inquiryListing} onClose={() => setInquiryListing(null)} />
+      )}
+
+      {buyNowListing && (
+        <BuyNowModal listing={buyNowListing} onClose={() => setBuyNowListing(null)} />
       )}
     </div>
   );

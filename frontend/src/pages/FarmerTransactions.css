@@ -1,17 +1,7 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #ffffff;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
   --soft: #eef6f1;
-  --danger: #b42318;
-  --shadow:
-    0 10px 30px rgba(15, 61, 46, 0.06),
-    0 30px 60px rgba(15, 61, 46, 0.08);
 }
 
 * {
@@ -85,43 +75,145 @@
   margin-bottom: 28px;
 }
 
-.transaction-stat-card {
-  background: rgba(255,255,255,0.76);
-  border: 1px solid rgba(255,255,255,0.72);
+/* TRADING WORKFLOW (matches AdminTransactions.css's "Structured Trading
+   Workflow" banner) — scoped under .farmer-transactions-page because
+   LandingPage.css also defines an unscoped .workflow-step (its "how it
+   works" cards) with a different display/layout; without the scope its
+   flex rule would leak in here. */
+
+.farmer-transactions-page .workflow-overview {
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 26px;
-  padding: 26px;
   box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 28px;
 }
 
-.stat-icon {
-  width: 52px;
-  height: 52px;
-  background: var(--soft);
-  color: var(--primary);
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.transaction-stat-card h2 {
-  margin: 18px 0 0;
-  font-size: 40px;
+.farmer-transactions-page .workflow-overview h3 {
+  margin: 0;
   font-weight: 950;
   color: var(--primary-dark);
 }
 
-.transaction-stat-card p {
-  margin: 0;
+.farmer-transactions-page .workflow-overview p {
+  margin: 5px 0 18px;
   color: var(--muted);
-  font-weight: 750;
 }
 
-.transaction-stat-card small {
+.farmer-transactions-page .workflow-steps {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.farmer-transactions-page .workflow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  background: linear-gradient(160deg, var(--step-tint, #f8f5ec), #fdfcf8 65%);
+  border: 1px solid var(--step-tint, #e8e2d4);
+  border-radius: 16px;
+  padding: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.farmer-transactions-page .workflow-step::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--step-color);
+  opacity: 0.85;
+}
+
+.farmer-transactions-page .workflow-step:hover {
+  transform: translateY(-2px);
+  border-color: var(--step-color);
+  box-shadow: 0 12px 24px -16px rgba(15, 61, 46, 0.3);
+}
+
+.farmer-transactions-page .workflow-step.accent-green {
+  --step-color: #16a34a;
+  --step-tint: rgba(22, 163, 74, 0.4);
+}
+
+.farmer-transactions-page .workflow-step-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.farmer-transactions-page .workflow-step-number {
+  margin: 0;
+  font-family: "JetBrains Mono", "Segoe UI", monospace;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--step-color);
+  opacity: 0.7;
+}
+
+.farmer-transactions-page .workflow-step-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: linear-gradient(150deg, var(--icon-tint, var(--step-tint)), transparent);
+  border: 1px solid var(--icon-tint, var(--step-tint));
+  color: var(--icon-color, var(--step-color));
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.farmer-transactions-page .workflow-step-icon.icon-blue { --icon-color: #000000; --icon-tint: rgba(37, 99, 235, 0.16); }
+.farmer-transactions-page .workflow-step-icon.icon-amber { --icon-color: #000000; --icon-tint: rgba(215, 162, 77, 0.2); }
+.farmer-transactions-page .workflow-step-icon.icon-purple { --icon-color: #000000; --icon-tint: rgba(124, 58, 237, 0.16); }
+.farmer-transactions-page .workflow-step-icon.icon-teal { --icon-color: #000000; --icon-tint: rgba(0, 200, 176, 0.18); }
+.farmer-transactions-page .workflow-step-icon.icon-green { --icon-color: #000000; --icon-tint: rgba(15, 61, 46, 0.16); }
+
+.farmer-transactions-page .workflow-step:hover .workflow-step-icon {
+  transform: scale(1.05);
+}
+
+.farmer-transactions-page .workflow-step strong {
   display: block;
-  margin-top: 8px;
-  color: var(--accent);
-  font-weight: 850;
+  color: var(--primary-dark);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.farmer-transactions-page .workflow-step p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.farmer-transactions-page .workflow-chevron {
+  flex-shrink: 0;
+  align-self: center;
+  color: #c9c2ad;
+}
+
+@media (max-width: 900px) {
+  .farmer-transactions-page .workflow-steps {
+    flex-direction: column;
+  }
+
+  .farmer-transactions-page .workflow-chevron {
+    display: none;
+  }
 }
 
 /* TOOLBAR */
@@ -167,21 +259,11 @@
 
 /* LAYOUT */
 
-.transactions-layout {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 24px;
-}
-
-.transactions-card,
-.side-panel-card {
+.transactions-card {
   background: rgba(255,255,255,0.76);
   border: 1px solid rgba(255,255,255,0.72);
   border-radius: 30px;
   box-shadow: var(--shadow);
-}
-
-.transactions-card {
   padding: 26px;
 }
 
@@ -192,18 +274,82 @@
   margin-bottom: 24px;
 }
 
-.card-header h3,
-.side-panel-card h3 {
+.card-header h3 {
   margin: 0;
   color: var(--primary-dark);
   font-weight: 950;
 }
 
-.card-header p,
-.side-panel-card p {
+.card-header p {
   margin: 6px 0 0;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.transaction-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.transaction-breakdown span {
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 850;
+}
+
+.transaction-breakdown .tone-pending {
+  background: var(--warning-soft);
+  color: #8a6500;
+}
+
+.transaction-breakdown .tone-available {
+  background: var(--green-soft);
+  color: var(--primary);
+}
+
+.transaction-breakdown .tone-flagged {
+  background: var(--danger-soft);
+  color: #b42318;
+}
+
+.results-count {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.transactions-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 60px 20px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed var(--border);
+  border-radius: 24px;
+}
+
+.transactions-empty-state svg {
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.transactions-empty-state h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.transactions-empty-state p {
+  margin: 0;
+  max-width: 340px;
 }
 
 .transaction-list {
@@ -245,16 +391,24 @@
   gap: 18px;
 }
 
-.transaction-icon-box {
+.transaction-icon-box,
+.transaction-thumb {
   width: 68px;
   height: 68px;
   border-radius: 22px;
+  flex-shrink: 0;
+}
+
+.transaction-icon-box {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+}
+
+.transaction-thumb {
+  object-fit: cover;
 }
 
 .transaction-heading {
@@ -283,9 +437,16 @@
 }
 
 .buyer-name {
-  margin: 10px 0 14px;
+  margin: 10px 0 4px;
   color: var(--muted);
   font-size: 15px;
+}
+
+.buyer-track-record {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .transaction-meta {
@@ -316,6 +477,13 @@
   font-family: Georgia, serif;
 }
 
+.transaction-qty {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: -8px;
+}
+
 .premium-status {
   padding: 10px 14px;
   border-radius: 999px;
@@ -324,23 +492,19 @@
 }
 
 .premium-status.completed {
-  background: var(--soft);
+  background: var(--green-soft);
   color: var(--primary);
 }
 
-.premium-status.verification {
-  background: #fff5d8;
-  color: #946200;
-}
-
+.premium-status.verification,
 .premium-status.pending {
-  background: #e8f0ff;
-  color: #2457a6;
+  background: var(--warning-soft);
+  color: #8a6500;
 }
 
 .premium-status.declined {
-  background: #fdeaea;
-  color: #d64545;
+  background: var(--danger-soft);
+  color: #b42318;
 }
 
 /* WORKFLOW */
@@ -354,6 +518,26 @@
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 22px;
+}
+
+.workflow-declined {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--danger-soft);
+  border-radius: 24px;
+  padding: 18px 22px;
+  color: #b42318;
+}
+
+.workflow-declined svg {
+  flex-shrink: 0;
+}
+
+.workflow-declined p {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .workflow-header {
@@ -454,7 +638,7 @@
 .decline-btn-premium {
   height: 52px;
   padding: 0 18px;
-  border: 1px solid #d64545;
+  border: 1px solid #b42318;
   border-radius: 18px;
   font-weight: 850;
   display: flex;
@@ -462,8 +646,14 @@
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  background: #fff5f5;
-  color: #d64545;
+  background: var(--danger-soft);
+  color: #b42318;
+}
+
+.message-btn-premium:disabled,
+.decline-btn-premium:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .waiting-buyer-note {
@@ -472,95 +662,28 @@
   padding: 0 6px;
   font-weight: 700;
   font-size: 13px;
-  color: #946200;
+  color: #8a6500;
 }
 
-/* SIDE PANEL */
-
-.transaction-side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.side-panel-card {
-  padding: 24px;
-}
-
-.workflow-guide {
-  margin-top: 20px;
-}
-
-.guide-item {
-  display: flex;
-  gap: 14px;
-  padding: 15px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.guide-item:last-child {
-  border-bottom: none;
-}
-
-.guide-item > span {
-  width: 34px;
-  height: 34px;
-  background: var(--primary);
-  color: white;
-  border-radius: 12px;
+.farmer-transactions-page .verification-required-note {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 950;
-  flex-shrink: 0;
-}
-
-.guide-item strong {
-  color: var(--primary-dark);
-}
-
-.guide-item p {
-  margin: 4px 0 0;
-}
-
-.health-item {
-  display: flex;
-  gap: 14px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.health-item:last-child {
-  border-bottom: none;
-}
-
-.health-item > div {
-  width: 44px;
-  height: 44px;
-  background: var(--soft);
-  color: var(--primary);
+  gap: 8px;
+  padding: 10px 16px;
   border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  background: var(--danger-soft, #fdecea);
+  color: #b42318;
+  font-weight: 800;
+  font-size: 13px;
+  text-decoration: none;
+  transition: transform 0.15s ease;
 }
 
-.health-item strong {
-  color: var(--primary-dark);
-}
-
-.health-item p {
-  margin: 4px 0 0;
+.farmer-transactions-page .verification-required-note:hover {
+  transform: translateY(-1px);
 }
 
 /* RESPONSIVE */
-
-@media (max-width: 1300px) {
-  .transactions-layout {
-    grid-template-columns: 1fr;
-  }
-}
 
 @media (max-width: 900px) {
   .transaction-stats,
@@ -573,7 +696,7 @@
   }
 
   .transactions-header h1 {
-    font-size: 38px;
+    font-size: 28px;
   }
 
   .card-header,
@@ -595,5 +718,571 @@
 
   .message-btn-premium {
     width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .farmer-transactions-page {
+    padding: 14px;
+  }
+
+  .farmer-transactions-page .page-tag {
+    font-size: 10.5px;
+  }
+
+  .transactions-header {
+    margin-bottom: 16px;
+  }
+
+  .transactions-header h1 {
+    font-size: 22px;
+    margin: 6px 0;
+  }
+
+  .transactions-header p {
+    font-size: 13px;
+  }
+
+  .transaction-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .admin-stat-card h2 {
+    font-size: 19px;
+    margin: 8px 0 0;
+  }
+
+  .admin-stat-card p {
+    font-size: 9.5px;
+  }
+
+  .admin-stat-card small {
+    font-size: 10px;
+  }
+
+  .farmer-transactions-page .workflow-overview {
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+
+  .farmer-transactions-page .workflow-step {
+    padding: 10px;
+  }
+
+  .farmer-transactions-page .workflow-step-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .farmer-transactions-page .workflow-step strong {
+    font-size: 12.5px;
+  }
+
+  .farmer-transactions-page .workflow-step p {
+    font-size: 11px;
+  }
+
+  .transaction-toolbar {
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+
+  .transaction-toolbar select {
+    height: 40px;
+    font-size: 13px;
+  }
+
+  .premium-transaction-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .transaction-top {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .transaction-left {
+    gap: 12px;
+  }
+
+  .transaction-icon-box,
+  .transaction-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+  }
+
+  .transaction-heading h3 {
+    font-size: 19px;
+  }
+
+  .transaction-id {
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+
+  .buyer-name {
+    font-size: 13px;
+    margin: 6px 0 3px;
+  }
+
+  .buyer-track-record {
+    font-size: 11px;
+  }
+
+  .transaction-meta {
+    gap: 10px;
+  }
+
+  .transaction-meta span {
+    font-size: 12px;
+  }
+
+  .transaction-right strong {
+    font-size: 24px;
+  }
+
+  .premium-status {
+    padding: 7px 11px;
+    font-size: 10.5px;
+  }
+
+  .transaction-center {
+    margin-bottom: 16px;
+  }
+
+  .workflow-wrapper {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .workflow-header {
+    margin-bottom: 12px;
+  }
+
+  .workflow-header h4 {
+    font-size: 14px;
+  }
+
+  .workflow-header p {
+    font-size: 12px;
+  }
+
+  .premium-actions button,
+  .premium-actions a,
+  .message-btn-premium {
+    height: 44px;
+    font-size: 13px;
+  }
+}
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.farmer-transactions-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal layout
+   Everything below is scoped under .farmer-transactions-page because
+   BuyerTransactions.css shares these class names and CRA loads every
+   stylesheet globally. Stat cards are intentionally untouched. */
+
+.farmer-transactions-page .workflow-labels {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Header: title only */
+
+  .farmer-transactions-page .transactions-header p,
+  .farmer-transactions-page .page-tag {
+    display: none;
+  }
+
+  .farmer-transactions-page .header-left {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .farmer-transactions-page .transactions-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  /* Structured Trading Workflow: one-row stepper, no descriptions */
+
+  .farmer-transactions-page .workflow-overview {
+    padding: 14px 12px;
+    border-radius: 18px;
+  }
+
+  .farmer-transactions-page .workflow-overview h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .farmer-transactions-page .workflow-overview > div > p,
+  .farmer-transactions-page .workflow-step p,
+  .farmer-transactions-page .workflow-step-number,
+  .farmer-transactions-page .workflow-step::after,
+  .farmer-transactions-page .workflow-chevron {
+    display: none;
+  }
+
+  .farmer-transactions-page .workflow-steps {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .farmer-transactions-page .workflow-step {
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    text-align: center;
+  }
+
+  .farmer-transactions-page .workflow-step-top {
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .farmer-transactions-page .workflow-step-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
+
+  .farmer-transactions-page .workflow-step-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .farmer-transactions-page .workflow-step strong {
+    font-size: 10.5px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  /* Toolbar: no panel; full-width search, two filters side by side */
+
+  .farmer-transactions-page .transaction-toolbar {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .farmer-transactions-page .transaction-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+    padding: 0 14px;
+  }
+
+  .farmer-transactions-page .transaction-search input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .farmer-transactions-page .transaction-toolbar select {
+    height: 40px;
+    min-width: 0;
+    border-radius: 12px;
+    padding: 0 10px;
+  }
+
+  /* Records: drop the outer panel, keep the list */
+
+  .farmer-transactions-page .transactions-card {
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .farmer-transactions-page .card-header {
+    margin-bottom: 6px;
+  }
+
+  .farmer-transactions-page .card-header h3 {
+    font-size: 15px;
+  }
+
+  /* The breakdown chips repeat the stat tiles */
+  .farmer-transactions-page .card-header p,
+  .farmer-transactions-page .transaction-breakdown {
+    display: none;
+  }
+
+  .farmer-transactions-page .results-count {
+    margin-bottom: 10px;
+    font-size: 11.5px;
+  }
+
+  .farmer-transactions-page .transaction-list {
+    gap: 10px;
+  }
+
+  /* Transaction record card */
+
+  .farmer-transactions-page .premium-transaction-card {
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(15, 61, 46, 0.05);
+  }
+
+  .farmer-transactions-page .transaction-top {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .farmer-transactions-page .transaction-left {
+    flex: 1;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .farmer-transactions-page .transaction-left > div {
+    min-width: 0;
+  }
+
+  .farmer-transactions-page .transaction-icon-box,
+  .farmer-transactions-page .transaction-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .farmer-transactions-page .transaction-heading {
+    gap: 6px;
+  }
+
+  .farmer-transactions-page .transaction-heading h3 {
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 850;
+  }
+
+  .farmer-transactions-page .transaction-id {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+
+  .farmer-transactions-page .buyer-name {
+    margin: 2px 0 1px;
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .farmer-transactions-page .buyer-track-record {
+    margin: 0 0 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .farmer-transactions-page .transaction-meta {
+    gap: 4px 10px;
+  }
+
+  .farmer-transactions-page .transaction-meta span {
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  .farmer-transactions-page .transaction-meta svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .farmer-transactions-page .transaction-meta .meta-updated {
+    display: none;
+  }
+
+  .farmer-transactions-page .transaction-right {
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .farmer-transactions-page .transaction-right strong {
+    font-size: 16px;
+    font-family: inherit;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .farmer-transactions-page .transaction-qty {
+    margin: 0;
+    font-size: 10.5px;
+  }
+
+  .farmer-transactions-page .premium-status {
+    padding: 4px 9px;
+    font-size: 10px;
+  }
+
+  /* Per-card workflow: bare bar + step names, no boxed header */
+
+  .farmer-transactions-page .transaction-center {
+    margin-bottom: 12px;
+  }
+
+  .farmer-transactions-page .workflow-wrapper {
+    padding: 0;
+    background: none;
+    border: none;
+  }
+
+  .farmer-transactions-page .workflow-header {
+    display: none;
+  }
+
+  .farmer-transactions-page .workflow-line {
+    gap: 4px;
+  }
+
+  .farmer-transactions-page .workflow-line span {
+    height: 5px;
+  }
+
+  .farmer-transactions-page .workflow-labels {
+    display: flex;
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .farmer-transactions-page .workflow-labels span {
+    flex: 1;
+    min-width: 0;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #98a2b3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .farmer-transactions-page .workflow-labels .done {
+    color: var(--primary);
+  }
+
+  .farmer-transactions-page .workflow-labels .active {
+    color: #8a6500;
+    font-weight: 900;
+  }
+
+  .farmer-transactions-page .workflow-declined {
+    padding: 10px 12px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+
+  .farmer-transactions-page .workflow-declined p {
+    font-size: 12px;
+  }
+
+  /* Footer: the MAO blurb repeats on every card, so drop it */
+
+  .farmer-transactions-page .transaction-info-box {
+    display: none;
+  }
+
+  .farmer-transactions-page .transaction-footer {
+    display: block;
+  }
+
+  /* Actions: primary (Advance) first and full width, then Message Buyer;
+     Decline becomes a quiet text button */
+
+  .farmer-transactions-page .premium-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .farmer-transactions-page .premium-actions .message-btn-premium,
+  .farmer-transactions-page .premium-actions .decline-btn-premium {
+    width: 100%;
+    height: 44px;
+    padding: 0 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .farmer-transactions-page .premium-actions svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .farmer-transactions-page .premium-actions button.message-btn-premium {
+    order: -1;
+  }
+
+  .farmer-transactions-page .premium-actions a.message-btn-premium {
+    background: var(--soft);
+    color: var(--primary);
+  }
+
+  .farmer-transactions-page .premium-actions .waiting-buyer-note {
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .farmer-transactions-page .premium-actions .decline-btn-premium {
+    height: 38px;
+    border: none;
+    background: none;
+    font-size: 12.5px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .farmer-transactions-page .premium-transaction-card:hover,
+  .farmer-transactions-page .workflow-step:hover,
+  .farmer-transactions-page .workflow-step:hover .workflow-step-icon,
+  .farmer-transactions-page .verification-required-note:hover {
+    transform: none;
   }
 }

@@ -164,13 +164,17 @@ function NotificationBell({ role }) {
   const handleRowClick = async (notif) => {
     const target = getRowTarget(role, notif);
 
-    if (role === "admin" && notif.status === "Unread") {
+    if ((role === "admin" || role === "farmer" || role === "buyer") && notif.status === "Unread") {
       const token = localStorage.getItem("token");
       try {
         await fetch(`${API_URL}${config.endpoint}/${notif.id}/read`, {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
         });
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, status: "Read" } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
       } catch (error) {
         // Best-effort — navigation should still proceed even if this fails.
       }

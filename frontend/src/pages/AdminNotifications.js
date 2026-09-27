@@ -22,6 +22,9 @@ import "./AdminNotifications.css";
 function AdminNotifications() {
   const navigate = useNavigate();
 
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isStaff = currentUser.role === "mao_staff";
+
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState({
     totalAlerts: 0,
@@ -178,9 +181,21 @@ function AdminNotifications() {
     return <BellRing size={22} />;
   };
 
+  const getTypeAccent = (type) => {
+    if (type === "Listing Approval") return "blue";
+    if (type === "Verification Request") return "amber";
+    if (type === "Transaction Alert") return "green";
+    if (type === "User Registration") return "purple";
+    return "gold";
+  };
+
   const formatTime = (time) => {
     return new Date(time).toLocaleString();
   };
+
+  const visibleCategories = CATEGORY_DEFS.filter(
+    (cat) => !isStaff || cat.key !== "userReports"
+  );
 
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading notifications...</h2>;
@@ -247,12 +262,12 @@ function AdminNotifications() {
 
           <span className="notif-category-count-pill">
             <BellRing size={14} />
-            {CATEGORY_DEFS.length} categories
+            {visibleCategories.length} categories
           </span>
         </div>
 
         <div className="notif-category-strip">
-          {CATEGORY_DEFS.map((cat) => (
+          {visibleCategories.map((cat) => (
             <CategoryItem
               key={cat.key}
               icon={cat.icon}
@@ -281,7 +296,7 @@ function AdminNotifications() {
           <option>Listing Approval</option>
           <option>Verification Request</option>
           <option>Transaction Alert</option>
-          <option>User Registration</option>
+          {!isStaff && <option>User Registration</option>}
         </select>
 
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -298,7 +313,10 @@ function AdminNotifications() {
             <p>Latest marketplace actions that require admin attention.</p>
           </div>
 
-          <button type="button" onClick={handleMarkAllRead}>Mark all as read</button>
+          <button className="mark-all-btn" type="button" onClick={handleMarkAllRead}>
+            <CheckCircle size={16} />
+            Mark all as read
+          </button>
         </div>
 
         <div className="notification-list">
@@ -307,10 +325,11 @@ function AdminNotifications() {
           ) : (
             filteredNotifications.map((notif) => {
               const route = getNotificationRoute(notif.type);
+              const accent = getTypeAccent(notif.type);
 
               return (
               <div
-                className={`notification-row ${
+                className={`notification-row accent-${accent} ${
                   notif.status === "Unread" ? "unread" : ""
                 } ${route ? "clickable" : ""}`}
                 key={notif.id}
@@ -320,7 +339,7 @@ function AdminNotifications() {
 
                 <div className="notification-content">
                   <div className="notification-meta">
-                    <span>{notif.type}</span>
+                    <span className="notification-type-chip">{notif.type}</span>
                     <small>{formatTime(notif.time)}</small>
                   </div>
 
@@ -333,6 +352,7 @@ function AdminNotifications() {
                         notif.status === "Unread" ? "tag-unread" : "tag-read"
                       }
                     >
+                      <span className="tag-dot"></span>
                       {notif.status}
                     </span>
                   </div>
@@ -341,6 +361,7 @@ function AdminNotifications() {
                 <div className="notification-actions">
                   {notif.status === "Unread" && (
                     <button
+                      className="neutral"
                       title="Mark as read"
                       type="button"
                       onClick={(e) => {
@@ -407,13 +428,14 @@ const CATEGORY_DEFS = [
 
 function CategoryItem({ icon, accent, title, count, text }) {
   return (
-    <div className={`notif-category accent-${accent}`} title={text}>
-      <div className="notif-category-icon">{icon}</div>
-
-      <div className="notif-category-info">
+    <div className={`notif-category accent-${accent}`}>
+      <div className="notif-category-top">
+        <div className="notif-category-icon">{icon}</div>
         <span className="notif-category-count">{count}</span>
-        <span className="notif-category-title">{title}</span>
       </div>
+
+      <span className="notif-category-title">{title}</span>
+      <p className="notif-category-text">{text}</p>
     </div>
   );
 }

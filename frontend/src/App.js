@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 
@@ -33,6 +34,7 @@ import FarmerLayout from "./components/FarmerLayout";
 ========================= */
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminStaff from "./pages/AdminStaff";
 import AdminListings from "./pages/AdminListings";
 import AdminVerification from "./pages/AdminVerification";
 import AdminTransactions from "./pages/AdminTransactions";
@@ -41,6 +43,7 @@ import AdminNotifications from "./pages/AdminNotifications";
 import AdminSettings from "./pages/AdminSettings";
 import AdminMapMonitoring from "./pages/AdminMapMonitoring";
 import AdminLayout from "./components/AdminLayout";
+import RequireAdminRole from "./components/RequireAdminRole";
 
 /* =========================
    BUYER PAGES
@@ -92,6 +95,11 @@ function App() {
         <Route
           path="/reset-password"
           element={<ResetPassword />}
+        />
+
+        <Route
+          path="/onboarding"
+          element={<Onboarding />}
         />
 
         {/* =========================
@@ -161,7 +169,20 @@ function App() {
 
           <Route
             path="/admin-users"
-            element={<AdminUsers />}
+            element={
+              <RequireAdminRole>
+                <AdminUsers />
+              </RequireAdminRole>
+            }
+          />
+
+          <Route
+            path="/admin-staff"
+            element={
+              <RequireAdminRole>
+                <AdminStaff />
+              </RequireAdminRole>
+            }
           />
 
           <Route
@@ -191,7 +212,11 @@ function App() {
 
           <Route
             path="/admin-settings"
-            element={<AdminSettings />}
+            element={
+              <RequireAdminRole>
+                <AdminSettings />
+              </RequireAdminRole>
+            }
           />
 
           <Route

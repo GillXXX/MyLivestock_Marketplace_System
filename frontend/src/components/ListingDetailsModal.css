@@ -184,7 +184,7 @@
 
 .details-modal-stats-bar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px 8px;
 
   background: var(--soft);
@@ -385,6 +385,22 @@
 
 .details-modal-seller-actions .secondary-action:hover {
   background: #dcefe4;
+}
+
+.details-modal-seller-actions .details-modal-buy-now {
+  background: var(--accent);
+  color: var(--primary-dark);
+}
+
+.details-modal-seller-actions .details-modal-buy-now:hover {
+  background: #c8913f;
+}
+
+.details-modal-seller-actions .details-modal-buy-now:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 480px) {

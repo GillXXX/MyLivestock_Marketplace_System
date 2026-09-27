@@ -6,6 +6,7 @@
   z-index: 0;
   border-radius: 18px;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .leaflet-basemap-toggle {
@@ -155,4 +156,30 @@
   display: block;
   font-size: 12px;
   color: #667085;
+}
+
+/* Bigger, easier-to-tap map controls on phones; Leaflet's defaults
+   (~26px) fall under standard touch-target guidance. */
+@media (max-width: 768px) {
+  .leaflet-map-wrap .leaflet-control-zoom a {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 18px;
+  }
+
+  .leaflet-basemap-toggle {
+    top: 10px;
+    right: 10px;
+  }
+
+  .leaflet-basemap-toggle button {
+    font-size: 13px;
+    padding: 10px 14px;
+    min-height: 40px;
+  }
+
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 60px);
+  }
 }

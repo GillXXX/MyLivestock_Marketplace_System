@@ -1,13 +1,77 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
+const { getSystemSettings } = require("../utils/systemSettings");
+const {
+  getDocumentRequirement,
+  formatRequirementMessage,
+} = require("../utils/livestockDocRequirements");
+const { getCategory, isValidUnit } = require("../utils/productCatalog");
+
+// Shared create/update validation. Live animals need breed, age, weight
+// and health status; backyard farm products (eggs, fruits, ...) only need
+// the basics, since "age" or "health status" don't apply to a tray of eggs.
+// Returns { error } or the cleaned fields.
+const validateListingInput = (body) => {
+  const livestockType = (body.livestockType || "").trim();
+  const category = getCategory(livestockType, body.category);
+  const unit = body.unit || (category === "livestock" ? "head" : "kg");
+  const { breed, age, weight, price, quantity, healthStatus, location } = body;
+
+  if (!livestockType || !price || !quantity || !location) {
+    return { error: "Please fill in all required fields" };
+  }
+
+  if (livestockType.length > 50) {
+    return { error: "Product type must be 50 characters or fewer" };
+  }
+
+  if (category === "livestock" && (!breed || !age || !weight || !healthStatus)) {
+    return { error: "Please fill in all required fields" };
+  }
+
+  if (!isValidUnit(unit)) {
+    return { error: "Please choose a valid selling unit" };
+  }
+
+  if (Number(quantity) < 1) {
+    return { error: "Quantity must be at least 1" };
+  }
+
+  return {
+    livestockType,
+    category,
+    unit,
+    breed: breed || null,
+    age: age || null,
+    weight: weight || null,
+    price,
+    quantity,
+    healthStatus: healthStatus || null,
+    location,
+  };
+};
+
+// Maps the admin's "Default Listing Status" setting (System Settings >
+// General System Configuration) to the actual livestock_listings.status
+// enum value a new listing should be created with.
+const DEFAULT_STATUS_MAP = {
+  "Pending Approval": "Pending",
+  "Auto Approved": "Available",
+  Draft: "Draft",
+};
+
+const getDefaultListingStatus = async () => {
+  const settings = await getSystemSettings();
+  return DEFAULT_STATUS_MAP[settings.default_listing_status] || "Pending";
+};
 
 const getMyListings = async (req, res) => {
   try {
     const farmerId = req.user.id;
 
     const [listings] = await db.query(
-      "SELECT * FROM livestock_listings WHERE farmer_id = ? ORDER BY created_at DESC",
+      "SELECT * FROM livestock_listings WHERE farmer_id = ? AND status != 'Removed' ORDER BY created_at DESC",
       [farmerId]
     );
 
@@ -41,21 +105,25 @@ const createListing = async (req, res) => {
   try {
     const farmerId = req.user.id;
 
+    const { description, imageUrl } = req.body;
+    const input = validateListingInput(req.body);
+
+    if (input.error) {
+      return res.status(400).json({ message: input.error });
+    }
+
     const {
       livestockType,
+      category,
+      unit,
       breed,
       age,
       weight,
       price,
+      quantity,
       healthStatus,
       location,
-      description,
-      imageUrl,
-    } = req.body;
-
-    if (!livestockType || !breed || !age || !weight || !price || !healthStatus || !location) {
-      return res.status(400).json({ message: "Please fill in all required fields" });
-    }
+    } = input;
 
     const [[farmerAccount]] = await db.query(
       "SELECT is_verified FROM users WHERE id = ?",
@@ -75,45 +143,68 @@ const createListing = async (req, res) => {
       : imageUrl || null;
 
     const uploadedDocuments = req.files?.documents || [];
+
+    const requirement = getDocumentRequirement(livestockType, category);
+    if (requirement && uploadedDocuments.length < requirement.minDocuments) {
+      return res.status(400).json({ message: formatRequirementMessage(livestockType, category) });
+    }
+
     const documentsJson = uploadedDocuments.length
       ? JSON.stringify(
           uploadedDocuments.map((file) => getFileUrl(file, req))
         )
       : null;
 
+    const listingStatus = await getDefaultListingStatus();
+
     const [result] = await db.query(
       `INSERT INTO livestock_listings
-      (farmer_id, livestock_type, breed, age, weight, price, health_status, location, description, image_url, documents, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (farmer_id, livestock_type, category, breed, age, weight, price, quantity, unit, health_status, location, description, image_url, documents, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         farmerId,
         livestockType,
+        category,
         breed,
         age,
         weight,
         price,
+        quantity,
+        unit,
         healthStatus,
         location,
         description,
         finalImageUrl,
         documentsJson,
-        "Pending",
+        listingStatus,
       ]
     );
 
-    const [[farmer]] = await db.query(
-      "SELECT full_name FROM users WHERE id = ?",
-      [farmerId]
-    );
+    // A draft has nothing for MAO to review yet, and an auto-approved
+    // listing skipped review entirely — only a Pending listing actually
+    // needs the admin's attention.
+    if (listingStatus === "Pending") {
+      const [[farmer]] = await db.query(
+        "SELECT full_name FROM users WHERE id = ?",
+        [farmerId]
+      );
 
-    await createNotification(
-      "Listing Approval",
-      "Livestock listing submitted",
-      `${farmer.full_name} submitted a ${livestockType} listing for review.`,
-      result.insertId
-    );
+      await createNotification(
+        "Listing Approval",
+        "Listing submitted",
+        `${farmer.full_name} submitted a ${livestockType} listing for review.`,
+        result.insertId
+      );
+    }
 
-    res.status(201).json({ message: "Listing submitted for review" });
+    const responseMessage =
+      listingStatus === "Available"
+        ? "Listing published"
+        : listingStatus === "Draft"
+        ? "Listing saved as draft"
+        : "Listing submitted for review";
+
+    res.status(201).json({ message: responseMessage });
   } catch (error) {
     console.error("Create listing error:", error);
     res.status(500).json({ message: "Server error creating listing" });
@@ -155,21 +246,25 @@ const updateListing = async (req, res) => {
       return res.status(404).json({ message: "Listing not found" });
     }
 
+    const { description, imageUrl } = req.body;
+    const input = validateListingInput(req.body);
+
+    if (input.error) {
+      return res.status(400).json({ message: input.error });
+    }
+
     const {
       livestockType,
+      category,
+      unit,
       breed,
       age,
       weight,
       price,
+      quantity,
       healthStatus,
       location,
-      description,
-      imageUrl,
-    } = req.body;
-
-    if (!livestockType || !breed || !age || !weight || !price || !healthStatus || !location) {
-      return res.status(400).json({ message: "Please fill in all required fields" });
-    }
+    } = input;
 
     const uploadedImage = req.files?.image?.[0];
     const finalImageUrl = uploadedImage
@@ -177,6 +272,24 @@ const updateListing = async (req, res) => {
       : imageUrl || existingRows[0].image_url;
 
     const uploadedDocuments = req.files?.documents || [];
+
+    let finalDocumentCount = uploadedDocuments.length;
+    if (!uploadedDocuments.length) {
+      try {
+        const existingDocs = existingRows[0].documents
+          ? JSON.parse(existingRows[0].documents)
+          : [];
+        finalDocumentCount = Array.isArray(existingDocs) ? existingDocs.length : 0;
+      } catch (error) {
+        finalDocumentCount = 0;
+      }
+    }
+
+    const requirement = getDocumentRequirement(livestockType, category);
+    if (requirement && finalDocumentCount < requirement.minDocuments) {
+      return res.status(400).json({ message: formatRequirementMessage(livestockType, category) });
+    }
+
     const documentsJson = uploadedDocuments.length
       ? JSON.stringify(
           uploadedDocuments.map((file) => getFileUrl(file, req))
@@ -185,15 +298,18 @@ const updateListing = async (req, res) => {
 
     await db.query(
       `UPDATE livestock_listings
-      SET livestock_type = ?, breed = ?, age = ?, weight = ?, price = ?,
-          health_status = ?, location = ?, description = ?, image_url = ?, documents = ?
+      SET livestock_type = ?, category = ?, breed = ?, age = ?, weight = ?, price = ?, quantity = ?,
+          unit = ?, health_status = ?, location = ?, description = ?, image_url = ?, documents = ?
       WHERE id = ? AND farmer_id = ?`,
       [
         livestockType,
+        category,
         breed,
         age,
         weight,
         price,
+        quantity,
+        unit,
         healthStatus,
         location,
         description,
@@ -232,10 +348,68 @@ const deleteListing = async (req, res) => {
   }
 };
 
+const publishListing = async (req, res) => {
+  try {
+    const farmerId = req.user.id;
+    const { id } = req.params;
+
+    const [[listing]] = await db.query(
+      "SELECT livestock_type, category, status FROM livestock_listings WHERE id = ? AND farmer_id = ?",
+      [id, farmerId]
+    );
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    if (listing.status !== "Draft") {
+      return res.status(400).json({ message: "Only draft listings can be published" });
+    }
+
+    const requirement = getDocumentRequirement(listing.livestock_type, listing.category);
+    if (requirement) {
+      const [[withDocs]] = await db.query(
+        "SELECT documents FROM livestock_listings WHERE id = ?",
+        [id]
+      );
+      const documentCount = withDocs.documents
+        ? JSON.parse(withDocs.documents).length
+        : 0;
+
+      if (documentCount < requirement.minDocuments) {
+        return res.status(400).json({ message: formatRequirementMessage(listing.livestock_type, listing.category) });
+      }
+    }
+
+    await db.query(
+      "UPDATE livestock_listings SET status = 'Pending' WHERE id = ? AND farmer_id = ?",
+      [id, farmerId]
+    );
+
+    const [[farmer]] = await db.query(
+      "SELECT full_name FROM users WHERE id = ?",
+      [farmerId]
+    );
+
+    await createNotification(
+      "Listing Approval",
+      "Listing submitted",
+      `${farmer.full_name} submitted a ${listing.livestock_type} listing for review.`,
+      id
+    );
+
+    res.json({ message: "Listing submitted for review" });
+  } catch (error) {
+    console.error("Publish listing error:", error);
+    res.status(500).json({ message: "Server error publishing listing" });
+  }
+};
+
 module.exports = {
   getMyListings,
   createListing,
   getListingById,
   updateListing,
   deleteListing,
+  publishListing,
 };

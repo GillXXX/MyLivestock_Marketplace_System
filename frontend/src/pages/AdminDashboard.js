@@ -12,7 +12,6 @@ import {
   RefreshCw,
   PieChart,
   Layers,
-  PawPrint,
   Radio,
   ChevronDown,
   ArrowUpRight,
@@ -21,19 +20,43 @@ import {
   X,
   Mail,
   Phone,
+  Sparkles,
+  Wallet,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
 import NotificationBell from "../components/NotificationBell";
 import { VERUELA_CENTER, VERUELA_BOUNDARY_GEOJSON, VERUELA_BARANGAYS } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
+import { getProductIcon } from "../utils/productCatalog";
 import "./AdminDashboard.css";
 
 const MAP_POLL_INTERVAL_MS = 20000;
 
 const CATEGORY_COLORS = ["#0f3d2e", "#d7a24d", "#3b82f6", "#8b5cf6", "#14b8a6", "#ef4444"];
+
+function getAvatarUrl(image) {
+  if (!image) return null;
+  return image.startsWith("http") ? image : `${API_URL}${image}`;
+}
+
+function getAdminHeroMessage(stats) {
+  if (stats.pendingVerification > 0) {
+    return {
+      headline: "Verification queue needs your attention.",
+      body: `${stats.pendingVerification} listing${
+        stats.pendingVerification === 1 ? " is" : "s are"
+      } waiting for review, out of ${stats.activeListings} active listings on the marketplace.`,
+    };
+  }
+
+  return {
+    headline: "The marketplace is running smoothly.",
+    body: `${stats.registeredUsers} registered users are trading across ${stats.activeListings} active listings, with ${stats.completedTrades} completed transactions so far.`,
+  };
+}
 
 // Raw DB status -> display label used on the Admin Listings filter dropdown
 // (that page renders "Available" as "Approved").
@@ -46,12 +69,15 @@ const STATUS_COLORS = {
   Pending: "#d7a24d",
   Flagged: "#ef4444",
   Sold: "#3b82f6",
-  Rejected: "#64748b",
+  Rejected: "#b42318",
   Removed: "#94a3b8",
 };
 
 function AdminDashboard() {
   const navigate = useNavigate();
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isStaff = currentUser.role === "mao_staff";
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -163,7 +189,7 @@ function AdminDashboard() {
           popupHtml: `<div class="map-popup"><strong>${escapeHtml(
             item.farmer || "Unknown farmer"
           )}</strong><span>${escapeHtml(
-            item.livestock_types || "No livestock yet"
+            item.livestock_types || "No listings yet"
           )}</span></div>`,
         })),
     [mapPreview.locations]
@@ -191,6 +217,8 @@ function AdminDashboard() {
   if (message) {
     return <h2 style={{ padding: "30px", color: "red" }}>{message}</h2>;
   }
+
+  const hero = getAdminHeroMessage(dashboardData.stats);
 
   return (
     <>
@@ -268,6 +296,51 @@ function AdminDashboard() {
           </div>
         )}
 
+        <section className="admin-hero-card">
+          <TrendingUp className="hero-watermark" />
+
+          <div className="hero-main">
+            <span className="hero-tag">
+              <Sparkles size={13} /> Marketplace Performance
+            </span>
+            <h2>{hero.headline}</h2>
+            <p>{hero.body}</p>
+
+            <div className="hero-actions">
+              <Link to="/admin-verification">
+                {dashboardData.stats.pendingVerification > 0 ? "Review Verifications" : "View Verifications"}
+                <ArrowUpRight size={18} />
+              </Link>
+
+              <Link className="secondary" to="/admin-listings">
+                Manage Listings
+              </Link>
+
+              <Link className="ghost" to="/admin-reports">
+                View Reports
+              </Link>
+            </div>
+          </div>
+
+          <div className="hero-side">
+            <div className="hero-metric">
+              <strong>{dashboardData.stats.pendingVerification}</strong>
+              <span>Pending verification</span>
+            </div>
+
+            <div className="hero-mini-stats">
+              <div>
+                <CheckCircle size={15} />
+                <span>{dashboardData.stats.activeListings} active listings</span>
+              </div>
+              <div>
+                <Wallet size={15} />
+                <span>₱{revenueTotal30d.toLocaleString()} last 4 weeks</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="kpi-grid">
           <Kpi
             accent="green"
@@ -283,7 +356,7 @@ function AdminDashboard() {
             accent="blue"
             title="Active Listings"
             value={dashboardData.stats.activeListings}
-            trend="Available livestock"
+            trend="Available listings"
             icon={<ClipboardCheck />}
             delta={dashboardData.deltas.activeListings}
             sparkline={dashboardData.trends.growth.map((d) => d.listings)}
@@ -377,7 +450,7 @@ function AdminDashboard() {
               <thead>
                 <tr>
                   <th>Farmer</th>
-                  <th>Livestock</th>
+                  <th>Product</th>
                   <th>Document</th>
                   <th>Waiting</th>
                 </tr>
@@ -399,9 +472,17 @@ function AdminDashboard() {
                           className="farmer-cell farmer-cell-link"
                           onClick={() => setSelectedFarmer(item)}
                         >
-                          <span className={`avatar status-${statusSlug(item.status)}`}>
-                            {initials(item.farmer_name)}
-                          </span>
+                          {item.farmer_profile_image ? (
+                            <img
+                              className={`avatar status-${statusSlug(item.status)}`}
+                              src={getAvatarUrl(item.farmer_profile_image)}
+                              alt={item.farmer_name}
+                            />
+                          ) : (
+                            <span className={`avatar status-${statusSlug(item.status)}`}>
+                              {initials(item.farmer_name)}
+                            </span>
+                          )}
                           {item.farmer_name}
                         </button>
                       </td>
@@ -486,7 +567,7 @@ function AdminDashboard() {
                 <h3>
                   <Layers size={18} /> Listings by Category
                 </h3>
-                <p>Distribution of active livestock across categories.</p>
+                <p>Distribution of active listings across livestock and farm product types.</p>
               </div>
             </div>
 
@@ -550,17 +631,19 @@ function AdminDashboard() {
         </section>
 
         <section className="quick-actions">
-          <button
-            className="action-card"
-            type="button"
-            onClick={() => navigate("/admin-users")}
-          >
-            <Users size={22} />
-            <div>
-              <strong>Manage Users</strong>
-              <p>Review farmer and buyer accounts.</p>
-            </div>
-          </button>
+          {!isStaff && (
+            <button
+              className="action-card"
+              type="button"
+              onClick={() => navigate("/admin-users")}
+            >
+              <Users size={22} />
+              <div>
+                <strong>Manage Users</strong>
+                <p>Review farmer and buyer accounts.</p>
+              </div>
+            </button>
+          )}
 
           <button
             className="action-card accent"
@@ -600,9 +683,17 @@ function AdminDashboard() {
             </button>
 
             <div className="farmer-modal-head">
-              <span className={`avatar large status-${statusSlug(selectedFarmer.status)}`}>
-                {initials(selectedFarmer.farmer_name)}
-              </span>
+              {selectedFarmer.farmer_profile_image ? (
+                <img
+                  className={`avatar large status-${statusSlug(selectedFarmer.status)}`}
+                  src={getAvatarUrl(selectedFarmer.farmer_profile_image)}
+                  alt={selectedFarmer.farmer_name}
+                />
+              ) : (
+                <span className={`avatar large status-${statusSlug(selectedFarmer.status)}`}>
+                  {initials(selectedFarmer.farmer_name)}
+                </span>
+              )}
               <div>
                 <h3>{selectedFarmer.farmer_name}</h3>
                 <span className={`verification-pill ${selectedFarmer.farmer_is_verified ? "verified" : "pending"}`}>
@@ -655,13 +746,15 @@ function AdminDashboard() {
               <p>{selectedFarmer.health_status || "Health Document"}</p>
             </div>
 
-            <button
-              className="farmer-modal-view-all"
-              type="button"
-              onClick={() => navigate("/admin-users")}
-            >
-              <UserCircle size={16} /> View Full Profile in User Management
-            </button>
+            {!isStaff && (
+              <button
+                className="farmer-modal-view-all"
+                type="button"
+                onClick={() => navigate("/admin-users")}
+              >
+                <UserCircle size={16} /> View Full Profile in User Management
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -884,6 +977,7 @@ function BarList({ items, onItemClick }) {
     <div className="bar-list">
       {items.map((item) => {
         const percent = Math.round((item.value / total) * 100);
+        const SpeciesIcon = getProductIcon(item.label);
 
         return (
           <button
@@ -896,7 +990,7 @@ function BarList({ items, onItemClick }) {
               className="bar-row-icon"
               style={{ background: `${item.color}1a`, color: item.color }}
             >
-              <PawPrint size={16} />
+              <SpeciesIcon size={16} />
             </div>
 
             <div className="bar-row-body">

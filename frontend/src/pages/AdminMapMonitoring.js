@@ -15,6 +15,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import AdminStatCard from "../components/AdminStatCard";
+import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
 import {
@@ -23,6 +24,7 @@ import {
   VERUELA_BARANGAYS,
 } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
+import { getProductIcon } from "../utils/productCatalog";
 import "./AdminMapMonitoring.css";
 
 const POLL_INTERVAL_MS = 15000;
@@ -43,7 +45,7 @@ function AdminMapMonitoring() {
   });
 
   const [searchText, setSearchText] = useState("");
-  const [livestockFilter, setLivestockFilter] = useState("All Livestock");
+  const [livestockFilter, setLivestockFilter] = useState("All Types");
   const [barangayFilter, setBarangayFilter] = useState("All Barangays");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -110,9 +112,12 @@ function AdminMapMonitoring() {
       address.toLowerCase().includes(search) ||
       livestockTypes.toLowerCase().includes(search);
 
+    // livestock_types is the farmer's listing types joined with commas
     const matchesLivestock =
-      livestockFilter === "All Livestock" ||
-      livestockTypes.includes(livestockFilter);
+      livestockFilter === "All Types" ||
+      livestockTypes
+        .split(",")
+        .some((type) => matchesTypeFilter(type.trim(), livestockFilter));
 
     const matchesBarangay =
       barangayFilter === "All Barangays" ||
@@ -155,7 +160,7 @@ function AdminMapMonitoring() {
           <div class="map-popup">
             <strong>${escapeHtml(item.farmer || "Unknown farmer")}</strong>
             <span>${escapeHtml(item.address || item.location || "No address")}</span>
-            <span>${escapeHtml(item.livestock_types || "No livestock yet")}</span>
+            <span>${escapeHtml(item.livestock_types || "No listings yet")}</span>
             <span>${item.listings} listing(s)</span>
           </div>
         `,
@@ -189,7 +194,7 @@ function AdminMapMonitoring() {
             <span className="eyebrow">MAO LOCATION MONITORING</span>
             <h1>Map Monitoring</h1>
             <p>
-              Monitor seller locations, livestock listing distribution, and farm
+              Monitor seller locations, listing distribution, and farm
               activity within Veruela, Agusan del Sur.
             </p>
           </div>
@@ -240,8 +245,8 @@ function AdminMapMonitoring() {
           accent="purple"
           icon={<Layers />}
           value={stats.livestockTypes}
-          label="Livestock Types"
-          note="Swine, cattle, goat, poultry"
+          label="Product Types"
+          note="Livestock and farm products"
         />
       </section>
 
@@ -250,7 +255,7 @@ function AdminMapMonitoring() {
           <Search size={18} />
 
           <input
-            placeholder="Search farmer, barangay, livestock type..."
+            placeholder="Search farmer, barangay, product type..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
@@ -260,11 +265,8 @@ function AdminMapMonitoring() {
           value={livestockFilter}
           onChange={(e) => setLivestockFilter(e.target.value)}
         >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option>All Types</option>
+          <ProductTypeOptions />
         </select>
 
         <select
@@ -296,7 +298,7 @@ function AdminMapMonitoring() {
             ref={mapRef}
             center={VERUELA_CENTER}
             zoom={12}
-            height="420px"
+            height="540px"
             markers={mapMarkers}
             barangayLabels={VERUELA_BARANGAYS}
             boundary={VERUELA_BOUNDARY_GEOJSON}
@@ -350,7 +352,7 @@ function AdminMapMonitoring() {
                     <p>{item.address || item.location || "No location provided"}</p>
 
                     <div className="record-tags">
-                      <span>{item.livestock_types || "No livestock yet"}</span>
+                      <span>{item.livestock_types || "No listings yet"}</span>
                       <span>{item.listings} listing(s)</span>
                       {item.farm_lat == null && (
                         <span className="tag-unpinned">Not pinned</span>
@@ -378,24 +380,31 @@ function AdminMapMonitoring() {
 
       <section className="map-insights-grid">
         <div className="map-card accent-green">
-          <h3>Livestock Distribution</h3>
+          <div className="card-heading">
+            <div>
+              <h3>Product Distribution</h3>
+              <p>Share of mapped listings by species.</p>
+            </div>
+          </div>
 
           {distribution.length === 0 ? (
-            <p>No livestock distribution data yet.</p>
+            <p>No listing distribution data yet.</p>
           ) : (
             distribution.map((item) => {
-              const percent =
+              const pct =
                 totalDistribution > 0
-                  ? `${(Number(item.total) / totalDistribution) * 100}%`
-                  : "0%";
+                  ? (Number(item.total) / totalDistribution) * 100
+                  : 0;
 
               return (
                 <Distribution
                   key={item.livestock_type}
-                  icon={getAnimalIcon(item.livestock_type)}
+                  icon={getProductIcon(item.livestock_type)}
+                  type={item.livestock_type}
                   label={item.livestock_type}
                   value={item.total}
-                  width={percent}
+                  percent={pct}
+                  width={`${pct}%`}
                 />
               );
             })
@@ -403,26 +412,33 @@ function AdminMapMonitoring() {
         </div>
 
         <div className="map-card accent-amber">
-          <h3>Monitoring Alerts</h3>
+          <div className="card-heading">
+            <div>
+              <h3>Monitoring Alerts</h3>
+              <p>Items that may need MAO attention.</p>
+            </div>
+          </div>
 
-          <div className="alert-row">
+          <div className="alert-row warning">
             <div className="alert-icon warning">
               <AlertTriangle size={20} />
             </div>
-            <div>
+            <div className="alert-body">
               <strong>Pending location review</strong>
               <p>{stats.pendingReview} seller/listing record(s) need MAO validation.</p>
             </div>
+            <span className="alert-status warning">Action Needed</span>
           </div>
 
           <div className="alert-row normal">
             <div className="alert-icon">
               <MapPin size={20} />
             </div>
-            <div>
+            <div className="alert-body">
               <strong>Coverage status</strong>
               <p>All current listings are within Veruela scope.</p>
             </div>
+            <span className="alert-status normal">All Clear</span>
           </div>
         </div>
       </section>
@@ -430,27 +446,25 @@ function AdminMapMonitoring() {
   );
 }
 
-function getAnimalIcon(type) {
-  if (type === "Swine") return "🐖";
-  if (type === "Cattle") return "🐄";
-  if (type === "Goat") return "🐐";
-  if (type === "Poultry") return "🐔";
-  return "🐾";
-}
-
-function Distribution({ icon, label, value, width }) {
+function Distribution({ icon: Icon, type, label, value, percent, width }) {
   return (
     <div className="distribution-item">
       <div>
         <span className="distribution-label">
-          <i className="distribution-icon">{icon}</i>
+          <i className={`distribution-icon ${(type || "").toLowerCase()}`}>
+            <Icon size={18} strokeWidth={2.25} />
+          </i>
           <strong>{label}</strong>
         </span>
-        <span className="distribution-value">{value}</span>
+
+        <span className="distribution-figures">
+          <span className="distribution-percent">{percent.toFixed(0)}%</span>
+          <span className="distribution-value">{value}</span>
+        </span>
       </div>
 
       <div className="distribution-track">
-        <div style={{ width }}></div>
+        <div className={(type || "").toLowerCase()} style={{ width }}></div>
       </div>
     </div>
   );

@@ -16,39 +16,28 @@
 
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr 1fr;
+  /* Photo background; the scrim only darkens the left side so the white
+     showcase text stays readable while the photo stays clear on the right. */
   background:
-    radial-gradient(circle at top right, rgba(215, 162, 77, 0.10), transparent 32%),
-    var(--background);
+    linear-gradient(
+      90deg,
+      rgba(7, 31, 22, 0.72) 0%,
+      rgba(7, 31, 22, 0.42) 45%,
+      rgba(7, 31, 22, 0.06) 100%
+    ),
+    url("../assets/landing-hero.jpg") center / cover no-repeat,
+    #0f3d2e;
+  background-attachment: fixed;
   font-family: "Inter", "Segoe UI", sans-serif;
 }
 
 /* LEFT */
 
 .login-showcase {
-  position: relative;
-  overflow: hidden;
-  background:
-    linear-gradient(
-      165deg,
-      rgba(7, 31, 22, 0.94) 0%,
-      rgba(15, 61, 46, 0.82) 55%,
-      rgba(9, 41, 31, 0.95) 100%
-    ),
-    url("https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=1600&auto=format&fit=crop");
-  background-size: cover;
-  background-position: center;
   padding: 60px;
   display: flex;
   align-items: center;
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 85% 15%, rgba(215, 162, 77, 0.35), transparent 45%),
-    radial-gradient(circle at 12% 92%, rgba(215, 162, 77, 0.12), transparent 42%);
 }
 
 .showcase-content {
@@ -56,6 +45,12 @@
   z-index: 2;
   color: white;
   max-width: 650px;
+}
+
+.brand-badge,
+.login-mobile-brand {
+  text-decoration: none;
+  color: inherit;
 }
 
 .brand-badge {
@@ -66,15 +61,19 @@
 }
 
 .brand-icon {
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--accent), #b8842c);
-  color: var(--primary-dark);
-  box-shadow: 0 10px 24px rgba(215, 162, 77, 0.35);
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.35));
 }
 
 .brand-badge h2 {
@@ -181,17 +180,95 @@ backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px;
+  padding: 60px 130px 60px 50px;
 }
 
 .login-card {
   width: 100%;
   max-width: 540px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.36)
+  );
+  backdrop-filter: blur(4px) saturate(130%);
+  -webkit-backdrop-filter: blur(4px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 32px;
   padding: 48px;
-  box-shadow: var(--shadow);
+  box-shadow:
+    0 24px 60px rgba(4, 20, 14, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 38%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.24),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+}
+
+.login-card > * {
+  position: relative;
+}
+
+/* Text/fields sit on a nearly clear card, so give them a light halo and
+   translucent fills to stay legible over the photo. */
+.modern-login .login-header h2,
+.modern-login .login-header p,
+.modern-login .form-group label,
+.modern-login .register-link p,
+.modern-login .register-link a,
+.modern-login .login-mobile-brand h3,
+.modern-login .login-mobile-brand span {
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.modern-login .login-header p,
+.modern-login .register-link p,
+.modern-login .login-mobile-brand span {
+  color: #374151;
+}
+
+.modern-login .login-tag {
+  color: #8a5f1a;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.modern-login .register-link a,
+.modern-login .password-label a {
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
+.modern-login .input-wrapper {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.modern-login .input-wrapper:focus-within {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.modern-login .social-login button {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.modern-login .divider p {
+  color: #4b5563;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 .login-tag {
@@ -225,6 +302,13 @@ backdrop-filter: blur(14px);
   font-size: 14px;
   font-weight: 850;
   color: var(--text);
+}
+
+.field-hint {
+  margin: 8px 2px 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #a3690a;
 }
 
 .password-label {
@@ -271,6 +355,17 @@ backdrop-filter: blur(14px);
   font-size: 15px;
 }
 
+.form-error {
+  margin: 0 0 15px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(198, 62, 62, 0.08);
+  border: 1px solid rgba(198, 62, 62, 0.22);
+  color: #b23434;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .eye-btn {
   border: none;
   background: transparent;
@@ -283,32 +378,6 @@ backdrop-filter: blur(14px);
 
 .eye-btn:hover {
   color: var(--primary);
-}
-
-.form-error {
-  margin: 0 0 15px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: rgba(198, 62, 62, 0.08);
-  border: 1px solid rgba(198, 62, 62, 0.22);
-  color: #b23434;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.login-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 26px;
-}
-
-.remember-box {
-  display: flex !important;
-  align-items: center;
-  gap: 9px;
-  font-size: 14px;
-  color: var(--muted);
 }
 
 .login-btn {
@@ -394,6 +463,13 @@ backdrop-filter: blur(14px);
   text-decoration: none;
 }
 
+/* Only shown on mobile/tablet, where .login-showcase (which carries the
+   logo the rest of the time) is hidden below. Same dark/glass theme as
+   the rest of the page — just repositioned for a narrow screen. */
+.login-mobile-brand {
+  display: none;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 1100px) {
@@ -404,18 +480,181 @@ backdrop-filter: blur(14px);
   .login-showcase {
     display: none;
   }
-}
 
-@media (max-width: 600px) {
-  .login-panel {
-    padding: 24px;
+  .login-mobile-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    margin-bottom: 22px;
   }
 
+  .login-mobile-brand img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+  }
+
+  .login-mobile-brand h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--primary-dark);
+  }
+
+  .login-mobile-brand span {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+}
+
+@media (max-width: 768px) {
+  .modern-login {
+    background:
+      url("../assets/login-phone-bg.jpg") center top / cover no-repeat,
+      #cbb99b;
+  }
+
+  .login-panel {
+    align-items: flex-end;
+    padding: 190px 16px 24px;
+  }
+
+  /* Glossy glass card: translucent fill, blur, bright top edge and a sheen */
   .login-card {
-    padding: 30px 24px;
+    position: relative;
+    overflow: hidden;
+    padding: 20px 18px;
+    border-radius: 22px;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.44),
+      rgba(255, 255, 255, 0.24)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(3px) saturate(125%);
+    backdrop-filter: blur(3px) saturate(125%);
+    box-shadow:
+      0 18px 40px rgba(60, 40, 15, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .login-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 38%;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.22),
+      rgba(255, 255, 255, 0)
+    );
+    pointer-events: none;
+  }
+
+  .login-card > * {
+    position: relative;
+  }
+
+  /* Keep text legible now that the card itself is nearly clear */
+  .login-header h2,
+  .login-header p,
+  .form-group label,
+  .register-link p,
+  .register-link a,
+  .login-mobile-brand h3,
+  .login-mobile-brand span {
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .input-wrapper {
+    background: rgba(255, 255, 255, 0.62);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .input-wrapper:focus-within {
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  .social-login button {
+    background: rgba(255, 255, 255, 0.62);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .divider p {
+    color: #4b5563;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(255, 255, 255, 0.9);
   }
 
   .login-header h2 {
-    font-size: 32px;
+    font-size: 22px;
+    margin: 8px 0 6px;
+  }
+
+  .login-header p {
+    font-size: 12.5px;
+    margin-bottom: 18px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    font-size: 12.5px;
+    margin-bottom: 6px;
+  }
+
+  .input-wrapper {
+    height: 44px;
+    border-radius: 14px;
+    padding: 0 14px;
+  }
+
+  .input-wrapper input {
+    font-size: 13.5px;
+  }
+
+  .password-label a {
+    font-size: 12px;
+  }
+
+  .eye-btn {
+    min-width: 32px;
+    min-height: 32px;
+    justify-content: center;
+  }
+
+  .login-btn {
+    height: 44px;
+    font-size: 13.5px;
+    border-radius: 14px;
+  }
+
+  .divider {
+    margin: 18px 0;
+  }
+
+  .social-login button {
+    width: 100%;
+    height: 42px;
+    font-size: 13px;
+  }
+
+  .register-link {
+    margin-top: 16px;
+  }
+
+  .register-link p,
+  .register-link a {
+    font-size: 12.5px;
   }
 }

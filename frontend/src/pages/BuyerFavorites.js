@@ -17,11 +17,21 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
-import { API_URL } from "../config";
+import BuyNowModal from "../components/BuyNowModal";
+import AdminStatCard from "../components/AdminStatCard";
+import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
+import {
+  LIVESTOCK_TYPES,
+  FARM_PRODUCT_TYPES,
+  ALL_KNOWN_TYPES,
+  formatPrice,
+} from "../utils/productCatalog";
+import useGoBack from "../utils/useGoBack";
 import "./BuyerFavorites.css";
 
 function BuyerFavorites() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/buyer-dashboard");
 
   const [savedListings, setSavedListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
@@ -38,11 +48,11 @@ function BuyerFavorites() {
   const [sortBy, setSortBy] = useState("Recently Saved");
   const [detailsListing, setDetailsListing] = useState(null);
   const [inquiryListing, setInquiryListing] = useState(null);
+  const [buyNowListing, setBuyNowListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const defaultImage =
-    "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
+  const defaultImage = DEFAULT_LISTING_IMAGE;
 
   const formatSavedTime = (time) => {
     if (!time) return "Saved recently";
@@ -108,7 +118,9 @@ function BuyerFavorites() {
       );
     }
 
-    if (livestockType !== "All Livestock") {
+    if (livestockType === "Other") {
+      results = results.filter((item) => !ALL_KNOWN_TYPES.includes(item.livestock_type));
+    } else if (livestockType !== "All Livestock") {
       results = results.filter((item) => item.livestock_type === livestockType);
     }
 
@@ -190,9 +202,9 @@ function BuyerFavorites() {
     <div className="buyer-favorites-page">
       <div className="favorites-header">
         <div className="header-left">
-          <Link to="/buyer-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="page-tag">BUYER SAVED LISTINGS</span>
@@ -206,28 +218,28 @@ function BuyerFavorites() {
       </div>
 
       <section className="favorites-stats">
-        <StatCard
+        <AdminStatCard
           icon={<Heart />}
           value={stats.savedListings}
           label="Saved Listings"
           note="Your watchlist"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<ShieldCheck />}
           value={stats.verifiedSellers}
           label="Verified Sellers"
           note="MAO monitored"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<Wallet />}
           value={`₱${Number(stats.savedValue).toLocaleString()}`}
           label="Saved Value"
           note="Total estimate"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<TrendingUp />}
           value={stats.activeInquiries}
           label="Active Inquiries"
@@ -250,11 +262,18 @@ function BuyerFavorites() {
           value={livestockType}
           onChange={(e) => setLivestockType(e.target.value)}
         >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option value="All Livestock">All Types</option>
+          <optgroup label="Livestock">
+            {LIVESTOCK_TYPES.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </optgroup>
+          <optgroup label="Farm Products">
+            {FARM_PRODUCT_TYPES.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </optgroup>
+          <option>Other</option>
         </select>
 
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -296,7 +315,7 @@ function BuyerFavorites() {
           filteredListings.map((item) => (
             <div className="saved-card" key={item.id}>
               <div className="saved-image">
-                <img src={item.image_url || defaultImage} alt={item.breed} />
+                <img src={item.image_url || defaultImage} alt={item.breed || item.livestock_type} />
 
                 <span className="saved-type">{item.livestock_type}</span>
 
@@ -312,7 +331,7 @@ function BuyerFavorites() {
               <div className="saved-body">
                 <div className="saved-title">
                   <div>
-                    <h3>{item.breed}</h3>
+                    <h3>{item.breed || item.livestock_type}</h3>
                     <button
                       type="button"
                       className="saved-seller-link"
@@ -323,7 +342,7 @@ function BuyerFavorites() {
                     </button>
                   </div>
 
-                  <strong>₱{Number(item.price).toLocaleString()}</strong>
+                  <strong>{formatPrice(item.price, item.unit)}</strong>
                 </div>
 
                 <div className="saved-meta">
@@ -390,6 +409,7 @@ function BuyerFavorites() {
           listing={detailsListing}
           onClose={() => setDetailsListing(null)}
           onInquire={(item) => setInquiryListing(item)}
+          onBuyNow={(item) => setBuyNowListing(item)}
         />
       )}
 
@@ -399,17 +419,13 @@ function BuyerFavorites() {
           onClose={() => setInquiryListing(null)}
         />
       )}
-    </div>
-  );
-}
 
-function StatCard({ icon, value, label, note }) {
-  return (
-    <div className="favorite-stat-card">
-      <div className="favorite-stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{note}</small>
+      {buyNowListing && (
+        <BuyNowModal
+          listing={buyNowListing}
+          onClose={() => setBuyNowListing(null)}
+        />
+      )}
     </div>
   );
 }

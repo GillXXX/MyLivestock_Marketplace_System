@@ -4,6 +4,7 @@ import {
   Search,
   CheckCircle,
   AlertTriangle,
+  Flag,
   Trash2,
   ArrowLeft,
   MapPin,
@@ -16,7 +17,9 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
 import AdminStatCard from "../components/AdminStatCard";
+import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
+import { ALL_KNOWN_TYPES, getCategory, formatPrice } from "../utils/productCatalog";
 import "./AdminListings.css";
 
 function AdminListings() {
@@ -32,7 +35,7 @@ function AdminListings() {
   });
 
   const [searchText, setSearchText] = useState("");
-  const [typeFilter, setTypeFilter] = useState(location.state?.typeFilter || "All Livestock Types");
+  const [typeFilter, setTypeFilter] = useState(location.state?.typeFilter || "All Types");
   const [statusFilter, setStatusFilter] = useState(location.state?.statusFilter || "All Status");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -243,11 +246,13 @@ function AdminListings() {
   const handleExport = () => {
     exportToCsv("listings.csv", [
       { label: "ID", value: (l) => l.id },
-      { label: "Livestock Type", value: (l) => l.livestock_type },
-      { label: "Breed", value: (l) => l.breed },
+      { label: "Product Type", value: (l) => l.livestock_type },
+      { label: "Category", value: (l) => (getCategory(l.livestock_type, l.category) === "product" ? "Farm Product" : "Livestock") },
+      { label: "Breed / Variety", value: (l) => l.breed },
       { label: "Farmer", value: (l) => l.farmer_name },
       { label: "Location", value: (l) => l.location },
       { label: "Price", value: (l) => l.price },
+      { label: "Unit", value: (l) => l.unit || "head" },
       { label: "Status", value: (l) => (l.status === "Available" ? "Approved" : l.status) },
       { label: "Date Posted", value: (l) => new Date(l.created_at).toLocaleDateString() },
     ], filteredListings);
@@ -264,7 +269,7 @@ function AdminListings() {
       String(item.id).includes(search);
 
     const matchesType =
-      typeFilter === "All Livestock Types" || item.livestock_type === typeFilter;
+      typeFilter === "All Types" || matchesTypeFilter(item.livestock_type, typeFilter);
 
     const displayStatus = item.status === "Available" ? "Approved" : item.status;
 
@@ -294,7 +299,7 @@ function AdminListings() {
             <span className="eyebrow">MAO Administration</span>
             <h1>Listings Approval</h1>
             <p>
-              Review livestock posts, approve valid listings, flag suspicious
+              Review livestock and farm product posts, approve valid listings, flag suspicious
               records, and remove invalid marketplace entries.
             </p>
           </div>
@@ -317,18 +322,19 @@ function AdminListings() {
         <div className="listing-search">
           <Search size={16} />
           <input
-            placeholder="Search by livestock, farmer, ID, or location..."
+            placeholder="Search by product, farmer, ID, or location..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
 
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option>All Livestock Types</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option>All Types</option>
+          <ProductTypeOptions />
+          {/* A custom type clicked from the dashboard's category chart */}
+          {typeFilter !== "All Types" &&
+            typeFilter !== "Other" &&
+            !ALL_KNOWN_TYPES.includes(typeFilter) && <option>{typeFilter}</option>}
         </select>
 
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -337,6 +343,7 @@ function AdminListings() {
           <option>Approved</option>
           <option>Flagged</option>
           <option>Rejected</option>
+          <option>Draft</option>
         </select>
       </section>
 
@@ -344,7 +351,7 @@ function AdminListings() {
         <div className="listings-table-card">
           <div className="card-title">
             <div>
-              <h3>Submitted Livestock Listings</h3>
+              <h3>Submitted Listings</h3>
               <p>Listings submitted by farmers for MAO review.</p>
             </div>
           </div>
@@ -359,7 +366,7 @@ function AdminListings() {
                 </button>
 
                 <button type="button" className="bulk-flag" onClick={handleBulkFlag}>
-                  <AlertTriangle size={15} /> Flag
+                  <Flag size={15} /> Flag
                 </button>
 
                 <button type="button" className="bulk-reject" onClick={handleBulkReject}>
@@ -454,12 +461,12 @@ function AdminListings() {
                               </button>
                             ) : (
                               <div className="animal-icon">
-                                {getAnimalIcon(item.livestock_type)}
+                                {getAnimalIcon(item.livestock_type, item.category)}
                               </div>
                             )}
                             <div>
                               <strong>{item.livestock_type}</strong>
-                              <p>{item.breed} • LST-{item.id}</p>
+                              <p>{item.breed ? `${item.breed} • ` : ""}LST-{item.id}</p>
                             </div>
                           </div>
                         </td>
@@ -477,7 +484,7 @@ function AdminListings() {
                         </td>
 
                         <td className="price-cell">
-                          ₱{Number(item.price).toLocaleString()}
+                          {formatPrice(item.price, item.unit)}
                         </td>
 
                         <td className="date-cell">{new Date(item.created_at).toLocaleDateString()}</td>
@@ -523,7 +530,7 @@ function AdminListings() {
                               type="button"
                               onClick={() => handleFlag(item)}
                             >
-                              <AlertTriangle size={17} />
+                              <Flag size={17} />
                             </button>
 
                             <button
@@ -558,12 +565,19 @@ function AdminListings() {
   );
 }
 
-function getAnimalIcon(type) {
+function getAnimalIcon(type, category) {
   if (type === "Swine") return "🐖";
   if (type === "Cattle") return "🐄";
   if (type === "Goat") return "🐐";
   if (type === "Poultry") return "🐔";
-  return "🐾";
+  if (type === "Carabao") return "🐃";
+  if (type === "Duck") return "🦆";
+  if (type === "Eggs") return "🥚";
+  if (type === "Fruits") return "🍎";
+  if (type === "Vegetables") return "🥕";
+  if (type === "Milk / Dairy") return "🥛";
+  if (type === "Honey") return "🍯";
+  return getCategory(type, category) === "product" ? "🌱" : "🐾";
 }
 
 export default AdminListings;

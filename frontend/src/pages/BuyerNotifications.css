@@ -1,18 +1,7 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-
-  --background: #f4f1e8;
-  --card: #ffffff;
-
-  --border: #e8e2d4;
-  --muted: #667085;
   --soft: #eaf5ef;
-
-  --shadow:
-    0 10px 30px rgba(15,61,46,0.06),
-    0 30px 60px rgba(15,61,46,0.08);
 }
 
 /* Every rule below is scoped under .buyer-notifications-page — see the same
@@ -97,8 +86,8 @@
   margin-bottom: 24px;
 }
 
-.buyer-notifications-page .notif-stat-card,
 .buyer-notifications-page .notifications-list-card,
+.buyer-notifications-page .notification-categories-panel,
 .buyer-notifications-page .notification-toolbar {
   background: rgba(255,255,255,0.8);
   border: 1px solid rgba(255,255,255,0.7);
@@ -108,111 +97,14 @@
   box-shadow: var(--shadow);
 }
 
-.buyer-notifications-page .notif-stat-card {
-  position: relative;
-  overflow: hidden;
+.buyer-notifications-page .notification-categories-panel {
   padding: 24px;
-  border-top: 3px solid var(--accent);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  animation: notif-card-rise 0.5s ease both;
+  margin-bottom: 24px;
 }
-
-.buyer-notifications-page .notif-stat-card:nth-child(1) { animation-delay: 0ms; }
-.buyer-notifications-page .notif-stat-card:nth-child(2) { animation-delay: 70ms; }
-.buyer-notifications-page .notif-stat-card:nth-child(3) { animation-delay: 140ms; }
-.buyer-notifications-page .notif-stat-card:nth-child(4) { animation-delay: 210ms; }
 
 @keyframes notif-card-rise {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.buyer-notifications-page .notif-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 22px 45px rgba(15,61,46,0.14);
-}
-
-.buyer-notifications-page .notif-stat-card:hover .notif-stat-icon {
-  transform: scale(1.08) rotate(-4deg);
-}
-
-.buyer-notifications-page .notif-stat-icon {
-  position: relative;
-
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 16px rgba(15,61,46,0.24);
-
-  transition: transform 0.25s ease;
-}
-
-/* Stat card accent tones, all drawn from the existing green/gold palette */
-
-.buyer-notifications-page .notif-stat-card.accent-amber {
-  border-top-color: #d9a441;
-}
-
-.buyer-notifications-page .notif-stat-card.accent-amber .notif-stat-icon {
-  background: linear-gradient(135deg, #e8b84b, #946200);
-  box-shadow: 0 8px 16px rgba(148,98,0,0.28);
-}
-
-.buyer-notifications-page .notif-stat-card.accent-soft-green {
-  border-top-color: var(--primary);
-}
-
-.buyer-notifications-page .notif-stat-card.accent-soft-green .notif-stat-icon {
-  background: var(--soft);
-  color: var(--primary);
-  box-shadow: none;
-}
-
-.buyer-notifications-page .notif-stat-card.accent-gold .notif-stat-icon {
-  background: linear-gradient(135deg, var(--accent), #b8842c);
-  box-shadow: 0 8px 16px rgba(184,132,44,0.28);
-}
-
-.buyer-notifications-page .notif-pulse-dot {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-
-  width: 12px;
-  height: 12px;
-
-  border-radius: 50%;
-
-  background: #946200;
-  border: 2px solid white;
-
-  animation: notif-pulse-ring 1.8s infinite;
-}
-
-@keyframes notif-pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(148,98,0,0.5); }
-  70% { box-shadow: 0 0 0 8px rgba(148,98,0,0); }
-  100% { box-shadow: 0 0 0 0 rgba(148,98,0,0); }
-}
-
-.buyer-notifications-page .notif-stat-card h2 {
-  font-size: 38px;
-  font-weight: 950;
-  margin: 14px 0 0;
-  color: var(--primary-dark);
-  font-family: Georgia, serif;
-}
-
-.buyer-notifications-page .notif-stat-card p {
-  margin: 0;
-  color: var(--muted);
-  font-weight: 700;
 }
 
 .buyer-notifications-page .notification-toolbar {
@@ -267,10 +159,6 @@
 
 /* Layout */
 
-.buyer-notifications-page .notifications-layout {
-  display: block;
-}
-
 .buyer-notifications-page .notifications-list-card {
   padding: 24px;
 }
@@ -294,6 +182,26 @@
   color: var(--muted);
 }
 
+.buyer-notifications-page .mark-all-btn {
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 11px 18px;
+  border-radius: 14px;
+  font-weight: 850;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.buyer-notifications-page .mark-all-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -8px rgba(15, 61, 46, 0.5);
+}
+
 .buyer-notifications-page .notification-list {
   display: flex;
   flex-direction: column;
@@ -301,6 +209,9 @@
 }
 
 .buyer-notifications-page .notification-row {
+  --row-color: #b8842c;
+  --row-tint: rgba(215, 162, 77, 0.12);
+
   position: relative;
 
   background: var(--soft);
@@ -316,15 +227,20 @@
   animation: notif-card-rise 0.4s ease both;
 }
 
+.buyer-notifications-page .notification-row.accent-blue { --row-color: #2563eb; --row-tint: rgba(37, 99, 235, 0.12); }
+.buyer-notifications-page .notification-row.accent-amber { --row-color: #b3790f; --row-tint: rgba(215, 162, 77, 0.16); }
+.buyer-notifications-page .notification-row.accent-green { --row-color: #0f3d2e; --row-tint: rgba(15, 61, 46, 0.12); }
+.buyer-notifications-page .notification-row.accent-gold { --row-color: #b8842c; --row-tint: rgba(215, 162, 77, 0.14); }
+
 .buyer-notifications-page .notification-row:hover {
-  border-color: var(--accent);
+  border-color: var(--row-color);
   transform: translateX(3px);
   box-shadow: 0 10px 24px rgba(15,61,46,0.08);
 }
 
 .buyer-notifications-page .notification-row.unread {
-  border-left: 5px solid var(--accent);
-  background: #fffdf7;
+  border-left: 5px solid var(--row-color);
+  background: linear-gradient(160deg, var(--row-tint) 0%, transparent 55%), #fffdf7;
   box-shadow: 0 4px 16px rgba(215,162,77,0.12);
 }
 
@@ -335,6 +251,13 @@
 .buyer-notifications-page .notification-row.clickable:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+.buyer-notifications-page .notification-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .buyer-notifications-page .notification-chevron {
@@ -348,18 +271,56 @@
   color: var(--primary);
 }
 
+.buyer-notifications-page .notification-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.buyer-notifications-page .notification-actions button {
+  --action-color: #64748b;
+  --action-tint: rgba(100, 116, 139, 0.14);
+  --action-shadow: rgba(100, 116, 139, 0.45);
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--action-tint);
+  border-radius: 11px;
+  background: var(--action-tint);
+  color: var(--action-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.buyer-notifications-page .notification-actions button svg {
+  stroke-width: 2.25;
+}
+
+.buyer-notifications-page .notification-actions button:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: var(--action-color);
+  color: #fff;
+  box-shadow: 0 10px 20px -8px var(--action-shadow);
+}
+
+.buyer-notifications-page .notification-actions button:active {
+  transform: translateY(0) scale(0.97);
+}
+
 .buyer-notifications-page .notification-icon {
   position: relative;
 
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--accent), #b8842c);
-  color: var(--primary-dark);
+  background: linear-gradient(150deg, var(--row-tint), transparent), white;
+  color: var(--row-color);
+  border: 1px solid var(--row-tint);
   border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 16px rgba(184,132,44,0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 
   transition: transform 0.2s ease;
 }
@@ -368,34 +329,28 @@
   transform: scale(1.06) rotate(-3deg);
 }
 
-.buyer-notifications-page .notification-row.type-inquiry .notification-icon {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  box-shadow: 0 8px 16px rgba(15,61,46,0.24);
-}
-
-.buyer-notifications-page .notification-row.type-general .notification-icon {
-  background: var(--soft);
-  color: var(--primary);
-  box-shadow: none;
-}
-
 .buyer-notifications-page .notification-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
 }
 
-.buyer-notifications-page .notification-meta span {
-  color: var(--primary);
-  font-size: 12px;
-  font-weight: 950;
+.buyer-notifications-page .notification-type-chip {
+  color: var(--row-color);
+  background: var(--row-tint);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 900;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .buyer-notifications-page .notification-meta small {
-  color: var(--accent);
-  font-weight: 800;
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .buyer-notifications-page .notification-content h4 {
@@ -415,10 +370,24 @@
 
 .buyer-notifications-page .tag-unread,
 .buyer-notifications-page .tag-read {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 11px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.buyer-notifications-page .tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px currentColor;
+  opacity: 0.9;
 }
 
 .buyer-notifications-page .tag-unread {
@@ -429,6 +398,155 @@
 .buyer-notifications-page .tag-read {
   background: var(--soft);
   color: var(--primary);
+}
+
+.buyer-notifications-page .notif-pulse-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e04f4f;
+  border: 2px solid var(--card);
+  box-shadow: 0 0 0 2px rgba(224, 79, 79, 0.25);
+}
+
+.buyer-notifications-page .notif-pulse-dot::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: #e04f4f;
+  opacity: 0.4;
+  animation: notif-live-pulse 1.8s ease-out infinite;
+}
+
+@keyframes notif-live-pulse {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+
+/* Categories panel */
+
+.buyer-notifications-page .notif-category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.buyer-notifications-page .notif-category-header h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-weight: 950;
+}
+
+.buyer-notifications-page .notif-category-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+}
+
+.buyer-notifications-page .notif-category-count-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-soft);
+  color: var(--primary);
+  border: 1px solid rgba(15, 61, 46, 0.12);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.buyer-notifications-page .notif-category-strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.buyer-notifications-page .notif-category {
+  --cat-color: #0f3d2e;
+  --cat-tint: rgba(15, 61, 46, 0.1);
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 16px;
+  background: linear-gradient(160deg, var(--cat-tint) 0%, transparent 60%), #fff;
+  border: 1px solid rgba(15, 61, 46, 0.08);
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.buyer-notifications-page .notif-category::before {
+  content: "";
+  position: absolute;
+  top: -35%;
+  right: -20%;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cat-tint) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.buyer-notifications-page .notif-category:hover {
+  transform: translateY(-3px);
+  border-color: var(--cat-color);
+  box-shadow: 0 14px 28px -18px var(--cat-color);
+}
+
+.buyer-notifications-page .notif-category.accent-blue { --cat-color: #2563eb; --cat-tint: rgba(37, 99, 235, 0.14); }
+.buyer-notifications-page .notif-category.accent-green { --cat-color: #0f3d2e; --cat-tint: rgba(15, 61, 46, 0.14); }
+
+.buyer-notifications-page .notif-category-top {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.buyer-notifications-page .notif-category-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: linear-gradient(150deg, var(--cat-tint), transparent);
+  border: 1px solid var(--cat-tint);
+  color: var(--cat-color);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.buyer-notifications-page .notif-category-count {
+  font-family: "JetBrains Mono", "Segoe UI", monospace;
+  color: var(--primary-dark);
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.buyer-notifications-page .notif-category-title {
+  position: relative;
+  display: block;
+  color: var(--primary-dark);
+  font-weight: 850;
+  font-size: 13px;
+}
+
+.buyer-notifications-page .notif-category-text {
+  position: relative;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 /* Empty state */
@@ -541,4 +659,350 @@
   .buyer-notifications-page .notification-chevron {
     display: none;
   }
+}
+
+@media (max-width: 560px) {
+  .buyer-notifications-page .notifications-header h1 {
+    font-size: 28px;
+  }
+
+  .buyer-notifications-page .notif-category-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .buyer-notifications-page .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .buyer-notifications-page {
+    padding: 14px;
+  }
+
+  .buyer-notifications-page .notifications-header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .buyer-notifications-page .notif-eyebrow {
+    font-size: 10.5px;
+  }
+
+  .buyer-notifications-page .notifications-header h1 {
+    font-size: 22px;
+    margin: 4px 0;
+  }
+
+  .buyer-notifications-page .notifications-header p {
+    font-size: 13px;
+  }
+
+  /* 2x2, matching the Total Transactions cards on the transactions page
+     (the 1000px rule above stacks them in a single column) */
+  .buyer-notifications-page .notification-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .buyer-notifications-page .admin-stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .buyer-notifications-page .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .buyer-notifications-page .admin-stat-card h2 {
+    font-size: 19px;
+    margin: 8px 0 0;
+  }
+
+  .buyer-notifications-page .admin-stat-card p {
+    font-size: 9.5px;
+  }
+
+  .buyer-notifications-page .notification-categories-panel,
+  .buyer-notifications-page .notification-toolbar,
+  .buyer-notifications-page .notifications-list-card {
+    padding: 14px;
+    border-radius: 18px;
+    margin-bottom: 14px;
+  }
+
+  .buyer-notifications-page .notification-search,
+  .buyer-notifications-page .notification-toolbar select {
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .buyer-notifications-page .notification-search input {
+    font-size: 16px;
+  }
+
+  .buyer-notifications-page .notifications-card-header {
+    margin-bottom: 14px;
+  }
+
+  .buyer-notifications-page .notifications-card-header h3 {
+    font-size: 16px;
+  }
+
+  .buyer-notifications-page .mark-all-btn {
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+
+  .buyer-notifications-page .notification-list {
+    gap: 10px;
+  }
+
+  .buyer-notifications-page .notification-row {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .buyer-notifications-page .notification-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .buyer-notifications-page .notification-type-chip {
+    font-size: 9.5px;
+    padding: 3px 8px;
+  }
+
+  .buyer-notifications-page .notification-content h4 {
+    font-size: 13.5px;
+    margin: 6px 0 3px;
+  }
+
+  .buyer-notifications-page .notification-content p {
+    font-size: 12px;
+  }
+
+  .buyer-notifications-page .notification-actions button {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* PHONE — minimal inbox
+   Stat cards are intentionally untouched. */
+
+@media (max-width: 768px) {
+  /* Header: title only */
+
+  .buyer-notifications-page .notif-eyebrow,
+  .buyer-notifications-page .notifications-header p {
+    display: none;
+  }
+
+  .buyer-notifications-page .notifications-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  /* The categories panel repeats the Inquiry/Transaction Updates stat
+     cards right above it */
+  .buyer-notifications-page .notification-categories-panel {
+    display: none;
+  }
+
+  /* Toolbar: no panel; full-width search, two filters side by side */
+
+  .buyer-notifications-page .notification-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .buyer-notifications-page .notification-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .buyer-notifications-page .notification-toolbar select {
+    height: 40px;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  /* Inbox: drop the outer panel, keep a slim header */
+
+  .buyer-notifications-page .notifications-list-card {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .buyer-notifications-page .notifications-card-header {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .buyer-notifications-page .notifications-card-header h3 {
+    font-size: 15px;
+  }
+
+  .buyer-notifications-page .notifications-card-header p {
+    display: none;
+  }
+
+  .buyer-notifications-page .mark-all-btn {
+    flex-shrink: 0;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+  }
+
+  .buyer-notifications-page .notification-list {
+    gap: 8px;
+  }
+
+  /* Row: [icon] [type · time / title / message] [mark-read] */
+
+  .buyer-notifications-page .notification-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  .buyer-notifications-page .notification-row.unread {
+    border-left-width: 3px;
+  }
+
+  .buyer-notifications-page .notification-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .buyer-notifications-page .notification-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .buyer-notifications-page .notif-pulse-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .buyer-notifications-page .notification-meta {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .buyer-notifications-page .notification-type-chip {
+    padding: 0;
+    background: none;
+    font-size: 9.5px;
+  }
+
+  .buyer-notifications-page .notification-meta small {
+    font-size: 10.5px;
+  }
+
+  .buyer-notifications-page .notification-content h4 {
+    margin: 3px 0 2px;
+    font-size: 13.5px;
+    line-height: 1.3;
+  }
+
+  .buyer-notifications-page .notification-content p {
+    font-size: 12.5px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Unread is already shown by the side stripe and red dot */
+  .buyer-notifications-page .notification-tags {
+    display: none;
+  }
+
+  .buyer-notifications-page .notification-side {
+    align-self: center;
+  }
+
+  .buyer-notifications-page .notification-actions button {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  /* Loading skeleton matches the slimmer header and rows */
+
+  .buyer-notifications-page .notif-skeleton-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .buyer-notifications-page .notif-skeleton-tag {
+    display: none;
+  }
+
+  .buyer-notifications-page .notif-skeleton-title {
+    width: 160px;
+    height: 24px;
+  }
+
+  .buyer-notifications-page .notif-skeleton-toolbar {
+    height: 44px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+
+  .buyer-notifications-page .notif-skeleton-row {
+    height: 76px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .buyer-notifications-page .notification-row:hover,
+  .buyer-notifications-page .notification-row:hover .notification-icon,
+  .buyer-notifications-page .notif-category:hover,
+  .buyer-notifications-page .back-btn:hover,
+  .buyer-notifications-page .mark-all-btn:hover,
+  .buyer-notifications-page .notification-actions button:hover {
+    transform: none;
+  }
+}
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.buyer-notifications-page .back-btn {
+  padding: 0;
+  cursor: pointer;
 }

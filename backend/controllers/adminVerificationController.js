@@ -2,19 +2,25 @@ const db = require("../config/db");
 
 const getAdminVerification = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [documents] = await db.query(`
       SELECT
         l.id,
         u.full_name AS farmer_name,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.health_status,
         l.status,
         l.documents,
-        l.created_at
+        l.created_at,
+        u.id AS farmer_id,
+        u.email AS farmer_email,
+        u.phone AS farmer_phone,
+        u.location AS farmer_location,
+        u.farm_location AS farmer_farm_location,
+        u.is_verified AS farmer_is_verified,
+        u.profile_image AS farmer_profile_image,
+        u.created_at AS farmer_joined_at
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id
       ORDER BY l.created_at DESC
@@ -46,10 +52,6 @@ const getAdminVerification = async (req, res) => {
 
 const updateVerificationStatus = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const { status } = req.body;
 
     if (!["Available", "Pending", "Flagged", "Rejected"].includes(status)) {

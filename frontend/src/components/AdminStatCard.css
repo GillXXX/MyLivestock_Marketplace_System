@@ -1,8 +1,10 @@
 .admin-stat-card {
   position: relative;
   overflow: hidden;
-  background: var(--card);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 20px;
   padding: 22px;
   box-shadow: var(--shadow);
@@ -13,10 +15,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(160deg, var(--stat-tint) 0%, transparent 55%),
-    radial-gradient(circle at 4px 4px, rgba(15, 23, 42, 0.05) 1px, transparent 1.4px);
-  background-size: auto, 15px 15px;
+  background: linear-gradient(160deg, var(--stat-tint) 0%, transparent 55%);
   pointer-events: none;
 }
 
@@ -38,15 +37,52 @@
   box-shadow: var(--shadow-lg, 0 22px 55px rgba(15, 61, 46, 0.14)), 0 0 0 1px var(--stat-tint), 0 16px 32px -12px var(--stat-color);
 }
 
-.admin-stat-card.accent-green { --stat-color: #0f3d2e; --stat-tint: rgba(15, 61, 46, 0.1); }
-.admin-stat-card.accent-blue { --stat-color: #2563eb; --stat-tint: rgba(37, 99, 235, 0.1); }
-.admin-stat-card.accent-amber { --stat-color: #b3790f; --stat-tint: rgba(215, 162, 77, 0.16); }
-.admin-stat-card.accent-purple { --stat-color: #7c3aed; --stat-tint: rgba(124, 58, 237, 0.1); }
+.admin-stat-card.accent-green,
+.admin-stat-card.accent-blue,
+.admin-stat-card.accent-amber,
+.admin-stat-card.accent-purple {
+  --stat-color: #0f3d2e;
+  --stat-tint: rgba(215, 162, 77, 0.16);
+}
+
 .admin-stat-card.accent-red { --stat-color: #b42318; --stat-tint: rgba(180, 35, 24, 0.1); }
+
+.admin-stat-card:first-child {
+  --stat-color: #d7a24d;
+  --stat-tint: rgba(215, 162, 77, 0.2);
+  background: linear-gradient(180deg, rgba(7, 28, 20, 0.98), rgba(20, 74, 53, 0.95));
+  border-color: rgba(215, 162, 77, 0.18);
+}
+
+.admin-stat-card:first-child h2 {
+  color: #ffffff;
+}
+
+.admin-stat-card:first-child p {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.admin-stat-card:first-child small {
+  color: rgba(255, 255, 255, 0.85);
+}
 
 .admin-stat-top {
   display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   position: relative;
+}
+
+.admin-stat-card:first-child .kpi-delta.up {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.admin-stat-card:first-child .kpi-delta.down {
+  color: #ffe5e5;
+  background: rgba(180, 35, 24, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 180, 170, 0.3);
 }
 
 .admin-stat-icon {

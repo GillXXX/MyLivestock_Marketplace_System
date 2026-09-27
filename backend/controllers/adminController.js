@@ -177,10 +177,6 @@ const buildDeltas = async () => {
 
 const getAdminDashboard = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [users] = await db.query(
       "SELECT COUNT(*) AS total FROM users WHERE role != 'admin'"
     );
@@ -206,7 +202,7 @@ const getAdminDashboard = async (req, res) => {
     );
 
     const [flaggedListings] = await db.query(
-      `SELECT l.id, l.livestock_type, l.breed, l.created_at, u.full_name AS farmer_name
+      `SELECT l.id, l.livestock_type, l.category, l.unit, l.breed, l.created_at, u.full_name AS farmer_name
        FROM livestock_listings l
        JOIN users u ON l.farmer_id = u.id
        WHERE l.status = 'Flagged'
@@ -221,6 +217,8 @@ const getAdminDashboard = async (req, res) => {
       `SELECT
         l.id,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.health_status,
         l.status,
         l.created_at,
@@ -231,6 +229,7 @@ const getAdminDashboard = async (req, res) => {
         u.location AS farmer_location,
         u.farm_location AS farmer_farm_location,
         u.is_verified AS farmer_is_verified,
+        u.profile_image AS farmer_profile_image,
         u.created_at AS farmer_joined_at
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id

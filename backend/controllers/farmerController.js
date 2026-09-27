@@ -2,8 +2,9 @@ const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const { createNotification } = require("../utils/notify");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
+const { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } = require("../utils/validators");
 
-const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];
+const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
 
 exports.getFarmerDashboard = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ exports.getFarmerDashboard = async (req, res) => {
 
     const [userRows] = await db.query(
       `
-      SELECT 
+      SELECT
         id,
         full_name,
         email,
@@ -19,7 +20,10 @@ exports.getFarmerDashboard = async (req, res) => {
         location,
         farm_location,
         role,
-        profile_image
+        profile_image,
+        is_verified,
+        verification_status,
+        verification_note
       FROM users
       WHERE id = ?
       `,
@@ -38,14 +42,17 @@ exports.getFarmerDashboard = async (req, res) => {
 
     const [listings] = await db.query(
       `
-      SELECT 
+      SELECT
         id,
         livestock_type,
+        category,
+        unit,
         breed,
         price,
-        status
+        status,
+        image_url
       FROM livestock_listings
-      WHERE farmer_id = ?
+      WHERE farmer_id = ? AND status != 'Removed'
       ORDER BY id DESC
       LIMIT 5
       `,
@@ -58,6 +65,32 @@ exports.getFarmerDashboard = async (req, res) => {
       FROM livestock_listings
       WHERE farmer_id = ?
       AND LOWER(status) IN ('available', 'active', 'approved')
+      `,
+      [userId]
+    );
+
+    const [listingBreakdownRows] = await db.query(
+      `
+      SELECT
+        COUNT(*) AS totalListings,
+        SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingReview,
+        SUM(CASE WHEN status IN ('Flagged', 'Rejected') THEN 1 ELSE 0 END) AS flaggedCount,
+        SUM(CASE WHEN status = 'Sold' THEN 1 ELSE 0 END) AS soldCount,
+        SUM(CASE WHEN status = 'Draft' THEN 1 ELSE 0 END) AS draftCount,
+        COALESCE(SUM(views), 0) AS marketplaceViews
+      FROM livestock_listings
+      WHERE farmer_id = ? AND status != 'Removed'
+      `,
+      [userId]
+    );
+
+    const [flaggedListings] = await db.query(
+      `
+      SELECT id, livestock_type, breed, status, review_note
+      FROM livestock_listings
+      WHERE farmer_id = ? AND status IN ('Flagged', 'Rejected')
+      ORDER BY created_at DESC
+      LIMIT 3
       `,
       [userId]
     );
@@ -83,6 +116,9 @@ exports.getFarmerDashboard = async (req, res) => {
       SELECT
         t.workflow_step,
         l.livestock_type,
+        l.category,
+        l.unit,
+        l.image_url,
         buyer.full_name AS buyer_name
       FROM transactions t
       JOIN livestock_listings l ON t.listing_id = l.id
@@ -139,10 +175,17 @@ exports.getFarmerDashboard = async (req, res) => {
         buyerInquiries: inquiryRows[0].buyerInquiries || 0,
         completedSales: txStatsRows[0].completedSales || 0,
         tradeValue: txStatsRows[0].tradeValue || 0,
+        totalListings: listingBreakdownRows[0].totalListings || 0,
+        pendingReview: listingBreakdownRows[0].pendingReview || 0,
+        flaggedCount: listingBreakdownRows[0].flaggedCount || 0,
+        soldCount: listingBreakdownRows[0].soldCount || 0,
+        draftCount: listingBreakdownRows[0].draftCount || 0,
+        marketplaceViews: listingBreakdownRows[0].marketplaceViews || 0,
       },
       listings,
       activities,
       workflows,
+      flaggedListings,
     });
   } catch (error) {
     console.log(error);
@@ -273,13 +316,37 @@ exports.getFarmerTransactions = async (req, res) => {
       SELECT
         t.id,
         t.amount,
+        t.quantity,
         t.workflow_step,
         t.status,
         t.created_at,
+        t.updated_at,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         l.location,
-        u.full_name AS buyer_name
+        l.image_url,
+        u.full_name AS buyer_name,
+        u.created_at AS buyer_joined_at,
+        (
+          SELECT c.id FROM conversations c
+          WHERE c.listing_id = t.listing_id
+            AND c.farmer_id = t.farmer_id
+            AND c.buyer_id = t.buyer_id
+          LIMIT 1
+        ) AS conversation_id,
+        (
+          SELECT COUNT(*) FROM transactions t2 WHERE t2.buyer_id = t.buyer_id
+        ) AS buyer_total_deals,
+        (
+          SELECT COUNT(*) FROM transactions t2
+          WHERE t2.buyer_id = t.buyer_id AND t2.status = 'Completed'
+        ) AS buyer_completed_deals,
+        (
+          SELECT COUNT(*) FROM transactions t2
+          WHERE t2.buyer_id = t.buyer_id AND t2.status IN ('Declined', 'Cancelled')
+        ) AS buyer_fallthrough_deals
       FROM transactions t
       JOIN livestock_listings l ON t.listing_id = l.id
       JOIN users u ON t.buyer_id = u.id
@@ -295,6 +362,7 @@ exports.getFarmerTransactions = async (req, res) => {
         COUNT(*) AS totalTransactions,
         SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingDeals,
         SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN status IN ('Declined', 'Cancelled') THEN 1 ELSE 0 END) AS declined,
         COALESCE(SUM(CASE WHEN status = 'Completed' THEN amount ELSE 0 END), 0) AS tradeValue
       FROM transactions
       WHERE farmer_id = ?
@@ -308,6 +376,7 @@ exports.getFarmerTransactions = async (req, res) => {
         totalTransactions: statsRows[0].totalTransactions || 0,
         pendingDeals: statsRows[0].pendingDeals || 0,
         completed: statsRows[0].completed || 0,
+        declined: statsRows[0].declined || 0,
         tradeValue: statsRows[0].tradeValue || 0,
       },
     });
@@ -323,7 +392,8 @@ exports.advanceTransactionStep = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await db.query(
-      `SELECT t.id, t.farmer_id, t.listing_id, t.workflow_step, t.status, l.livestock_type, buyer.full_name AS buyer_name
+      `SELECT t.id, t.farmer_id, t.listing_id, t.workflow_step, t.status,
+              l.livestock_type, buyer.full_name AS buyer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users buyer ON t.buyer_id = buyer.id
@@ -341,7 +411,7 @@ exports.advanceTransactionStep = async (req, res) => {
       return res.status(403).json({ message: "Not authorized for this transaction" });
     }
 
-    if (["Flagged", "Declined", "Cancelled"].includes(transaction.status)) {
+    if (["Declined", "Cancelled"].includes(transaction.status)) {
       return res.status(400).json({ message: `This transaction is ${transaction.status.toLowerCase()} and cannot be advanced` });
     }
 
@@ -356,6 +426,9 @@ exports.advanceTransactionStep = async (req, res) => {
       return res.status(400).json({ message: "This transaction is already completed" });
     }
 
+    // Negotiation and confirmation are entirely between the buyer and
+    // seller — MAO can monitor every transaction, but doesn't get to block
+    // it from advancing.
     await db.query(
       "UPDATE transactions SET workflow_step = ? WHERE id = ?",
       [nextStep, id]
@@ -381,7 +454,7 @@ exports.declineTransaction = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await db.query(
-      `SELECT t.id, t.farmer_id, t.status, l.livestock_type, buyer.full_name AS buyer_name
+      `SELECT t.id, t.farmer_id, t.listing_id, t.quantity, t.status, l.livestock_type, buyer.full_name AS buyer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users buyer ON t.buyer_id = buyer.id
@@ -399,11 +472,17 @@ exports.declineTransaction = async (req, res) => {
       return res.status(403).json({ message: "Not authorized for this transaction" });
     }
 
-    if (["Completed", "Declined", "Cancelled", "Flagged"].includes(transaction.status)) {
+    if (["Completed", "Declined", "Cancelled"].includes(transaction.status)) {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
     await db.query("UPDATE transactions SET status = 'Declined' WHERE id = ?", [id]);
+
+    // Return the reserved stock to the listing now that the order fell through.
+    await db.query(
+      "UPDATE livestock_listings SET quantity = quantity + ?, status = IF(status = 'Sold', 'Available', status) WHERE id = ?",
+      [transaction.quantity, transaction.listing_id]
+    );
 
     await createNotification(
       "Transaction Alert",
@@ -460,9 +539,9 @@ exports.submitVerification = async (req, res) => {
   }
 };
 
-exports.getFarmerNotifications = async (req, res) => {
-  try {
-    const farmerId = req.user.id || req.user.userId;
+// Shared by getFarmerNotifications and markAllFarmerNotificationsRead so the
+// "which notifications exist" logic can't drift between the two.
+async function buildFarmerNotifications(farmerId) {
     const notifications = [];
 
     const [listings] = await db.query(
@@ -503,7 +582,9 @@ exports.getFarmerNotifications = async (req, res) => {
 
     const [inquiries] = await db.query(
       `
-      SELECT c.id, c.created_at, l.livestock_type, buyer.full_name AS buyer_name
+      SELECT c.id, c.created_at, c.farmer_last_read_at, l.livestock_type, buyer.full_name AS buyer_name,
+        (SELECT MAX(created_at) FROM messages m WHERE m.conversation_id = c.id) AS last_message_at,
+        (SELECT sender_id FROM messages m WHERE m.conversation_id = c.id ORDER BY created_at DESC LIMIT 1) AS last_sender_id
       FROM conversations c
       JOIN livestock_listings l ON c.listing_id = l.id
       JOIN users buyer ON c.buyer_id = buyer.id
@@ -515,13 +596,23 @@ exports.getFarmerNotifications = async (req, res) => {
     );
 
     inquiries.forEach((item) => {
+      const lastMessageAt = item.last_message_at || item.created_at;
+      // Unread whenever the buyer has the last word and the farmer hasn't
+      // opened this conversation since — so a brand-new reply flips this
+      // back to Unread even if the thread was read long ago.
+      const unread = Boolean(
+        item.last_sender_id &&
+          item.last_sender_id !== farmerId &&
+          (!item.farmer_last_read_at || new Date(lastMessageAt) > new Date(item.farmer_last_read_at))
+      );
+
       notifications.push({
         id: `C-${item.id}`,
         type: "Buyer Inquiry",
-        title: "New buyer inquiry",
+        title: unread ? "New buyer message" : "Buyer inquiry",
         message: `${item.buyer_name} inquired about your ${item.livestock_type} listing.`,
-        time: item.created_at,
-        status: "Unread",
+        time: lastMessageAt,
+        status: unread ? "Unread" : "Read",
       });
     });
 
@@ -551,6 +642,27 @@ exports.getFarmerNotifications = async (req, res) => {
 
     notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
 
+    return notifications;
+}
+
+exports.getFarmerNotifications = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+    const notifications = await buildFarmerNotifications(farmerId);
+
+    const [readRows] = await db.query(
+      "SELECT notification_key FROM farmer_notification_reads WHERE farmer_id = ?",
+      [farmerId]
+    );
+    const readKeys = new Set(readRows.map((row) => row.notification_key));
+
+    notifications.forEach((notif) => {
+      // "Buyer Inquiry" derives its read state live from the conversation
+      // itself (see buildFarmerNotifications) so a stale read-mark here
+      // can't hide a genuinely new message.
+      if (notif.type !== "Buyer Inquiry" && readKeys.has(notif.id)) notif.status = "Read";
+    });
+
     const totalAlerts = notifications.length;
     const unreadAlerts = notifications.filter((n) => n.status === "Unread").length;
 
@@ -569,6 +681,42 @@ exports.getFarmerNotifications = async (req, res) => {
   }
 };
 
+exports.markFarmerNotificationRead = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+
+    await db.query(
+      "INSERT IGNORE INTO farmer_notification_reads (farmer_id, notification_key) VALUES (?, ?)",
+      [farmerId, req.params.id]
+    );
+
+    res.json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Mark farmer notification read error:", error);
+    res.status(500).json({ message: "Server error updating notification" });
+  }
+};
+
+exports.markAllFarmerNotificationsRead = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+    const notifications = await buildFarmerNotifications(farmerId);
+
+    if (notifications.length > 0) {
+      const values = notifications.map((notif) => [farmerId, notif.id]);
+      await db.query(
+        "INSERT IGNORE INTO farmer_notification_reads (farmer_id, notification_key) VALUES ?",
+        [values]
+      );
+    }
+
+    res.json({ message: "All notifications marked as read" });
+  } catch (error) {
+    console.error("Mark all farmer notifications read error:", error);
+    res.status(500).json({ message: "Server error updating notifications" });
+  }
+};
+
 exports.changeFarmerPassword = async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -582,8 +730,8 @@ exports.changeFarmerPassword = async (req, res) => {
       return res.status(400).json({ message: "New passwords do not match" });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ message: PASSWORD_REQUIREMENTS_MESSAGE });
     }
 
     const [rows] = await db.query("SELECT password FROM users WHERE id = ?", [userId]);

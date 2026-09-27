@@ -13,14 +13,27 @@ import {
   FileText,
   Pencil,
   Trash2,
+  UploadCloud,
+  PackageSearch,
+  Hash,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
+import AdminStatCard from "../components/AdminStatCard";
+import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
+import {
+  getProductIcon,
+  isLivestock,
+  formatPrice,
+  formatQuantity,
+} from "../utils/productCatalog";
+import useGoBack from "../utils/useGoBack";
 import "./Listings.css";
 
 function Listings() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/farmer-dashboard");
 
   const [listings, setListings] = useState([]);
   const [stats, setStats] = useState({
@@ -31,15 +44,12 @@ function Listings() {
   });
 
   const [searchText, setSearchText] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All Livestock");
+  const [typeFilter, setTypeFilter] = useState("All Types");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [selectedListing, setSelectedListing] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const defaultImage =
-    "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
 
   const fetchListings = async () => {
     try {
@@ -101,6 +111,34 @@ function Listings() {
     }
   };
 
+  const handlePublish = async (item) => {
+    const confirmed = window.confirm(
+      `Submit your ${item.livestock_type} (${item.breed || "listing"}) draft for MAO review?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_URL}/api/listings/${item.id}/publish`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to publish listing");
+        return;
+      }
+
+      fetchListings();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
   const handleDelete = async (item) => {
     const confirmed = window.confirm(
       `Remove your ${item.livestock_type} (${item.breed || "listing"}) from the marketplace? This can't be undone from here.`
@@ -145,7 +183,7 @@ function Listings() {
       : true;
 
     const matchesType =
-      typeFilter === "All Livestock" || item.livestock_type === typeFilter;
+      typeFilter === "All Types" || matchesTypeFilter(item.livestock_type, typeFilter);
 
     const matchesStatus =
       statusFilter === "All Status" || item.status === statusFilter;
@@ -153,18 +191,27 @@ function Listings() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  const SelectedSpeciesIcon = getProductIcon(
+    selectedListing?.livestock_type,
+    selectedListing?.category
+  );
+  const selectedIsLivestock = isLivestock(
+    selectedListing?.livestock_type,
+    selectedListing?.category
+  );
+
   return (
     <div className="premium-listings-page">
       <div className="premium-header">
         <div className="header-left">
-          <Link to="/farmer-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="page-tag">FARMER MARKETPLACE</span>
-            <h1>My Livestock Listings</h1>
-            <p>Manage your livestock marketplace postings professionally.</p>
+            <h1>My Listings</h1>
+            <p>Manage your livestock and farm product postings.</p>
           </div>
         </div>
 
@@ -175,32 +222,28 @@ function Listings() {
       </div>
 
       <section className="stats-grid">
-        <StatCard
-          tone="green"
+        <AdminStatCard
           icon={<PackageCheck />}
           value={stats.activeListings}
           label="Active Listings"
-          note="Current livestock posts"
+          note="Current marketplace posts"
         />
 
-        <StatCard
-          tone="amber"
+        <AdminStatCard
           icon={<Clock3 />}
           value={stats.pendingReview}
           label="Pending Review"
           note="Awaiting verification"
         />
 
-        <StatCard
-          tone="blue"
+        <AdminStatCard
           icon={<TrendingUp />}
           value={stats.marketplaceViews}
           label="Marketplace Views"
           note="Buyer engagement"
         />
 
-        <StatCard
-          tone="purple"
+        <AdminStatCard
           icon={<Wallet />}
           value={`₱${Number(stats.estimatedValue).toLocaleString()}`}
           label="Estimated Value"
@@ -213,7 +256,7 @@ function Listings() {
           <Search size={16} />
           <input
             type="text"
-            placeholder="Search livestock..."
+            placeholder="Search listings..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
@@ -221,11 +264,8 @@ function Listings() {
 
         <div className="toolbar-actions">
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option>All Livestock</option>
-            <option>Swine</option>
-            <option>Cattle</option>
-            <option>Goat</option>
-            <option>Poultry</option>
+            <option>All Types</option>
+            <ProductTypeOptions />
           </select>
 
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -233,41 +273,97 @@ function Listings() {
             <option>Available</option>
             <option>Pending</option>
             <option>Sold</option>
+            <option>Draft</option>
           </select>
         </div>
       </section>
 
+      {listings.length > 0 && (
+        <p className="results-count">
+          Showing {filteredListings.length} of {listings.length} listing
+          {listings.length === 1 ? "" : "s"}
+        </p>
+      )}
+
       <section className="premium-livestock-grid">
         {listings.length === 0 ? (
-          <h3>No livestock listings yet.</h3>
+          <div className="listings-empty-state">
+            <PackageSearch size={38} />
+            <h3>No listings yet</h3>
+            <p>Post your first livestock or farm product to start reaching verified buyers.</p>
+            <Link to="/post" className="create-btn">
+              <PlusCircle size={18} />
+              Create Listing
+            </Link>
+          </div>
         ) : filteredListings.length === 0 ? (
-          <h3>No listings match your search.</h3>
+          <div className="listings-empty-state">
+            <Search size={38} />
+            <h3>No listings match your search</h3>
+            <p>Try a different keyword or clear your filters.</p>
+            <button
+              type="button"
+              className="clear-filters-btn"
+              onClick={() => {
+                setSearchText("");
+                setTypeFilter("All Types");
+                setStatusFilter("All Status");
+              }}
+            >
+              Clear filters
+            </button>
+          </div>
         ) : (
-          filteredListings.map((item) => (
+          filteredListings.map((item) => {
+            const SpeciesIcon = getProductIcon(item.livestock_type, item.category);
+
+            return (
             <div className="premium-card" key={item.id}>
               <div className="premium-image-wrapper">
-                <img src={item.image_url || defaultImage} alt={item.breed} />
+                {item.image_url ? (
+                  <img src={item.image_url} alt={item.breed} />
+                ) : (
+                  <div className="premium-image-fallback">
+                    <SpeciesIcon size={30} />
+                  </div>
+                )}
 
-                <span className={`premium-badge status-${item.status?.toLowerCase()}`}>
-                  {item.status}
-                </span>
+                <span className="premium-type-chip">{item.livestock_type}</span>
               </div>
 
               <div className="premium-card-body">
-                <div className="premium-card-heading">
-                  <h3>{item.breed}</h3>
-                  <span className="premium-price-tag">
-                    ₱{Number(item.price).toLocaleString()}
-                  </span>
+                <div className="premium-card-title">
+                  <div>
+                    <h3>{item.breed || item.livestock_type}</h3>
+                    <span className="premium-card-subtitle">{item.livestock_type}</span>
+                  </div>
+
+                  <strong>{formatPrice(item.price, item.unit)}</strong>
                 </div>
 
-                <div className="premium-meta-row">
-                  <span>
+                <div className="premium-meta-col">
+                  <div>
                     <MapPin size={14} />
-                    {item.location}
+                    <span>{item.location}</span>
+                  </div>
+
+                  <div>
+                    <Clock3 size={14} />
+                    <span>{formatPostedTime(item.created_at)}</span>
+                  </div>
+                </div>
+
+                <div className="premium-status-row">
+                  <span className={`premium-badge status-${item.status?.toLowerCase()}`}>
+                    {item.status}
                   </span>
-                  <span className="meta-divider">•</span>
-                  <span>{item.age}</span>
+
+                  <span className={item.quantity > 0 ? "stock-chip" : "stock-chip out"}>
+                    <Hash size={12} />
+                    {item.quantity > 0
+                      ? `${formatQuantity(item.quantity, item.unit)} available`
+                      : "Out of stock"}
+                  </span>
                 </div>
 
                 <div className="premium-card-actions">
@@ -279,13 +375,25 @@ function Listings() {
                     View Details
                   </button>
 
-                  <Link className="listing-edit-btn" to={`/post/${item.id}`}>
+                  {item.status === "Draft" && (
+                    <button
+                      className="publish-btn"
+                      title="Submit draft for review"
+                      type="button"
+                      onClick={() => handlePublish(item)}
+                    >
+                      <UploadCloud size={16} />
+                    </button>
+                  )}
+
+                  <Link className="listing-edit-btn" to={`/post/${item.id}`} title="Edit listing">
                     <Pencil size={16} />
                   </Link>
 
                   <button
                     className="delete-btn"
                     type="button"
+                    title="Remove listing"
                     onClick={() => handleDelete(item)}
                   >
                     <Trash2 size={16} />
@@ -293,7 +401,8 @@ function Listings() {
                 </div>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </section>
 
@@ -302,10 +411,13 @@ function Listings() {
           <div className="listing-modal" onClick={(e) => e.stopPropagation()}>
             <div className="listing-modal-media">
               <div className="listing-modal-media-scroll">
-                <img
-                  src={selectedListing.image_url || defaultImage}
-                  alt={selectedListing.breed}
-                />
+                {selectedListing.image_url ? (
+                  <img src={selectedListing.image_url} alt={selectedListing.breed} />
+                ) : (
+                  <div className="listing-modal-media-fallback">
+                    <SelectedSpeciesIcon size={44} />
+                  </div>
+                )}
               </div>
 
               <button
@@ -326,11 +438,15 @@ function Listings() {
                 </span>
 
                 <strong className="listing-modal-price-inline">
-                  ₱{Number(selectedListing.price).toLocaleString()}
+                  {formatPrice(selectedListing.price, selectedListing.unit)}
                 </strong>
               </div>
 
-              <h2 className="listing-modal-title">{selectedListing.breed}</h2>
+              <h2 className="listing-modal-title">{selectedListing.livestock_type}</h2>
+              <p className="listing-modal-subtitle">
+                {selectedListing.breed ||
+                  (selectedIsLivestock ? "No breed specified" : "No variety specified")}
+              </p>
 
               <div className="listing-modal-meta-line">
                 <MapPin size={13} />
@@ -343,20 +459,44 @@ function Listings() {
                 )}
               </div>
 
+              {/* Farm products leave age/size/variety/condition optional,
+                  so hide the empty ones instead of showing "N/A". */}
               <div className="listing-modal-stats-bar">
-                <div>
-                  <span>Age</span>
-                  <strong>{selectedListing.age || "N/A"}</strong>
-                </div>
+                {(selectedIsLivestock || selectedListing.age) && (
+                  <div>
+                    <span>Age</span>
+                    <strong>{selectedListing.age || "N/A"}</strong>
+                  </div>
+                )}
+
+                {(selectedIsLivestock || selectedListing.weight) && (
+                  <div>
+                    <span>{selectedIsLivestock ? "Weight" : "Size / Weight"}</span>
+                    <strong>{selectedListing.weight || "N/A"}</strong>
+                  </div>
+                )}
+
+                {(selectedIsLivestock || selectedListing.breed) && (
+                  <div>
+                    <span>{selectedIsLivestock ? "Breed" : "Variety"}</span>
+                    <strong>{selectedListing.breed || "N/A"}</strong>
+                  </div>
+                )}
+
+                {!selectedIsLivestock && selectedListing.health_status && (
+                  <div>
+                    <span>Condition</span>
+                    <strong>{selectedListing.health_status}</strong>
+                  </div>
+                )}
 
                 <div>
-                  <span>Weight</span>
-                  <strong>{selectedListing.weight || "N/A"}</strong>
-                </div>
-
-                <div>
-                  <span>Breed</span>
-                  <strong>{selectedListing.breed || "N/A"}</strong>
+                  <span>Available</span>
+                  <strong>
+                    {selectedListing.quantity > 0
+                      ? formatQuantity(selectedListing.quantity, selectedListing.unit)
+                      : "Out of stock"}
+                  </strong>
                 </div>
               </div>
 
@@ -387,17 +527,6 @@ function Listings() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function StatCard({ icon, value, label, note, tone = "green" }) {
-  return (
-    <div className={`stat-card tone-${tone}`}>
-      <div className="stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{note}</small>
     </div>
   );
 }

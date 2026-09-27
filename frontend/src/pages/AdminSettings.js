@@ -9,6 +9,7 @@ import {
   FileCheck2,
   Save,
   Lock,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -149,31 +150,39 @@ function AdminSettings() {
 
       <section className="settings-grid">
         <SettingsCard
+          accent="blue"
           icon={<ShieldCheck />}
           title="Role-Based Access Control"
           text="Control system permissions for admin, farmers, and buyers."
           status={settings.role_based_access ? "Enabled" : "Disabled"}
+          tone={settings.role_based_access ? "success" : "neutral"}
         />
 
         <SettingsCard
+          accent="amber"
           icon={<ClipboardCheck />}
           title="Listing Approval"
-          text="Require MAO review before livestock listings appear publicly."
+          text="Require MAO review before listings appear publicly."
           status={settings.default_listing_status}
+          tone="info"
         />
 
         <SettingsCard
+          accent="green"
           icon={<FileCheck2 />}
           title="Document Verification"
           text="Require certificates or permits before transaction confirmation."
           status={settings.document_verification ? "Required" : "Optional"}
+          tone={settings.document_verification ? "success" : "neutral"}
         />
 
         <SettingsCard
+          accent="purple"
           icon={<Bell />}
           title="Admin Notifications"
           text="Receive alerts for new listings, documents, and transactions."
           status={settings.admin_notifications ? "Enabled" : "Disabled"}
+          tone={settings.admin_notifications ? "success" : "neutral"}
         />
       </section>
 
@@ -183,6 +192,10 @@ function AdminSettings() {
             <h3>General System Configuration</h3>
             <p>Basic marketplace rules and admin preferences.</p>
           </div>
+
+          <span className="card-icon-badge">
+            <SlidersHorizontal size={20} />
+          </span>
         </div>
 
         <div className="settings-form">
@@ -217,13 +230,17 @@ function AdminSettings() {
           </div>
 
           <div className="settings-group">
-            <label>Allowed Livestock Types</label>
+            <label>Product Types (reference)</label>
             <input
               name="livestock_types"
               type="text"
               value={settings.livestock_types}
               onChange={handleChange}
             />
+            <small className="settings-group-hint">
+              For your records only — farmers choose from the built-in livestock and
+              farm product list, or type their own under "Other".
+            </small>
           </div>
 
           <div className="settings-group">
@@ -259,10 +276,15 @@ function AdminSettings() {
             <h3>Security and Access Settings</h3>
             <p>Manage login, role permissions, and account restrictions.</p>
           </div>
+
+          <span className="card-icon-badge">
+            <Lock size={20} />
+          </span>
         </div>
 
         <div className="settings-list">
           <SettingToggle
+            accent="blue"
             icon={<Lock />}
             title="Require secure login"
             text="Users must login before accessing marketplace dashboards."
@@ -271,6 +293,7 @@ function AdminSettings() {
           />
 
           <SettingToggle
+            accent="blue"
             icon={<ShieldCheck />}
             title="Enable role-based access"
             text="Separate access for farmers, buyers, and MAO administrators."
@@ -279,6 +302,7 @@ function AdminSettings() {
           />
 
           <SettingToggle
+            accent="purple"
             icon={<UserCog />}
             title="Allow account deactivation"
             text="Admins can activate or deactivate user accounts."
@@ -287,6 +311,7 @@ function AdminSettings() {
           />
 
           <SettingToggle
+            accent="green"
             icon={<FileCheck2 />}
             title="Require document verification"
             text="Transactions cannot be completed without required documents."
@@ -295,6 +320,7 @@ function AdminSettings() {
           />
 
           <SettingToggle
+            accent="amber"
             icon={<Bell />}
             title="Enable admin notification alerts"
             text="Notify admin when new actions require review."
@@ -314,9 +340,9 @@ function AdminSettings() {
   );
 }
 
-function SettingsCard({ icon, title, text, status }) {
+function SettingsCard({ accent = "green", icon, title, text, status, tone = "info" }) {
   return (
-    <div className="settings-card">
+    <div className={`settings-card accent-${accent}`}>
       <div className="settings-icon">{icon}</div>
 
       <div>
@@ -324,14 +350,14 @@ function SettingsCard({ icon, title, text, status }) {
         <p>{text}</p>
       </div>
 
-      <span>{status}</span>
+      <span className={`settings-status ${tone}`}>{status}</span>
     </div>
   );
 }
 
-function SettingToggle({ icon, title, text, active, onChange }) {
+function SettingToggle({ accent = "green", icon, title, text, active, onChange }) {
   return (
-    <div className="setting-toggle">
+    <div className={`setting-toggle accent-${accent} ${active ? "is-active" : ""}`}>
       <div className="setting-toggle-icon">{icon}</div>
 
       <div>

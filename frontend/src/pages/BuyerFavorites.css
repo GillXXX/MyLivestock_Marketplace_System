@@ -1,14 +1,7 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #f8f6ef;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
   --soft: #eaf5ef;
-  --danger: #b42318;
 }
 
 * {
@@ -86,46 +79,6 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
-}
-
-.favorite-stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 18px;
-}
-
-.favorite-stat-icon {
-  width: 38px;
-  height: 38px;
-  background: var(--soft);
-  color: var(--primary);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.favorite-stat-card h2 {
-  margin: 14px 0 0;
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--primary-dark);
-}
-
-.favorite-stat-card p {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.favorite-stat-card small {
-  display: block;
-  margin-top: 4px;
-  color: var(--accent);
-  font-size: 11.5px;
-  font-weight: 800;
 }
 
 /* TOOLBAR */
@@ -470,20 +423,177 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .buyer-favorites-page {
-    padding: 22px;
+    padding: 12px;
+  }
+
+  .favorites-header {
+    margin-bottom: 16px;
+  }
+
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .page-tag {
+    font-size: 10.5px;
   }
 
   .favorites-header h1 {
-    font-size: 28px;
+    font-size: 20px;
+    margin: 4px 0;
+  }
+
+  .favorites-header p {
+    font-size: 12px;
   }
 
   .favorites-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
+  .favorites-toolbar {
+    padding: 10px;
+    border-radius: 14px;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .favorites-search,
+  .favorites-toolbar select {
+    height: 40px;
+    border-radius: 11px;
+  }
+
+  .favorites-search input,
+  .favorites-toolbar select {
+    font-size: 13px;
+  }
+
+  /* Cards themselves stay full size — only the surrounding chrome
+     (header, toolbar, back button) is compact. */
   .saved-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
+
+  .saved-card {
+    max-width: 100%;
+  }
+
+  .saved-image {
+    height: 200px;
+  }
+
+  .saved-title h3 {
+    font-size: 18px;
+  }
+
+  .saved-title strong {
+    font-size: 17px;
+  }
+
+  .saved-seller-link {
+    font-size: 13px;
+  }
+
+  .saved-meta div {
+    font-size: 13px;
+  }
+
+  .saved-actions {
+    grid-template-columns: 1fr 48px 48px;
+  }
+
+  .saved-actions button {
+    height: 48px;
+    font-size: 14px;
+  }
+}
+
+/* PHONE — minimal chrome
+   Scoped under .buyer-favorites-page because .header-left, .back-btn and
+   .page-tag are shared class names and CRA loads every stylesheet
+   globally. Stat cards and listing cards are intentionally untouched. */
+
+@media (max-width: 768px) {
+  /* Header: title only */
+
+  .buyer-favorites-page .page-tag,
+  .buyer-favorites-page .favorites-header p {
+    display: none;
+  }
+
+  .buyer-favorites-page .header-left {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .buyer-favorites-page .favorites-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  .buyer-favorites-page .favorites-stats {
+    margin-bottom: 14px;
+  }
+
+  /* Toolbar: no panel; full-width search, three filters in one row */
+
+  .buyer-favorites-page .favorites-toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .buyer-favorites-page .favorites-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .buyer-favorites-page .favorites-search input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .buyer-favorites-page .favorites-toolbar select {
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+  }
+
+  /* Bigger tap target for the heart; it sits on the photo, so the card
+     size doesn't change */
+
+  .buyer-favorites-page .remove-heart {
+    width: 40px;
+    height: 40px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .buyer-favorites-page .saved-card:hover,
+  .buyer-favorites-page .back-btn:hover,
+  .buyer-favorites-page .remove-heart:hover {
+    transform: none;
+  }
+}
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.buyer-favorites-page .back-btn {
+  padding: 0;
+  cursor: pointer;
 }

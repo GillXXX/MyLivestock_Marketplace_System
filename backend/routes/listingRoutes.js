@@ -9,17 +9,19 @@ const {
   getListingById,
   updateListing,
   deleteListing,
+  publishListing,
 } = require("../controllers/listingController");
 
 const listingUpload = upload.fields([
   { name: "image", maxCount: 1 },
-  { name: "documents", maxCount: 5 },
+  { name: "documents", maxCount: 1 },
 ]);
 
 router.get("/my-listings", protect, getMyListings);
 router.post("/", protect, listingUpload, createListing);
 router.get("/:id", protect, getListingById);
 router.put("/:id", protect, listingUpload, updateListing);
+router.put("/:id/publish", protect, publishListing);
 router.delete("/:id", protect, deleteListing);
 
 module.exports = router;

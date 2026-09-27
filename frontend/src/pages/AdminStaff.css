@@ -1,0 +1,535 @@
+@import "./AdminTheme.css";
+
+.enterprise-staff-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(215, 162, 77, 0.08), transparent 30%),
+    var(--background);
+  padding: 34px;
+  color: var(--text);
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+.staff-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.staff-page-header .header-left {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.staff-page-header .back-button {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.staff-page-header .eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+.staff-page-header h1 {
+  font-size: clamp(32px, 4vw, 46px);
+  font-weight: 950;
+  letter-spacing: -1.2px;
+  margin: 5px 0;
+  color: var(--primary-dark);
+}
+
+.staff-page-header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 760px;
+  line-height: 1.6;
+}
+
+.add-staff-btn {
+  height: 52px;
+  border: none;
+  border-radius: 16px;
+  padding: 0 20px;
+  background: var(--primary);
+  color: white;
+  font-weight: 850;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.staff-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.staff-management-card {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: 0 20px 48px rgba(15, 61, 46, 0.1);
+}
+
+.staff-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.09);
+}
+
+.staff-toolbar .toolbar-title h3 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.2px;
+  color: var(--primary-dark);
+  font-weight: 950;
+}
+
+.staff-toolbar .toolbar-title p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.staff-toolbar .toolbar-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.staff-toolbar .search-control {
+  height: 52px;
+  width: 360px;
+  background: #f8f5ec;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+}
+
+.staff-toolbar .search-control input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.staff-filter-row {
+  display: grid;
+  grid-template-columns: 210px;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.staff-filter-row select {
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8f5ec;
+  padding: 0 14px;
+  outline: none;
+}
+
+.enterprise-staff-table-wrapper {
+  overflow-x: auto;
+}
+
+.enterprise-staff-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.enterprise-staff-table th {
+  text-align: left;
+  color: #8b9a92;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 0 10px 12px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  white-space: nowrap;
+}
+
+.enterprise-staff-table td {
+  padding: 16px 10px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.06);
+  vertical-align: middle;
+  transition: background 0.15s ease;
+}
+
+.enterprise-staff-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.enterprise-staff-table tbody tr:hover td {
+  background: rgba(15, 61, 46, 0.03);
+}
+
+.staff-cell {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.staff-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: linear-gradient(150deg, var(--primary), var(--primary-dark));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 950;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 6px 14px -8px rgba(15, 61, 46, 0.6);
+}
+
+.staff-cell strong,
+.staff-contact-cell strong {
+  color: var(--primary-dark);
+}
+
+.staff-cell p,
+.staff-contact-cell p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.staff-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.staff-status-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px currentColor;
+  opacity: 0.9;
+}
+
+.staff-status-pill.active {
+  background: var(--green-soft);
+  color: var(--primary);
+}
+
+.staff-status-pill.inactive {
+  background: var(--danger-soft);
+  color: #b42318;
+}
+
+.staff-table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.staff-table-actions button {
+  --action-color: #16a34a;
+  --action-tint: rgba(22, 163, 74, 0.12);
+  --action-shadow: rgba(22, 163, 74, 0.5);
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--action-tint);
+  border-radius: 11px;
+  background: var(--action-tint);
+  color: var(--action-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.staff-table-actions button svg {
+  stroke-width: 2.25;
+}
+
+.staff-table-actions button:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: var(--action-color);
+  color: #fff;
+  box-shadow: 0 10px 20px -8px var(--action-shadow);
+}
+
+.staff-table-actions button:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.staff-table-actions .warning {
+  --action-color: #b3790f;
+  --action-tint: rgba(215, 162, 77, 0.18);
+  --action-shadow: rgba(179, 121, 15, 0.5);
+}
+
+.staff-table-actions .danger {
+  --action-color: #dc2626;
+  --action-tint: rgba(220, 38, 38, 0.12);
+  --action-shadow: rgba(220, 38, 38, 0.5);
+}
+
+/* ADD STAFF MODAL */
+
+.staff-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(7, 33, 23, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.staff-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: 0 16px 45px rgba(15, 61, 46, 0.18);
+  padding: 28px;
+}
+
+.staff-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.staff-modal h3 {
+  margin: 0 0 4px;
+  padding-right: 40px;
+  color: var(--primary-dark);
+  font-size: 20px;
+}
+
+.staff-modal > p {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.staff-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.staff-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.staff-modal .field-hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #a3690a;
+}
+
+.staff-modal input {
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0 14px;
+  outline: none;
+  font-weight: 500;
+}
+
+.staff-form-error {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--danger-soft);
+  color: #b42318;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.staff-modal-submit {
+  height: 48px;
+  margin-top: 4px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #16a34a, #0f3d2e);
+  color: white;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 8px 16px -8px rgba(22, 163, 74, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.staff-modal-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -8px rgba(22, 163, 74, 0.6);
+}
+
+.staff-modal-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .staff-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .staff-toolbar,
+  .staff-page-header {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .staff-toolbar .toolbar-actions {
+    width: 100%;
+  }
+
+  .staff-toolbar .search-control {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .enterprise-staff-page {
+    padding: 14px;
+  }
+
+  .staff-page-header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .staff-page-header .back-button {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .staff-page-header .eyebrow {
+    font-size: 10.5px;
+  }
+
+  .staff-page-header h1 {
+    font-size: 22px;
+    margin: 4px 0;
+  }
+
+  .staff-page-header p {
+    font-size: 13px;
+  }
+
+  .add-staff-btn {
+    height: 42px;
+    padding: 0 14px;
+    font-size: 13px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .staff-kpi-grid,
+  .staff-filter-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .admin-stat-card h2 {
+    font-size: 19px;
+    margin: 8px 0 0;
+  }
+
+  .admin-stat-card p {
+    font-size: 9.5px;
+  }
+
+  .staff-management-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .staff-toolbar {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+
+  .staff-toolbar .toolbar-title h3 {
+    font-size: 15px;
+  }
+
+  .staff-toolbar .toolbar-actions {
+    flex-direction: column;
+  }
+
+  .enterprise-staff-table th,
+  .enterprise-staff-table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+}

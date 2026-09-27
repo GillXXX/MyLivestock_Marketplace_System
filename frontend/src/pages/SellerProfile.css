@@ -1,11 +1,6 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #f8f6ef;
-  --muted: #667085;
-  --border: #e8e2d4;
   --soft: #eaf5ef;
 }
 
@@ -203,6 +198,16 @@
   color: var(--accent);
 }
 
+.seller-distance-badge {
+  margin-left: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .seller-map-box {
   border-radius: 22px;
   overflow: hidden;
@@ -365,5 +370,96 @@
 
   .seller-card-stats {
     align-self: stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .seller-profile-header .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .seller-profile-page {
+    padding: 14px;
+  }
+
+  .seller-profile-header {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .seller-profile-header .page-tag {
+    font-size: 10.5px;
+  }
+
+  .seller-card {
+    padding: 16px;
+    border-radius: 20px;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .seller-card-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+
+  .seller-card-info h1 {
+    font-size: 20px;
+  }
+
+  .seller-card-location,
+  .seller-card-about {
+    font-size: 12.5px;
+  }
+
+  .seller-card-member {
+    font-size: 11.5px;
+  }
+
+  .seller-card-stats {
+    padding: 12px 18px;
+  }
+
+  .seller-card-stats strong {
+    font-size: 22px;
+  }
+
+  .seller-map-section,
+  .seller-listings-section {
+    margin-bottom: 20px;
+  }
+
+  .seller-map-section h2,
+  .seller-listings-section h2 {
+    font-size: 15px;
+  }
+
+  .seller-listings-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .seller-listing-image {
+    height: 190px;
+  }
+
+  .seller-listing-heading h3 {
+    font-size: 17px;
+  }
+
+  .seller-listing-heading span {
+    font-size: 16px;
+  }
+
+  .seller-listing-meta {
+    font-size: 13px;
+  }
+
+  .seller-listing-details-btn {
+    height: 46px;
+    font-size: 14px;
   }
 }

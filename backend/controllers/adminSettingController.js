@@ -2,10 +2,6 @@ const db = require("../config/db");
 
 const getAdminSettings = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [settings] = await db.query("SELECT * FROM system_settings WHERE id = 1");
 
     res.json({ settings: settings[0] });
@@ -17,10 +13,6 @@ const getAdminSettings = async (req, res) => {
 
 const updateAdminSettings = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const {
       system_name,
       municipality,

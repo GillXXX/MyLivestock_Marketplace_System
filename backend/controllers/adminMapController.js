@@ -2,10 +2,6 @@ const db = require("../config/db");
 
 const getAdminMapData = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [locations] = await db.query(`
       SELECT 
         u.id,

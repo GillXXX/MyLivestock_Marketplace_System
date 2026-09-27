@@ -26,14 +26,14 @@ const sendPasswordResetEmail = async (to, resetUrl) => {
   }
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || "HerdMarket <no-reply@herdmarket.local>",
+    from: process.env.EMAIL_FROM || "VOLT <no-reply@herdmarket.local>",
     to,
-    subject: "Reset your HerdMarket password",
-    text: `We received a request to reset your HerdMarket password. Open this link to choose a new one (expires in 1 hour):\n\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.`,
+    subject: "Reset your VOLT password",
+    text: `We received a request to reset your VOLT password. Open this link to choose a new one (expires in 1 hour):\n\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
         <h2 style="color: #0f3d2e;">Reset your password</h2>
-        <p>We received a request to reset your HerdMarket password. This link expires in 1 hour.</p>
+        <p>We received a request to reset your VOLT password. This link expires in 1 hour.</p>
         <p>
           <a href="${resetUrl}" style="display:inline-block;background:#0f3d2e;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;">
             Reset Password
@@ -45,4 +45,30 @@ const sendPasswordResetEmail = async (to, resetUrl) => {
   });
 };
 
-module.exports = { sendPasswordResetEmail };
+// Verifies a new email address during registration.
+const sendRegistrationCodeEmail = async (to, code) => {
+  if (!transporter) {
+    console.log(`[email disabled — no EMAIL_HOST set] Registration code for ${to}:`);
+    console.log(code);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || "VOLT <no-reply@herdmarket.local>",
+    to,
+    subject: "Your VOLT verification code",
+    text: `Your VOLT verification code is ${code}. It expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="color: #0f3d2e;">Verify your email</h2>
+        <p>Enter this code to finish creating your VOLT account. It expires in 10 minutes.</p>
+        <p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0f3d2e; text-align: center; margin: 24px 0;">
+          ${code}
+        </p>
+        <p style="color: #667085; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+};
+
+module.exports = { sendPasswordResetEmail, sendRegistrationCodeEmail };

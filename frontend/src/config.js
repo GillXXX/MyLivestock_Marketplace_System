@@ -12,3 +12,7 @@ const DEFAULT_AVATAR_SVG = `
 `;
 
 export const DEFAULT_AVATAR = `data:image/svg+xml,${encodeURIComponent(DEFAULT_AVATAR_SVG)}`;
+
+// Bundled with the app so listings without a photo never depend on a
+// third-party host being reachable.
+export { default as DEFAULT_LISTING_IMAGE } from "./assets/livestock/cattle.jpg";

@@ -1,9 +1,10 @@
-import { X, BadgeCheck, MapPin, FileText, MessageCircle } from "lucide-react";
+import { X, BadgeCheck, MapPin, FileText, MessageCircle, ShoppingCart } from "lucide-react";
+import { DEFAULT_LISTING_IMAGE } from "../config";
+import { isLivestock, formatPrice, formatQuantity } from "../utils/productCatalog";
 import { useNavigate } from "react-router-dom";
 import "./ListingDetailsModal.css";
 
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
+const DEFAULT_IMAGE = DEFAULT_LISTING_IMAGE;
 
 function parseDocuments(documents) {
   if (!documents) return [];
@@ -28,9 +29,23 @@ function formatPostedTime(time) {
   return `Posted ${new Date(time).toLocaleDateString()}`;
 }
 
-function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
+function ListingDetailsModal({ listing, onClose, onInquire, onBuyNow }) {
   const navigate = useNavigate();
   const documents = parseDocuments(listing.documents);
+  const isProduct = !isLivestock(listing.livestock_type, listing.category);
+  const title = listing.breed || listing.livestock_type;
+
+  // Live animals always show every stat (N/A when blank); farm products
+  // only show the optional fields the farmer actually filled in.
+  const stats = [
+    { label: "Age", value: listing.age, show: !isProduct || listing.age },
+    { label: isProduct ? "Size" : "Weight", value: listing.weight, show: !isProduct || listing.weight },
+    {
+      label: isProduct ? "Condition" : "Health",
+      value: listing.health_status,
+      show: !isProduct || listing.health_status,
+    },
+  ].filter((stat) => stat.show);
 
   const goToSellerProfile = () => {
     if (!listing.seller_id) return;
@@ -43,7 +58,7 @@ function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
       <div className="details-modal" onClick={(e) => e.stopPropagation()}>
         <div className="details-modal-media">
           <div className="details-modal-media-scroll">
-            <img src={listing.image_url || DEFAULT_IMAGE} alt={listing.breed} />
+            <img src={listing.image_url || DEFAULT_IMAGE} alt={title} />
           </div>
 
           <button className="details-modal-close" type="button" onClick={onClose}>
@@ -56,11 +71,11 @@ function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
             <span className="details-modal-status">{listing.livestock_type}</span>
 
             <strong className="details-modal-price-inline">
-              ₱{Number(listing.price).toLocaleString()}
+              {formatPrice(listing.price, listing.unit)}
             </strong>
           </div>
 
-          <h2 className="details-modal-title">{listing.breed}</h2>
+          <h2 className="details-modal-title">{title}</h2>
 
           <div className="details-modal-meta-line">
             <MapPin size={13} />
@@ -74,19 +89,20 @@ function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
           </div>
 
           <div className="details-modal-stats-bar">
-            <div>
-              <span>Age</span>
-              <strong>{listing.age || "N/A"}</strong>
-            </div>
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <span>{stat.label}</span>
+                <strong>{stat.value || "N/A"}</strong>
+              </div>
+            ))}
 
             <div>
-              <span>Weight</span>
-              <strong>{listing.weight || "N/A"}</strong>
-            </div>
-
-            <div>
-              <span>Health</span>
-              <strong>{listing.health_status || "N/A"}</strong>
+              <span>Available</span>
+              <strong>
+                {listing.quantity > 0
+                  ? formatQuantity(listing.quantity, listing.unit)
+                  : "Out of stock"}
+              </strong>
             </div>
           </div>
 
@@ -154,7 +170,17 @@ function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
                 </button>
               )}
 
-              {extraActions}
+              {onBuyNow && (
+                <button
+                  type="button"
+                  className="details-modal-buy-now"
+                  onClick={() => onBuyNow(listing)}
+                  disabled={Number(listing.quantity) <= 0}
+                >
+                  <ShoppingCart size={16} />
+                  {Number(listing.quantity) > 0 ? "Buy Now" : "Out of Stock"}
+                </button>
+              )}
             </div>
           </div>
         </div>

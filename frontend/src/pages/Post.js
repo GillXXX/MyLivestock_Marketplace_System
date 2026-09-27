@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   ImagePlus,
   MapPin,
-  BadgeDollarSign,
+  PhilippinePeso,
   Weight,
   HeartPulse,
   Calendar,
@@ -12,14 +12,30 @@ import {
   ArrowLeft,
   ShieldCheck,
   UploadCloud,
+  AlertTriangle,
+  Hash,
+  X,
 } from "lucide-react";
 
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { getDocumentRequirement, formatRequirementMessage } from "../utils/livestockDocRequirements";
+import {
+  LIVESTOCK_TYPES,
+  FARM_PRODUCT_TYPES,
+  ALL_KNOWN_TYPES,
+  OTHER_LIVESTOCK,
+  OTHER_PRODUCT,
+  UNITS,
+  defaultUnitFor,
+  getCategory,
+} from "../utils/productCatalog";
 import { API_URL } from "../config";
+import useGoBack from "../utils/useGoBack";
 import "./Post.css";
 
 function Post() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/listings");
   const { id } = useParams();
   const isEditMode = Boolean(id);
 
@@ -32,12 +48,18 @@ function Post() {
   const [existingDocuments, setExistingDocuments] = useState([]);
   const [isVerified, setIsVerified] = useState(true);
 
+  // typeChoice is the dropdown value: a known type, or one of the two
+  // "Other" options, in which case the farmer types the name in customType.
+  const [typeChoice, setTypeChoice] = useState("");
+  const [customType, setCustomType] = useState("");
+
   const [formData, setFormData] = useState({
-    livestockType: "",
+    unit: "head",
     breed: "",
     age: "",
     weight: "",
     price: "",
+    quantity: "",
     healthStatus: "",
     location: "",
     description: "",
@@ -68,12 +90,21 @@ function Post() {
           return;
         }
 
+        const savedType = data.livestock_type || "";
+        if (ALL_KNOWN_TYPES.includes(savedType)) {
+          setTypeChoice(savedType);
+        } else if (savedType) {
+          setTypeChoice(data.category === "product" ? OTHER_PRODUCT : OTHER_LIVESTOCK);
+          setCustomType(savedType);
+        }
+
         setFormData({
-          livestockType: data.livestock_type || "",
+          unit: data.unit || "head",
           breed: data.breed || "",
           age: data.age || "",
           weight: data.weight || "",
           price: data.price || "",
+          quantity: data.quantity || "",
           healthStatus: data.health_status || "",
           location: data.location || "",
           description: data.description || "",
@@ -130,6 +161,20 @@ function Post() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditMode]);
 
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
+  useEffect(() => {
+    if (!selectedImage) {
+      setImagePreviewUrl("");
+      return;
+    }
+
+    const url = URL.createObjectURL(selectedImage);
+    setImagePreviewUrl(url);
+
+    return () => URL.revokeObjectURL(url);
+  }, [selectedImage]);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -137,18 +182,56 @@ function Post() {
     });
   };
 
+  const isOtherChoice = typeChoice === OTHER_LIVESTOCK || typeChoice === OTHER_PRODUCT;
+  const productType = isOtherChoice ? customType.trim() : typeChoice;
+  const category =
+    typeChoice === OTHER_PRODUCT ? "product" : getCategory(typeChoice, "livestock");
+  const isProduct = category === "product";
+  const unitInfo = UNITS.find((u) => u.value === formData.unit) || UNITS[0];
+
+  const handleTypeChange = (e) => {
+    const choice = e.target.value;
+    setTypeChoice(choice);
+
+    const nextCategory = choice === OTHER_PRODUCT ? "product" : getCategory(choice, "livestock");
+    setFormData((prev) => ({ ...prev, unit: defaultUnitFor(choice, nextCategory) }));
+  };
+
   const handleImageChange = (e) => {
     setSelectedImage(e.target.files[0] || null);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setExistingImageUrl("");
   };
 
   const handleDocumentsChange = (e) => {
     setSelectedDocuments(Array.from(e.target.files));
   };
 
+  const handleRemoveSelectedDocument = (index) => {
+    setSelectedDocuments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handlePost = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setMessage("");
+
+    if (!productType) {
+      setMessage("Please enter what you're selling.");
+      return;
+    }
+
+    const requirement = getDocumentRequirement(productType, category);
+    const documentCount = selectedDocuments.length || existingDocuments.length;
+
+    if (requirement && documentCount < requirement.minDocuments) {
+      setMessage(formatRequirementMessage(productType, category));
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const token = localStorage.getItem("token");
@@ -162,6 +245,8 @@ function Post() {
       Object.entries(formData).forEach(([key, value]) => {
         payload.append(key, value);
       });
+      payload.append("livestockType", productType);
+      payload.append("category", category);
 
       if (selectedImage) {
         payload.append("image", selectedImage);
@@ -209,17 +294,17 @@ function Post() {
     <div className="premium-post-page">
       <div className="premium-post-header">
         <div className="header-left">
-          <Link to="/listings" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
-            <span className="page-tag">LIVESTOCK MARKETPLACE</span>
+            <span className="page-tag">FARM MARKETPLACE</span>
             <h1>{isEditMode ? "Edit Listing" : "Create New Listing"}</h1>
             <p>
               {isEditMode
-                ? "Update your livestock listing details, photo, or documents."
-                : "Publish your livestock professionally and reach more verified buyers across the marketplace."}
+                ? "Update your listing details, photo, or documents."
+                : "Post livestock or backyard farm products like eggs, fruits, and vegetables to reach verified buyers."}
             </p>
           </div>
         </div>
@@ -227,85 +312,70 @@ function Post() {
 
       <div className="premium-post-card">
         {!isEditMode && !isVerified && (
-          <p style={{ color: "#946200", background: "#fff5d8", padding: "12px 16px", borderRadius: "12px", marginBottom: "15px" }}>
-            Your account isn't verified yet, so you can't post a listing. Submit your
-            government ID and barangay certificate on your{" "}
-            <Link to="/profile">Profile page</Link> to get verified.
-          </p>
+          <div className="form-alert warning">
+            <AlertTriangle size={18} />
+            <p>
+              Your account isn't verified yet, so you can't post a listing. Submit your
+              government ID and barangay certificate on your{" "}
+              <Link to="/profile">Profile page</Link> to get verified.
+            </p>
+          </div>
         )}
 
         {message && (
-          <p style={{ color: "red", marginBottom: "15px" }}>
-            {message}
-          </p>
+          <div className="form-alert error">
+            <AlertTriangle size={18} />
+            <p>{message}</p>
+          </div>
         )}
 
         <form onSubmit={handlePost}>
           <div className="premium-upload-box">
-            <div className="upload-icon">
-              <UploadCloud size={26} />
-            </div>
+            {imagePreviewUrl || existingImageUrl ? (
+              <div className="upload-preview">
+                <img src={imagePreviewUrl || existingImageUrl} alt="Product" />
+                <button
+                  type="button"
+                  className="upload-preview-remove"
+                  onClick={handleRemoveImage}
+                  title="Remove photo"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="upload-icon">
+                  <UploadCloud size={26} />
+                </div>
 
-            <h3>Upload Livestock Photo</h3>
+                <h3>Upload Product Photo</h3>
 
-            <p>Click Choose Photo to select a livestock image from your computer.</p>
+                <p>Click Choose Photo to select a photo of what you're selling.</p>
+              </>
+            )}
 
-            <label
-              className="upload-btn"
-              htmlFor="livestockImage"
-              style={{
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                position: "relative",
-                zIndex: 10,
-              }}
-            >
+            <label className="upload-btn" htmlFor="livestockImage">
               <ImagePlus size={18} />
-              Choose Photo
+              {imagePreviewUrl || existingImageUrl ? "Change Photo" : "Choose Photo"}
             </label>
 
             <input
               id="livestockImage"
+              className="visually-hidden"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              style={{
-                opacity: 0,
-                position: "absolute",
-                width: "1px",
-                height: "1px",
-                pointerEvents: "none",
-              }}
             />
-
-            {selectedImage ? (
-              <div style={{ marginTop: "15px" }}>
-                <strong>Selected photo:</strong>
-                <p style={{ margin: "5px 0" }}>{selectedImage.name}</p>
-              </div>
-            ) : existingImageUrl ? (
-              <div style={{ marginTop: "15px" }}>
-                <strong>Current photo:</strong>
-                <p style={{ margin: "5px 0" }}>
-                  <img
-                    src={existingImageUrl}
-                    alt="Current listing"
-                    style={{ maxWidth: "160px", borderRadius: "12px", marginTop: "8px" }}
-                  />
-                </p>
-              </div>
-            ) : null}
 
             <input
               name="imageUrl"
+              className="upload-url-fallback"
               type="text"
               placeholder="Or paste an image URL instead"
               value={formData.imageUrl}
               onChange={handleChange}
               disabled={!!selectedImage}
-              style={{ marginTop: "15px" }}
             />
           </div>
 
@@ -314,95 +384,144 @@ function Post() {
               <FileText size={26} />
             </div>
 
-            <h3>Upload Supporting Documents</h3>
+            {isProduct ? (
+              <>
+                <h3>
+                  Supporting Documents <span className="optional-mark">(Optional)</span>
+                </h3>
 
-            <p>Attach health certificates, ownership documents, or other proof for MAO verification.</p>
+                <p>Farm products don't need a health certificate, but you can attach any permit or certificate you have.</p>
+              </>
+            ) : (
+              <>
+                <h3>Upload Barangay Health Certificate</h3>
 
-            <label
-              className="upload-btn"
-              htmlFor="livestockDocuments"
-              style={{
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                position: "relative",
-                zIndex: 10,
-              }}
-            >
+                <p>Attach your barangay health certificate for this animal for MAO verification.</p>
+
+                {productType && (
+                  <p className="doc-requirement-hint">
+                    {formatRequirementMessage(productType, category)}
+                  </p>
+                )}
+              </>
+            )}
+
+            <label className="upload-btn" htmlFor="livestockDocuments">
               <FileText size={18} />
               Choose Documents
             </label>
 
             <input
               id="livestockDocuments"
+              className="visually-hidden"
               type="file"
-              multiple
               accept="image/*,application/pdf"
               onChange={handleDocumentsChange}
-              style={{
-                opacity: 0,
-                position: "absolute",
-                width: "1px",
-                height: "1px",
-                pointerEvents: "none",
-              }}
             />
 
             {selectedDocuments.length > 0 ? (
-              <div style={{ marginTop: "15px" }}>
-                <strong>Selected documents (will replace existing):</strong>
+              <div className="doc-chip-list">
+                <span className="doc-chip-label">Selected (will replace existing):</span>
 
                 {selectedDocuments.map((file, index) => (
-                  <p key={index} style={{ margin: "5px 0" }}>
-                    {file.name}
-                  </p>
+                  <span className="doc-chip" key={index}>
+                    <FileText size={14} />
+                    <span className="doc-chip-name">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSelectedDocument(index)}
+                      title="Remove"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
                 ))}
               </div>
             ) : existingDocuments.length > 0 ? (
-              <div style={{ marginTop: "15px" }}>
-                <strong>Current documents:</strong>
+              <div className="doc-chip-list">
+                <span className="doc-chip-label">Current documents:</span>
 
                 {existingDocuments.map((docUrl, index) => (
-                  <p key={index} style={{ margin: "5px 0" }}>
-                    <a href={docUrl} target="_blank" rel="noopener noreferrer">
-                      Document {index + 1}
-                    </a>
-                  </p>
+                  <a
+                    className="doc-chip"
+                    href={docUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    key={index}
+                  >
+                    <FileText size={14} />
+                    <span className="doc-chip-name">Document {index + 1}</span>
+                  </a>
                 ))}
               </div>
             ) : null}
           </div>
 
           <div className="section-title">
-            <ShieldCheck size={18} />
-            Livestock Information
+            <div className="section-title-icon">
+              <ShieldCheck size={16} />
+            </div>
+            <div>
+              <h4>{isProduct ? "Product Information" : "Livestock Information"}</h4>
+              <p>Accurate details help MAO verify your listing faster.</p>
+            </div>
           </div>
 
           <div className="premium-form-grid">
             <div className="form-group">
-              <label>Livestock Type</label>
+              <label>What are you selling?</label>
 
               <div className="input-wrapper">
                 <Tag size={18} />
 
-                <select
-                  name="livestockType"
-                  value={formData.livestockType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Choose livestock type</option>
-                  <option value="Swine">Swine</option>
-                  <option value="Cattle">Cattle</option>
-                  <option value="Goat">Goat</option>
-                  <option value="Poultry">Poultry</option>
+                <select value={typeChoice} onChange={handleTypeChange} required>
+                  <option value="">Choose a product type</option>
+                  <optgroup label="Livestock">
+                    {LIVESTOCK_TYPES.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Farm Products">
+                    {FARM_PRODUCT_TYPES.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Other">
+                    <option value={OTHER_LIVESTOCK}>Other animal (type your own)</option>
+                    <option value={OTHER_PRODUCT}>Other farm product (type your own)</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
 
+            {isOtherChoice && (
+              <div className="form-group">
+                <label>{typeChoice === OTHER_PRODUCT ? "Product Name" : "Animal Type"}</label>
+
+                <div className="input-wrapper">
+                  <Tag size={18} />
+
+                  <input
+                    type="text"
+                    maxLength={50}
+                    placeholder={
+                      typeChoice === OTHER_PRODUCT
+                        ? "Example: Mushrooms, Rice, Peanuts"
+                        : "Example: Rabbit, Turkey, Sheep"
+                    }
+                    value={customType}
+                    onChange={(e) => setCustomType(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="form-group">
-              <label>Breed</label>
+              <label>
+                {isProduct ? "Variety" : "Breed"}
+                {isProduct && <span className="optional-mark"> (Optional)</span>}
+              </label>
 
               <div className="input-wrapper">
                 <Tag size={18} />
@@ -410,14 +529,15 @@ function Post() {
                 <input
                   name="breed"
                   type="text"
-                  placeholder="Enter livestock breed"
+                  placeholder={isProduct ? "Example: Native, Lakatan, Carabao mango" : "Enter livestock breed"}
                   value={formData.breed}
                   onChange={handleChange}
-                  required
+                  required={!isProduct}
                 />
               </div>
             </div>
 
+            {!isProduct && (
             <div className="form-group">
               <label>Age</label>
 
@@ -434,9 +554,13 @@ function Post() {
                 />
               </div>
             </div>
+            )}
 
             <div className="form-group">
-              <label>Weight</label>
+              <label>
+                {isProduct ? "Size / Weight" : "Weight"}
+                {isProduct && <span className="optional-mark"> (Optional)</span>}
+              </label>
 
               <div className="input-wrapper">
                 <Weight size={18} />
@@ -444,24 +568,24 @@ function Post() {
                 <input
                   name="weight"
                   type="text"
-                  placeholder="Example: 120 kg"
+                  placeholder={isProduct ? "Example: Large, 60g per egg" : "Example: 120 kg"}
                   value={formData.weight}
                   onChange={handleChange}
-                  required
+                  required={!isProduct}
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Price</label>
+              <label>Price {unitInfo.label}</label>
 
               <div className="input-wrapper">
-                <BadgeDollarSign size={18} />
+                <PhilippinePeso size={18} />
 
                 <input
                   name="price"
                   type="number"
-                  placeholder="Enter selling price"
+                  placeholder={`Price ${unitInfo.label}`}
                   value={formData.price}
                   onChange={handleChange}
                   required
@@ -470,7 +594,43 @@ function Post() {
             </div>
 
             <div className="form-group">
-              <label>Health Status</label>
+              <label>Selling Unit</label>
+
+              <div className="input-wrapper">
+                <Hash size={18} />
+
+                <select name="unit" value={formData.unit} onChange={handleChange} required>
+                  {UNITS.map((u) => (
+                    <option key={u.value} value={u.value}>{u.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Quantity Available</label>
+
+              <div className="input-wrapper">
+                <Hash size={18} />
+
+                <input
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder={`Number of ${unitInfo.plural} available`}
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>
+                {isProduct ? "Condition" : "Health Status"}
+                {isProduct && <span className="optional-mark"> (Optional)</span>}
+              </label>
 
               <div className="input-wrapper">
                 <HeartPulse size={18} />
@@ -478,10 +638,10 @@ function Post() {
                 <input
                   name="healthStatus"
                   type="text"
-                  placeholder="Healthy / Vaccinated"
+                  placeholder={isProduct ? "Fresh / Organic / Newly harvested" : "Healthy / Vaccinated"}
                   value={formData.healthStatus}
                   onChange={handleChange}
-                  required
+                  required={!isProduct}
                 />
               </div>
             </div>
@@ -505,7 +665,9 @@ function Post() {
           </div>
 
           <div className="form-group full-width">
-            <label>Description</label>
+            <label>
+              Description <span className="optional-mark">(Optional)</span>
+            </label>
 
             <div className="textarea-wrapper">
               <FileText size={18} />
@@ -513,7 +675,11 @@ function Post() {
               <textarea
                 name="description"
                 rows="6"
-                placeholder="Provide complete livestock details, feeding history, vaccination records, and additional information..."
+                placeholder={
+                  isProduct
+                    ? "Describe your product: how it was grown or raised, harvest date, pickup or delivery options..."
+                    : "Provide complete livestock details, feeding history, vaccination records, and additional information..."
+                }
                 value={formData.description}
                 onChange={handleChange}
               ></textarea>
@@ -522,7 +688,7 @@ function Post() {
 
           <div className="post-actions">
             <button
-              className="publish-btn"
+              className="post-submit-btn"
               type="submit"
               disabled={loading || (!isEditMode && !isVerified)}
             >

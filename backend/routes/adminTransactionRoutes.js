@@ -2,13 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const protect = require("../middleware/authMiddleware");
+const requireRole = require("../middleware/roleMiddleware");
 
-const {
-  getAdminTransactions,
-  updateTransactionStatus,
-} = require("../controllers/adminTransactionController");
+const { getAdminTransactions } = require("../controllers/adminTransactionController");
 
-router.get("/", protect, getAdminTransactions);
-router.put("/:id/status", protect, updateTransactionStatus);
+router.get("/", protect, requireRole("admin", "mao_staff"), getAdminTransactions);
 
 module.exports = router;

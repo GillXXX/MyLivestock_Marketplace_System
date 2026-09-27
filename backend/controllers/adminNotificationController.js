@@ -2,12 +2,15 @@ const db = require("../config/db");
 
 const getAdminNotifications = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
+    // Account-provisioning alerts (new farmer/buyer signups) are Super
+    // Admin's user-management domain, not MAO staff's day-to-day
+    // moderation scope — exclude them from the staff-visible feed.
+    const isStaff = req.user.role === "mao_staff";
 
     const [rows] = await db.query(
-      "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100"
+      isStaff
+        ? "SELECT * FROM notifications WHERE type != 'User Registration' ORDER BY created_at DESC LIMIT 100"
+        : "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100"
     );
 
     const notifications = rows.map((row) => ({
@@ -50,10 +53,6 @@ const getAdminNotifications = async (req, res) => {
 
 const markNotificationRead = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     await db.query("UPDATE notifications SET is_read = 1 WHERE id = ?", [
       req.params.id,
     ]);
@@ -67,10 +66,6 @@ const markNotificationRead = async (req, res) => {
 
 const markAllNotificationsRead = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     await db.query("UPDATE notifications SET is_read = 1 WHERE is_read = 0");
 
     res.json({ message: "All notifications marked as read" });
@@ -82,10 +77,6 @@ const markAllNotificationsRead = async (req, res) => {
 
 const deleteNotification = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     await db.query("DELETE FROM notifications WHERE id = ?", [req.params.id]);
 
     res.json({ message: "Notification deleted" });

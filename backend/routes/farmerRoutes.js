@@ -13,6 +13,8 @@ const {
   declineTransaction,
   submitVerification,
   getFarmerNotifications,
+  markFarmerNotificationRead,
+  markAllFarmerNotificationsRead,
   changeFarmerPassword,
 } = require("../controllers/farmerController");
 
@@ -44,6 +46,10 @@ router.post(
 );
 
 router.get("/notifications", protect, getFarmerNotifications);
+
+router.put("/notifications/read-all", protect, markAllFarmerNotificationsRead);
+
+router.put("/notifications/:id/read", protect, markFarmerNotificationRead);
 
 router.put("/change-password", protect, changeFarmerPassword);
 

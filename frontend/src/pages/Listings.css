@@ -1,21 +1,7 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-
-  --background: #f4f1e8;
-  --card: #f8f6ef;
-
-  --text: #111827;
-  --muted: #667085;
-
-  --border: #e8e2d4;
-
   --soft: #e6e1d3;
-
-  --shadow:
-    0 10px 30px rgba(15, 61, 46, 0.06),
-    0 30px 60px rgba(15, 61, 46, 0.08);
 
   --hover-shadow:
     0 20px 50px rgba(15, 61, 46, 0.14);
@@ -184,107 +170,6 @@ body {
   margin-bottom: 34px;
 }
 
-.stat-card {
-  position: relative;
-  overflow: hidden;
-
-  background: rgba(255,255,255,0.8);
-
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-
-  border: 1px solid rgba(255,255,255,0.65);
-
-  border-radius: 20px;
-
-  padding: 22px;
-
-  box-shadow: var(--shadow);
-
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--hover-shadow);
-}
-
-/* Admin-dashboard KPI card technique: a diagonal tint wash plus a thin
-   gradient bar along the top edge, both driven by a per-card accent. */
-
-.stat-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(160deg, var(--tone-tint) 0%, transparent 55%);
-  pointer-events: none;
-}
-
-.stat-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--tone-color), transparent 140%);
-}
-
-.stat-card.tone-green { --tone-color: #0f3d2e; --tone-tint: rgba(15, 61, 46, 0.08); }
-.stat-card.tone-blue { --tone-color: #2563eb; --tone-tint: rgba(37, 99, 235, 0.08); }
-.stat-card.tone-amber { --tone-color: #b3790f; --tone-tint: rgba(215, 162, 77, 0.14); }
-.stat-card.tone-purple { --tone-color: #7c3aed; --tone-tint: rgba(124, 58, 237, 0.08); }
-
-.stat-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-
-  border-radius: 14px;
-
-  background: linear-gradient(145deg, var(--tone-tint), transparent);
-  border: 1px solid var(--tone-tint);
-
-  color: var(--tone-color);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-card h2 {
-  margin: 16px 0 0;
-
-  font-size: 36px;
-
-  font-weight: 950;
-
-  color: var(--primary-dark);
-}
-
-.stat-card p {
-  margin: 0;
-
-  color: var(--muted);
-
-  font-weight: 700;
-}
-
-.stat-card small {
-  display: block;
-
-  margin-top: 8px;
-
-  color: var(--tone-color);
-
-  font-weight: 850;
-}
-
 /* ================= TOOLBAR ================= */
 
 .toolbar-section {
@@ -305,7 +190,7 @@ body {
 
   gap: 14px;
 
-  margin-bottom: 32px;
+  margin-bottom: 14px;
 
   box-shadow: var(--shadow);
 }
@@ -389,80 +274,199 @@ body {
   box-shadow: 0 10px 20px rgba(15,61,46,0.1);
 }
 
+.results-count {
+  margin: 0 4px 18px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 /* ================= GRID ================= */
 
 .premium-livestock-grid {
   display: grid;
 
   grid-template-columns:
-    repeat(auto-fill, minmax(230px, 1fr));
+    repeat(auto-fill, minmax(260px, 1fr));
 
-  gap: 18px;
+  gap: 20px;
 }
 
-/* ================= CARD ================= */
+.listings-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 70px 20px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed var(--border);
+  border-radius: 24px;
+}
+
+.listings-empty-state svg {
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.listings-empty-state h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 19px;
+  font-weight: 850;
+}
+
+.listings-empty-state p {
+  margin: 0 0 14px;
+  max-width: 360px;
+}
+
+.clear-filters-btn {
+  border: none;
+  background: var(--soft);
+  color: var(--primary);
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-weight: 850;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.clear-filters-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* ================= CARD (uniform with the buyer Saved Listings card) ================= */
 
 .premium-card {
   background: var(--card);
-
   border-radius: 22px;
   padding: 10px 10px 14px;
-
-  position: relative;
-
-  box-shadow: 0 4px 14px rgba(15,61,46,0.06);
-
+  box-shadow: 0 4px 14px rgba(15, 61, 46, 0.06);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .premium-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 26px rgba(15,61,46,0.12);
+  box-shadow: 0 12px 26px rgba(15, 61, 46, 0.12);
 }
 
-/* IMAGE — inset with its own rounding so it reads as a framed photo,
-   not an edge-to-edge banner. */
+/* IMAGE */
 
 .premium-image-wrapper {
-  position: relative;
-
   height: 130px;
-
+  position: relative;
   border-radius: 16px;
   overflow: hidden;
-
   margin-bottom: 10px;
 }
 
 .premium-image-wrapper img {
   width: 100%;
   height: 100%;
-
   object-fit: cover;
 }
 
-/* STATUS BADGE — color-coded per status so Pending/Available/Sold read
-   as distinct states at a glance, not the same pill. */
+.premium-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(150deg, var(--soft), transparent);
+  color: var(--primary);
+}
 
-.premium-badge {
+.premium-type-chip {
   position: absolute;
-
+  z-index: 2;
   top: 9px;
   left: 9px;
-
-  background: rgba(255,247,230,0.95);
-
-  color: #8a5f1a;
-
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--primary-dark);
   padding: 4px 10px;
-
   border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
 
-  font-size: 9.5px;
-  font-weight: 900;
+/* ================= BODY ================= */
 
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+.premium-card-body {
+  padding: 0 4px;
+}
+
+.premium-card-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.premium-card-title h3 {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.premium-card-subtitle {
+  display: block;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.premium-card-title strong {
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.premium-meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.premium-meta-col div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.premium-meta-col svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.premium-status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.premium-badge,
+.stock-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
 }
 
 .premium-badge.status-pending {
@@ -471,7 +475,7 @@ body {
 }
 
 .premium-badge.status-available {
-  background: #eaf5ef;
+  background: var(--soft);
   color: var(--primary);
 }
 
@@ -480,128 +484,56 @@ body {
   color: #6b6b6b;
 }
 
-/* HEADING — breed + price as plain text in the card body */
-
-.premium-card-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
+.premium-badge.status-flagged,
+.premium-badge.status-rejected {
+  background: var(--danger-soft);
+  color: #b42318;
 }
 
-.premium-card-heading h3 {
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.2;
-  font-weight: 800;
-  color: var(--primary-dark);
+.premium-badge.status-draft {
+  background: #e8e2d4;
+  color: #52514e;
 }
 
-.premium-price-tag {
-  flex-shrink: 0;
-  color: var(--primary);
-  font-size: 12.5px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-/* FAVORITE */
-
-.favorite-btn {
-  position: absolute;
-
-  top: 20px;
-  right: 20px;
-
-  width: 58px;
-  height: 58px;
-
-  border-radius: 50%;
-
-  border: none;
-
-  background:
-    rgba(255,255,255,0.84);
-
-  -webkit-backdrop-filter: blur(10px);  
-  backdrop-filter: blur(10px);
-
-  color: var(--primary);
-
-  font-size: 28px;
-
-  cursor: pointer;
-
-  z-index: 5;
-
-  transition: 0.2s ease;
-}
-
-.favorite-btn:hover {
-  transform: scale(1.08);
-}
-
-/* ================= BODY ================= */
-
-.premium-card-body {
-  position: relative;
-  z-index: 1;
-  padding: 0 4px;
-}
-
-.premium-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 700;
-
-  margin-bottom: 10px;
-}
-
-.premium-meta-row span {
+.stock-chip {
+  background: var(--border);
+  color: #45534c;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.premium-meta-row svg {
-  color: var(--accent);
-  width: 12px;
-  height: 12px;
+.stock-chip.out {
+  color: #b42318;
 }
 
-.premium-meta-row .meta-divider {
-  color: var(--border);
-}
-
-/* BUTTON */
+/* BUTTONS */
 
 .premium-card-actions {
   display: flex;
   gap: 6px;
 }
 
-.details-btn {
-  flex: 1;
+.premium-card-actions button,
+.premium-card-actions a {
   height: 36px;
-
   border: none;
   border-radius: 999px;
-
-  background: var(--soft);
-
-  color: var(--primary);
-
   font-size: 12.5px;
   font-weight: 800;
-
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
-
+  text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
+}
+
+.details-btn {
+  flex: 1;
+  background: var(--soft);
+  color: var(--primary);
 }
 
 .details-btn:hover {
@@ -610,28 +542,16 @@ body {
 }
 
 .listing-edit-btn,
-.delete-btn {
+.delete-btn,
+.publish-btn {
   width: 36px;
-  height: 36px;
   flex-shrink: 0;
-
-  border: none;
-  border-radius: 999px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  text-decoration: none;
-
   background: var(--soft);
-
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .listing-edit-btn svg,
-.delete-btn svg {
+.delete-btn svg,
+.publish-btn svg {
   width: 15px;
   height: 15px;
 }
@@ -642,6 +562,15 @@ body {
 
 .listing-edit-btn:hover {
   background: #fff2d6;
+}
+
+.publish-btn {
+  color: #0f3d2e;
+}
+
+.publish-btn:hover {
+  background: #0f3d2e;
+  color: white;
 }
 
 .delete-btn {
@@ -669,15 +598,87 @@ body {
 @media (max-width: 768px) {
 
   .premium-listings-page {
-    padding: 22px;
+    padding: 14px;
+  }
+
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .premium-listings-page .page-tag {
+    font-size: 10.5px;
   }
 
   .premium-header {
     flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .premium-header h1 {
+    font-size: 22px;
+  }
+
+  .premium-header p {
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  .create-btn {
+    height: 42px;
+    padding: 0 16px;
+    font-size: 13px;
+    border-radius: 13px;
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .admin-stat-card h2 {
+    font-size: 19px;
+    margin: 8px 0 0;
+  }
+
+  .admin-stat-card p {
+    font-size: 9.5px;
+  }
+
+  .admin-stat-card small {
+    font-size: 10px;
+  }
+
+  .toolbar-section {
+    padding: 10px;
+    border-radius: 18px;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .search-box,
+  .toolbar-actions select,
+  .filter-btn {
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .search-box input {
+    font-size: 16px;
   }
 
   .toolbar-actions {
@@ -686,18 +687,43 @@ body {
 
   .premium-livestock-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
-  .premium-card-top {
-    flex-direction: column;
+  .premium-card {
+    max-width: 100%;
   }
 
-  .premium-card-top h3 {
-    font-size: 34px;
+  .premium-image-wrapper {
+    height: 190px;
   }
 
-  .premium-card-top h2 {
-    font-size: 24px;
+  .premium-card-title h3 {
+    font-size: 17px;
+  }
+
+  .premium-card-title strong {
+    font-size: 16px;
+  }
+
+  .premium-card-subtitle {
+    font-size: 13px;
+  }
+
+  .premium-meta-col div {
+    font-size: 13px;
+  }
+
+  .premium-card-actions button,
+  .premium-card-actions a {
+    height: 46px;
+    font-size: 14px;
+  }
+
+  .listing-edit-btn,
+  .delete-btn,
+  .publish-btn {
+    width: 46px;
   }
 
 }
@@ -770,6 +796,15 @@ body {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.listing-modal-media-fallback {
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(150deg, var(--soft), transparent);
+  color: var(--primary);
 }
 
 .listing-modal-media::after {
@@ -854,6 +889,17 @@ body {
   color: #6b6b6b;
 }
 
+.listing-modal-status.status-flagged,
+.listing-modal-status.status-rejected {
+  background: var(--danger-soft);
+  color: #b42318;
+}
+
+.listing-modal-status.status-draft {
+  background: #e8e2d4;
+  color: #52514e;
+}
+
 .listing-modal-price-inline {
   font-size: 21px;
   font-weight: 900;
@@ -862,11 +908,18 @@ body {
 }
 
 .listing-modal-title {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 25px;
   font-weight: 900;
   color: var(--primary-dark);
   letter-spacing: -0.5px;
+}
+
+.listing-modal-subtitle {
+  margin: 2px 0 12px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 14px;
 }
 
 .listing-modal-meta-line {
@@ -892,7 +945,7 @@ body {
 
 .listing-modal-stats-bar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px 8px;
 
   background: var(--soft);
@@ -966,5 +1019,143 @@ body {
 @media (max-width: 480px) {
   .listing-modal-stats-bar {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.premium-listings-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Scoped under .premium-listings-page (.back-btn, .page-tag,
+   .header-left etc. are shared class names). Stat cards and listing
+   cards keep their size; only the chrome around them is trimmed. */
+
+@media (max-width: 768px) {
+  /* Header: back + title on one row, Create Listing full width below */
+
+  .premium-listings-page .page-tag,
+  .premium-listings-page .premium-header p {
+    display: none;
+  }
+
+  .premium-listings-page .premium-header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .premium-listings-page .header-left {
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .premium-listings-page .premium-header h1 {
+    font-size: 21px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .premium-listings-page .premium-header .create-btn {
+    width: 100%;
+    height: 44px;
+    justify-content: center;
+  }
+
+  /* Toolbar: no panel; full-width search, two filters side by side */
+
+  .premium-listings-page .toolbar-section {
+    padding: 0;
+    gap: 8px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .premium-listings-page .search-box {
+    max-width: none;
+    height: 44px;
+    border-radius: 14px;
+    background: white;
+  }
+
+  .premium-listings-page .search-box input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .premium-listings-page .toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .premium-listings-page .toolbar-actions select {
+    min-width: 0;
+    padding: 0 10px;
+    background: white;
+  }
+
+  .premium-listings-page .results-count {
+    margin: 0 2px 10px;
+    font-size: 11.5px;
+  }
+
+  /* Listing details modal becomes a bottom sheet */
+
+  .premium-listings-page .listing-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .premium-listings-page .listing-modal {
+    max-width: none;
+    max-height: 88vh;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: listings-sheet-up 0.25s ease both;
+  }
+
+  .premium-listings-page .listing-modal-media {
+    border-radius: 22px 22px 0 0;
+  }
+
+  .premium-listings-page .listing-modal-close {
+    width: 40px;
+    height: 40px;
+  }
+
+  .premium-listings-page .listing-modal-body {
+    padding: 6px 16px 20px;
+  }
+
+  .premium-listings-page .listing-modal-documents a {
+    min-height: 40px;
+  }
+}
+
+@keyframes listings-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .premium-listings-page .back-btn:hover,
+  .premium-listings-page .create-btn:hover,
+  .premium-listings-page .premium-card:hover,
+  .premium-listings-page .filter-btn:hover,
+  .premium-listings-page .admin-stat-card:hover,
+  .premium-listings-page .admin-stat-card:hover .admin-stat-icon {
+    transform: none;
   }
 }

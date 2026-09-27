@@ -3,10 +3,6 @@ const { createNotification } = require("../utils/notify");
 
 const getAdminUsers = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [users] = await db.query(`
       SELECT
         u.id,
@@ -15,6 +11,7 @@ const getAdminUsers = async (req, res) => {
         u.phone,
         u.location,
         u.farm_location,
+        u.profile_image,
         u.role,
         u.is_verified,
         u.is_active,
@@ -26,7 +23,7 @@ const getAdminUsers = async (req, res) => {
         COUNT(l.id) AS listings
       FROM users u
       LEFT JOIN livestock_listings l ON u.id = l.farmer_id
-      WHERE u.role != 'admin'
+      WHERE u.role NOT IN ('admin', 'mao_staff')
       GROUP BY u.id
       ORDER BY u.created_at DESC
     `);
@@ -56,12 +53,8 @@ const getAdminUsers = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [[user]] = await db.query(
-      "SELECT id FROM users WHERE id = ? AND role != 'admin'",
+      "SELECT id FROM users WHERE id = ? AND role NOT IN ('admin', 'mao_staff')",
       [req.params.id]
     );
 
@@ -90,10 +83,6 @@ const deleteUser = async (req, res) => {
 
 const verifyUser = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [[user]] = await db.query(
       "SELECT id FROM users WHERE id = ? AND role = 'farmer'",
       [req.params.id]
@@ -117,10 +106,6 @@ const verifyUser = async (req, res) => {
 
 const rejectVerification = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const { reason } = req.body;
 
     const [[user]] = await db.query(
@@ -153,10 +138,6 @@ const rejectVerification = async (req, res) => {
 
 const setUserActive = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const { isActive } = req.body;
 
     if (typeof isActive !== "boolean") {
@@ -164,7 +145,7 @@ const setUserActive = async (req, res) => {
     }
 
     const [[user]] = await db.query(
-      "SELECT id FROM users WHERE id = ? AND role != 'admin'",
+      "SELECT id FROM users WHERE id = ? AND role NOT IN ('admin', 'mao_staff')",
       [req.params.id]
     );
 

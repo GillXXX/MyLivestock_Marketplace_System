@@ -2,23 +2,34 @@ const multer = require("multer");
 const path = require("path");
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB per file
+const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25MB for chat image/video attachments
 
 const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 const DOCUMENT_MIME_TYPES = [...IMAGE_MIME_TYPES, "application/pdf"];
+const CHAT_ATTACHMENT_MIME_TYPES = [...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES];
 
-// Photo-only fields vs. fields that also accept scanned/PDF documents.
+// Photo-only fields vs. fields that also accept scanned/PDF documents vs.
+// chat attachments (which also accept short video clips).
 const IMAGE_ONLY_FIELDS = new Set(["profile_image", "image"]);
+const CHAT_ATTACHMENT_FIELDS = new Set(["attachment"]);
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = IMAGE_ONLY_FIELDS.has(file.fieldname)
-    ? IMAGE_MIME_TYPES
-    : DOCUMENT_MIME_TYPES;
+  let allowedTypes;
+  let kind;
+
+  if (CHAT_ATTACHMENT_FIELDS.has(file.fieldname)) {
+    allowedTypes = CHAT_ATTACHMENT_MIME_TYPES;
+    kind = "an image (JPG, PNG, WEBP, GIF) or video (MP4, WEBM, MOV)";
+  } else if (IMAGE_ONLY_FIELDS.has(file.fieldname)) {
+    allowedTypes = IMAGE_MIME_TYPES;
+    kind = "an image (JPG, PNG, WEBP, or GIF)";
+  } else {
+    allowedTypes = DOCUMENT_MIME_TYPES;
+    kind = "an image (JPG, PNG, WEBP, GIF) or PDF";
+  }
 
   if (!allowedTypes.includes(file.mimetype)) {
-    const kind = IMAGE_ONLY_FIELDS.has(file.fieldname)
-      ? "an image (JPG, PNG, WEBP, or GIF)"
-      : "an image (JPG, PNG, WEBP, GIF) or PDF";
-
     cb(new Error(`"${file.fieldname}" must be ${kind}`));
     return;
   }
@@ -81,7 +92,15 @@ if (s3Enabled) {
   });
 
   getFileUrl = (file, req) => {
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    // BACKEND_PUBLIC_URL lets this stay correct regardless of which
+    // hostname a given request came in on (localhost from this machine's
+    // own browser vs. the LAN IP from a phone on the same network) — using
+    // req.get("host") here would bake in whichever one the *uploader*
+    // happened to use, breaking the image for anyone viewing it from a
+    // different host. Falls back to the request's own host when unset, for
+    // environments where there's only ever one way in (e.g. production
+    // behind a single domain).
+    const baseUrl = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
     return `${baseUrl}/uploads/${file.filename}`;
   };
 }
@@ -94,6 +113,17 @@ const upload = multer({
   },
 });
 
+// Separate instance so chat image/video attachments get a larger size limit
+// without loosening it for every other upload (profile photos, documents).
+const chatUpload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: MAX_ATTACHMENT_SIZE_BYTES,
+  },
+});
+
 module.exports = upload;
 module.exports.getFileUrl = getFileUrl;
 module.exports.isS3Enabled = s3Enabled;
+module.exports.chatUpload = chatUpload;

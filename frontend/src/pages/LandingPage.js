@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   MessageCircle,
@@ -9,28 +9,77 @@ import {
   ArrowRight,
   CheckCircle,
   Store,
-  Tractor,
   Handshake,
   Users,
   Menu,
   X,
 } from "lucide-react";
 
+import { API_URL } from "../config";
+import logo from "../assets/logo.png";
+import heroImage from "../assets/landing-hero.jpg";
+import swineImage from "../assets/livestock/swine.jpg";
+import cattleImage from "../assets/livestock/cattle.jpg";
+import goatImage from "../assets/livestock/goat.jpg";
+import poultryImage from "../assets/livestock/poultry.jpg";
 import "./LandingPage.css";
 
 function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeListings, setActiveListings] = useState(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/public/stats`);
+        const data = await res.json();
+        if (res.ok) setActiveListings(data.activeListings);
+      } catch (error) {
+        // The hero stat is a nice-to-have — leave the placeholder if this fails.
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const revealEls = document.querySelectorAll(".reveal");
+    if (!revealEls.length) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    revealEls.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="premium-landing">
-      <nav className="landing-nav">
+      <nav className={`landing-nav ${scrolled ? "scrolled" : ""}`}>
         <a href="/" className="brand">
           <div className="brand-logo">
-            <Tractor size={27} />
+            <img src={logo} alt="VOLT logo" />
           </div>
           <div>
-            <h3>HerdMarket</h3>
-            <span>Livestock Marketplace</span>
+            <h3>VOLT</h3>
+            <span>Veruela Online Livestock Trade</span>
           </div>
         </a>
 
@@ -78,25 +127,14 @@ function LandingPage() {
           </span>
 
           <h1>
-            Modern livestock trading for backyard farmers in Veruela.
+            Modern livestock and farm product trading for backyard farmers in Veruela.
           </h1>
 
           <p>
-            HerdMarket connects farmers, buyers, and MAO personnel through a
+            VOLT connects farmers, buyers, and MAO personnel through a
             secure digital marketplace with structured workflows, seller mapping,
             document verification, messaging, and transaction recording.
           </p>
-
-          <div className="hero-buttons">
-            <a href="/register" className="primary-btn">
-              Start Trading
-              <ArrowRight size={18} />
-            </a>
-
-            <a href="/login" className="secondary-btn">
-              Login Portal
-            </a>
-          </div>
 
           <div className="trust-row">
             <div>
@@ -114,6 +152,17 @@ function LandingPage() {
               Map-based seller visibility
             </div>
           </div>
+
+          <div className="hero-buttons">
+            <a href="/register" className="primary-btn">
+              Start Trading
+              <ArrowRight size={18} />
+            </a>
+
+            <a href="/login" className="secondary-btn">
+              Login Portal
+            </a>
+          </div>
         </div>
 
         <div className="hero-visual">
@@ -121,8 +170,9 @@ function LandingPage() {
 
           <div className="hero-image-card">
             <img
-              src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1500&auto=format&fit=crop"
-              alt="Livestock marketplace"
+              src={heroImage}
+              alt="A farmer with his carabao, pigs, goats and chickens on a farm in Veruela"
+              fetchPriority="high"
             />
 
             <div className="hero-floating-card top">
@@ -130,7 +180,7 @@ function LandingPage() {
                 <Store size={20} />
               </div>
               <div>
-                <strong>56+</strong>
+                <strong>{activeListings === null ? "—" : activeListings}</strong>
                 <span>Active Listings</span>
               </div>
             </div>
@@ -139,7 +189,7 @@ function LandingPage() {
       </section>
 
       <section id="features" className="section features-section">
-        <div className="section-heading">
+        <div className="section-heading reveal">
           <span className="eyebrow">SYSTEM FEATURES</span>
           <h2>Built for secure and transparent livestock trading.</h2>
           <p>
@@ -151,8 +201,8 @@ function LandingPage() {
         <div className="feature-grid">
           <Feature
             icon={<Search />}
-            title="Search Livestock"
-            text="Buyers can browse and filter livestock by type, price, location, and availability."
+            title="Search Livestock & Produce"
+            text="Buyers can browse and filter livestock and farm products by type, price, location, and availability."
             tone="green"
           />
 
@@ -193,18 +243,18 @@ function LandingPage() {
         </div>
       </section>
 
-      <section id="workflow" className="workflow-section">
+      <section id="workflow" className="workflow-section reveal">
         <div className="workflow-content">
           <span className="eyebrow">STRUCTURED TRADING WORKFLOW</span>
           <h2>A clear process from listing to transaction confirmation.</h2>
           <p>
-            Unlike generic marketplace platforms, HerdMarket follows a
+            Unlike generic marketplace platforms, VOLT follows a
             livestock-specific workflow that supports inquiry, negotiation,
             verification, and transaction recording.
           </p>
 
           <a href="/register">
-            Start with HerdMarket
+            Start with VOLT
             <ArrowRight size={18} />
           </a>
         </div>
@@ -244,50 +294,36 @@ function LandingPage() {
       </section>
 
       <section id="livestock" className="section">
-        <div className="section-heading">
-          <span className="eyebrow">SUPPORTED LIVESTOCK</span>
+        <div className="section-heading reveal">
+          <span className="eyebrow">WHAT YOU CAN TRADE</span>
           <h2>Designed for common livestock in Veruela.</h2>
           <p>
             The system supports structured workflows for livestock commonly
-            traded by backyard farmers.
+            traded by backyard farmers, plus backyard farm products like eggs,
+            fruits, and vegetables.
           </p>
         </div>
 
         <div className="livestock-grid">
-          <Livestock
-            name="Swine"
-            image="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=1200&auto=format&fit=crop"
-          />
-
-          <Livestock
-            name="Cattle"
-            image="https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1200&auto=format&fit=crop"
-          />
-
-          <Livestock
-            name="Goat"
-            image="https://images.unsplash.com/photo-1524024973431-2ad916746881?q=80&w=1200&auto=format&fit=crop"
-          />
-
-          <Livestock
-            name="Poultry"
-            image="https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1200&auto=format&fit=crop"
-          />
+          <Livestock name="Swine" image={swineImage} />
+          <Livestock name="Cattle" image={cattleImage} />
+          <Livestock name="Goat" image={goatImage} />
+          <Livestock name="Poultry" image={poultryImage} />
         </div>
       </section>
 
       <section id="benefits" className="benefits-section">
-        <div className="benefit-card dark">
-          <span className="eyebrow">WHY HERDMARKET</span>
+        <div className="benefit-card dark reveal">
+          <span className="eyebrow">WHY VOLT</span>
           <h2>From manual trading to organized digital livestock commerce.</h2>
           <p>
-            HerdMarket improves trading visibility, price transparency,
+            VOLT improves trading visibility, price transparency,
             transaction documentation, and marketplace monitoring for rural
             livestock trading.
           </p>
         </div>
 
-        <div className="benefit-list">
+        <div className="benefit-list reveal">
           <Benefit icon={<Users size={20} />} title="Wider buyer access" text="Farmers can present livestock to more potential buyers online." />
           <Benefit icon={<MessageCircle size={20} />} title="Transparent negotiation" text="Buyers and sellers can communicate through structured messaging." />
           <Benefit icon={<ShieldCheck size={20} />} title="Verified transactions" text="MAO verification strengthens trust and documentation completeness." />
@@ -295,7 +331,7 @@ function LandingPage() {
         </div>
       </section>
 
-      <section className="cta-section">
+      <section className="cta-section reveal">
         <div>
           <span className="eyebrow">START TODAY</span>
           <h2>Modernize livestock trading in Veruela.</h2>
@@ -316,9 +352,9 @@ function LandingPage() {
           <div className="footer-brand">
             <div className="footer-brand-mark">
               <div className="footer-brand-icon">
-                <Tractor size={20} />
+                <img src={logo} alt="VOLT logo" />
               </div>
-              <h3>HerdMarket</h3>
+              <h3>VOLT</h3>
             </div>
             <p>Web-Based Livestock Marketplace System for Veruela, Agusan del Sur.</p>
           </div>
@@ -344,7 +380,7 @@ function LandingPage() {
         </div>
 
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} HerdMarket. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} VOLT. All rights reserved.</p>
         </div>
       </footer>
     </div>
@@ -353,7 +389,7 @@ function LandingPage() {
 
 function Feature({ icon, title, text, tone = "green" }) {
   return (
-    <div className={`lp-feature-card tone-${tone}`}>
+    <div className={`lp-feature-card tone-${tone} reveal`}>
       <div className="feature-icon">{icon}</div>
       <h4>{title}</h4>
       <p>{text}</p>
@@ -376,8 +412,8 @@ function WorkflowStep({ number, icon, title, text }) {
 
 function Livestock({ name, image }) {
   return (
-    <div className="livestock-card">
-      <img src={image} alt={name} />
+    <div className="livestock-card reveal">
+      <img src={image} alt={name} loading="lazy" />
       <div>
         <h4>{name}</h4>
         <p>Browse {name.toLowerCase()} listings</p>

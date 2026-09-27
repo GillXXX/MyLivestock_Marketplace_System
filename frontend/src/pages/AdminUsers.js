@@ -11,6 +11,10 @@ import {
   Tractor,
   ShoppingBag,
   Clock,
+  FileText,
+  XCircle,
+  Eye,
+  X,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -18,6 +22,11 @@ import { exportToCsv } from "../utils/exportCsv";
 import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminUsers.css";
+
+function getAvatarUrl(image) {
+  if (!image) return null;
+  return image.startsWith("http") ? image : `${API_URL}${image}`;
+}
 
 function AdminUsers() {
   const navigate = useNavigate();
@@ -31,6 +40,7 @@ function AdminUsers() {
   });
 
   const [verificationQueue, setVerificationQueue] = useState([]);
+  const [viewingDocsFor, setViewingDocsFor] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All Account Status");
@@ -377,7 +387,15 @@ function AdminUsers() {
                   <tr key={user.id}>
                     <td>
                       <div className="user-cell">
-                        <div className="avatar">{user.full_name.charAt(0)}</div>
+                        {user.profile_image ? (
+                          <img
+                            className="avatar"
+                            src={getAvatarUrl(user.profile_image)}
+                            alt={user.full_name}
+                          />
+                        ) : (
+                          <div className="avatar">{user.full_name.charAt(0)}</div>
+                        )}
 
                         <div>
                           <strong>{user.full_name}</strong>
@@ -436,8 +454,20 @@ function AdminUsers() {
 
                     <td>
                       <div className="table-actions">
+                        {user.role === "farmer" && (
+                          <button
+                            className="neutral"
+                            title="View Submitted Documents"
+                            type="button"
+                            onClick={() => setViewingDocsFor(user)}
+                          >
+                            <Eye size={17} />
+                          </button>
+                        )}
+
                         {user.role === "farmer" && !user.is_verified && (
                           <button
+                            className="approve"
                             title="Verify Farmer"
                             type="button"
                             onClick={() => handleVerify(user.id)}
@@ -447,6 +477,7 @@ function AdminUsers() {
                         )}
 
                         <button
+                          className="warning"
                           title={user.is_active ? "Deactivate Account" : "Reactivate Account"}
                           type="button"
                           onClick={() => handleToggleActive(user.id, user.is_active)}
@@ -483,7 +514,8 @@ function AdminUsers() {
 
         <div className="queue-list">
           {verificationQueue.length === 0 ? (
-            <div>
+            <div className="queue-empty">
+              <ShieldCheck size={28} />
               <strong>No pending submissions</strong>
               <span>No farmers are currently awaiting verification review.</span>
             </div>
@@ -493,12 +525,29 @@ function AdminUsers() {
 
               return (
                 <div key={user.id} className="queue-item">
-                  <div>
-                    <strong>{user.full_name}</strong>
-                    <span>
-                      {user.verification_submitted_at
-                        ? `Submitted ${new Date(user.verification_submitted_at).toLocaleDateString()}`
-                        : user.farm_location || "Farm location not provided"}
+                  <div className="queue-item-info">
+                    {user.profile_image ? (
+                      <img
+                        className="queue-avatar"
+                        src={getAvatarUrl(user.profile_image)}
+                        alt={user.full_name}
+                      />
+                    ) : (
+                      <div className="queue-avatar">{user.full_name.charAt(0)}</div>
+                    )}
+
+                    <div>
+                      <strong>{user.full_name}</strong>
+                      <span>
+                        {user.verification_submitted_at
+                          ? `Submitted ${new Date(user.verification_submitted_at).toLocaleDateString()}`
+                          : user.farm_location || "Farm location not provided"}
+                      </span>
+                    </div>
+
+                    <span className="queue-pending-badge">
+                      <Clock size={12} />
+                      Pending Review
                     </span>
                   </div>
 
@@ -506,14 +555,16 @@ function AdminUsers() {
                     {docs.map((doc) => (
                       <button
                         key={doc.type}
+                        className="doc-chip"
                         type="button"
                         onClick={() => window.open(doc.url, "_blank")}
                       >
-                        View {doc.type}
+                        <FileText size={14} />
+                        {doc.type}
                       </button>
                     ))}
 
-                    <button type="button" onClick={() => handleVerify(user.id)}>
+                    <button className="approve" type="button" onClick={() => handleVerify(user.id)}>
                       <UserCheck size={15} />
                       Approve
                     </button>
@@ -523,6 +574,7 @@ function AdminUsers() {
                       type="button"
                       onClick={() => handleRejectVerification(user.id)}
                     >
+                      <XCircle size={15} />
                       Reject
                     </button>
                   </div>
@@ -532,6 +584,111 @@ function AdminUsers() {
           )}
         </div>
       </section>
+
+      {viewingDocsFor && (
+        <div className="docs-modal-overlay" onClick={() => setViewingDocsFor(null)}>
+          <div className="docs-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="docs-modal-close"
+              type="button"
+              onClick={() => setViewingDocsFor(null)}
+            >
+              <X size={20} />
+            </button>
+
+            <div className="docs-modal-header">
+              {viewingDocsFor.profile_image ? (
+                <img
+                  className="docs-modal-avatar"
+                  src={getAvatarUrl(viewingDocsFor.profile_image)}
+                  alt={viewingDocsFor.full_name}
+                />
+              ) : (
+                <div className="docs-modal-avatar">
+                  {viewingDocsFor.full_name.charAt(0)}
+                </div>
+              )}
+
+              <div>
+                <strong>{viewingDocsFor.full_name}</strong>
+                <span
+                  className={`verification-pill ${
+                    viewingDocsFor.verification_status === "Approved"
+                      ? "verified"
+                      : viewingDocsFor.verification_status === "Pending"
+                      ? "pending"
+                      : viewingDocsFor.verification_status === "Rejected"
+                      ? "rejected"
+                      : "neutral"
+                  }`}
+                >
+                  {viewingDocsFor.verification_status || "Not Submitted"}
+                </span>
+              </div>
+            </div>
+
+            {viewingDocsFor.verification_submitted_at && (
+              <p className="docs-modal-meta">
+                Submitted{" "}
+                {new Date(viewingDocsFor.verification_submitted_at).toLocaleDateString()}
+              </p>
+            )}
+
+            {viewingDocsFor.verification_note && (
+              <div className="docs-modal-note">
+                <strong>Admin note:</strong> {viewingDocsFor.verification_note}
+              </div>
+            )}
+
+            <div className="docs-modal-list">
+              {getVerificationDocs(viewingDocsFor).length === 0 ? (
+                <p className="docs-modal-empty">No documents submitted yet.</p>
+              ) : (
+                getVerificationDocs(viewingDocsFor).map((doc, index) => (
+                  <a
+                    key={index}
+                    className="doc-chip"
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FileText size={14} />
+                    {doc.type}
+                  </a>
+                ))
+              )}
+            </div>
+
+            {viewingDocsFor.verification_status === "Pending" && (
+              <div className="docs-modal-actions">
+                <button
+                  className="approve"
+                  type="button"
+                  onClick={() => {
+                    handleVerify(viewingDocsFor.id);
+                    setViewingDocsFor(null);
+                  }}
+                >
+                  <UserCheck size={15} />
+                  Approve
+                </button>
+
+                <button
+                  className="danger"
+                  type="button"
+                  onClick={() => {
+                    handleRejectVerification(viewingDocsFor.id);
+                    setViewingDocsFor(null);
+                  }}
+                >
+                  <XCircle size={15} />
+                  Reject
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

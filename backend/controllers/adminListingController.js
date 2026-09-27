@@ -2,14 +2,12 @@ const db = require("../config/db");
 
 const getAdminListings = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [listings] = await db.query(`
       SELECT
         l.id,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         l.price,
         l.location,
@@ -49,10 +47,6 @@ const getAdminListings = async (req, res) => {
 
 const updateListingStatus = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const { status, reason } = req.body;
 
     if (!["Available", "Pending", "Flagged", "Rejected"].includes(status)) {
@@ -75,10 +69,6 @@ const updateListingStatus = async (req, res) => {
 
 const deleteListing = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     await db.query("DELETE FROM livestock_listings WHERE id = ?", [req.params.id]);
 
     res.json({ message: "Listing deleted successfully" });
