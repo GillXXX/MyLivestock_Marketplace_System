@@ -43,7 +43,7 @@ const getAdminMapData = async (req, res) => {
     `);
 
     const [distribution] = await db.query(`
-      SELECT livestock_type, COUNT(*) AS total
+      SELECT livestock_type, MAX(category) AS category, COUNT(*) AS total
       FROM livestock_listings
       GROUP BY livestock_type
     `);

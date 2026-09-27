@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { X, ShoppingCart, CheckCircle2, Minus, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
-import { UNITS, formatQuantity } from "../utils/productCatalog";
+import { API_URL } from "../config";
+import { UNITS, formatQuantity, getListingPlaceholder } from "../utils/productCatalog";
 import "./BuyNowModal.css";
-
-const DEFAULT_IMAGE = DEFAULT_LISTING_IMAGE;
 
 function BuyNowModal({ listing, onClose }) {
   const navigate = useNavigate();
@@ -132,7 +130,7 @@ function BuyNowModal({ listing, onClose }) {
             </p>
 
             <div className="buynow-listing-preview">
-              <img src={listing.image_url || DEFAULT_IMAGE} alt={title} />
+              <img src={listing.image_url || getListingPlaceholder(listing.livestock_type, listing.category)} alt={title} />
 
               <div>
                 <strong>{title}</strong>

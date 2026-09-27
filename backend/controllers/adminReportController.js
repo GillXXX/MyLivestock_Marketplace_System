@@ -104,6 +104,7 @@ const fetchLivestockData = async (listingWhere, listingParams) => {
   const [rows] = await db.query(
     `SELECT
       l.livestock_type AS type,
+      MAX(l.category) AS category,
       COUNT(l.id) AS total,
       COALESCE(SUM(l.price), 0) AS value
     FROM livestock_listings l
@@ -120,6 +121,7 @@ const fetchMonthlyTransactions = async (trxWhere, trxParams) => {
   const [rows] = await db.query(
     `SELECT
       l.livestock_type,
+      MAX(l.category) AS category,
       SUM(CASE WHEN t.status = 'Completed' THEN 1 ELSE 0 END) AS completed,
       SUM(CASE WHEN t.status = 'Pending' THEN 1 ELSE 0 END) AS pending,
       COALESCE(SUM(CASE WHEN t.status = 'Completed' THEN t.amount ELSE 0 END), 0) AS totalValue

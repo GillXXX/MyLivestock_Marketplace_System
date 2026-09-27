@@ -245,7 +245,7 @@ const getAdminDashboard = async (req, res) => {
     // Real totals across every listing (not capped like the widgets above),
     // backing the dashboard's category and status breakdown charts.
     const [listingsByCategory] = await db.query(
-      "SELECT livestock_type, COUNT(*) AS total FROM livestock_listings GROUP BY livestock_type"
+      "SELECT livestock_type, MAX(category) AS category, COUNT(*) AS total FROM livestock_listings GROUP BY livestock_type"
     );
 
     const [listingsByStatus] = await db.query(

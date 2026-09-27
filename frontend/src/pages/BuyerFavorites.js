@@ -19,12 +19,13 @@ import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
 import BuyNowModal from "../components/BuyNowModal";
 import AdminStatCard from "../components/AdminStatCard";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
+import { API_URL } from "../config";
 import {
   LIVESTOCK_TYPES,
   FARM_PRODUCT_TYPES,
   ALL_KNOWN_TYPES,
   formatPrice,
+  getListingPlaceholder,
 } from "../utils/productCatalog";
 import useGoBack from "../utils/useGoBack";
 import "./BuyerFavorites.css";
@@ -51,8 +52,6 @@ function BuyerFavorites() {
   const [buyNowListing, setBuyNowListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-
-  const defaultImage = DEFAULT_LISTING_IMAGE;
 
   const formatSavedTime = (time) => {
     if (!time) return "Saved recently";
@@ -315,7 +314,7 @@ function BuyerFavorites() {
           filteredListings.map((item) => (
             <div className="saved-card" key={item.id}>
               <div className="saved-image">
-                <img src={item.image_url || defaultImage} alt={item.breed || item.livestock_type} />
+                <img src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)} alt={item.breed || item.livestock_type} />
 
                 <span className="saved-type">{item.livestock_type}</span>
 

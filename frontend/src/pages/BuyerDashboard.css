@@ -217,6 +217,12 @@
   gap: 24px;
   margin-bottom: 28px;
   animation: dash-rise 0.4s ease both;
+  /* The finished entrance animation leaves a transform on this header,
+     which makes it its own layer — without a z-index, the hero and stat
+     cards (painted later) covered the notification dropdown opening from
+     here. Lift the whole header above them. */
+  position: relative;
+  z-index: 30;
 }
 
 .buyer-shell .topbar-left {

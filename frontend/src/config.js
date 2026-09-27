@@ -1,4 +1,9 @@
-export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// Set but empty (REACT_APP_API_URL=) means "same origin": requests go to
+// /api/... on the page's own host and the dev server's proxy forwards them
+// to the backend — needed for the local HTTPS setup. Unset falls back to
+// the local backend.
+const envApiUrl = process.env.REACT_APP_API_URL;
+export const API_URL = envApiUrl !== undefined ? envApiUrl : "http://localhost:5000";
 
 // Local, dependency-free fallback avatar (a hotlinked Unsplash photo used to
 // serve as this default and started returning 503s — a bundled data URI

@@ -159,6 +159,7 @@ function AdminDashboard() {
     if (!dashboardData) return [];
     return dashboardData.listingsByCategory.map((item, index) => ({
       label: item.livestock_type,
+      category: item.category,
       value: item.total,
       color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
     }));
@@ -977,7 +978,7 @@ function BarList({ items, onItemClick }) {
     <div className="bar-list">
       {items.map((item) => {
         const percent = Math.round((item.value / total) * 100);
-        const SpeciesIcon = getProductIcon(item.label);
+        const SpeciesIcon = getProductIcon(item.label, item.category);
 
         return (
           <button

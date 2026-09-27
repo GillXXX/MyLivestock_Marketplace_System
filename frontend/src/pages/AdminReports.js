@@ -306,7 +306,7 @@ function AdminReports() {
               <p>No listing data available.</p>
             ) : (
               livestockData.map((item) => {
-                const AnimalIcon = getProductIcon(item.type);
+                const AnimalIcon = getProductIcon(item.type, item.category);
 
                 return (
                 <div className={`perf-card ${item.type.toLowerCase()}`} key={item.type}>
@@ -407,7 +407,7 @@ function AdminReports() {
                   </tr>
                 ) : (
                   monthlyTransactions.map((item) => {
-                    const AnimalIcon = getProductIcon(item.livestock_type);
+                    const AnimalIcon = getProductIcon(item.livestock_type, item.category);
 
                     return (
                     <tr key={item.livestock_type}>

@@ -15,8 +15,8 @@ import { Link, useNavigate } from "react-router-dom";
 import InquiryModal from "../components/InquiryModal";
 import NotificationBell from "../components/NotificationBell";
 import AdminStatCard from "../components/AdminStatCard";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
-import { getProductIcon, formatPrice } from "../utils/productCatalog";
+import { API_URL } from "../config";
+import { getProductIcon, formatPrice, getListingPlaceholder } from "../utils/productCatalog";
 import "./BuyerDashboard.css";
 
 function getGreeting() {
@@ -71,8 +71,6 @@ function BuyerDashboard() {
   const [message, setMessage] = useState("");
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [inquiryListing, setInquiryListing] = useState(null);
-
-  const defaultImage = DEFAULT_LISTING_IMAGE;
 
   useEffect(() => {
     const fetchBuyerDashboard = async () => {
@@ -294,7 +292,7 @@ function BuyerDashboard() {
                 dashboardData.recommended.map((item) => (
                   <div className="recommended-card" key={item.id}>
                     <div className="recommended-image">
-                      <img src={item.image_url || defaultImage} alt={item.breed || item.livestock_type} />
+                      <img src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)} alt={item.breed || item.livestock_type} />
 
                       <span className="recommended-type-badge">{item.livestock_type}</span>
 

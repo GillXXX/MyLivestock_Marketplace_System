@@ -401,7 +401,7 @@ function AdminMapMonitoring() {
               return (
                 <Distribution
                   key={item.livestock_type}
-                  icon={getProductIcon(item.livestock_type)}
+                  icon={getProductIcon(item.livestock_type, item.category)}
                   type={item.livestock_type}
                   label={item.livestock_type}
                   value={item.total}

@@ -23,10 +23,16 @@ import {
   VERUELA_BOUNDARY_GEOJSON,
   VERUELA_BARANGAYS,
 } from "../utils/veruelaGeo";
-import { haversineDistanceKm, formatDistance, useLiveLocation } from "../utils/geo";
+import {
+  haversineDistanceKm,
+  formatDistance,
+  formatKm,
+  remainingAlongRoute,
+  useLiveLocation,
+} from "../utils/geo";
 import { fetchRoute } from "../utils/routing";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
-import { getProductIcon, formatPrice } from "../utils/productCatalog";
+import { API_URL } from "../config";
+import { getProductIcon, formatPrice, getListingPlaceholder } from "../utils/productCatalog";
 import "./BuyerMap.css";
 
 function isRecentlyPosted(time) {
@@ -35,17 +41,47 @@ function isRecentlyPosted(time) {
   return diffDays <= 2;
 }
 
-function formatRoute(route) {
-  if (!route) return null;
+// The phone's GPS accuracy radius in plain words: High = clear outdoor fix,
+// Medium = near buildings/trees, Low = indoors or Wi-Fi/cell-tower only.
+function gpsAccuracyLevel(meters) {
+  if (meters <= 20) return "High";
+  if (meters <= 60) return "Medium";
+  return "Low";
+}
 
-  const km = route.distanceKm.toFixed(1);
+// Within this distance of the farm counts as arrived.
+const ARRIVED_KM = 0.05;
 
-  if (route.isEstimate) {
-    return `~${km} km away (straight-line estimate)`;
-  }
+// Distance-left panel for the selected seller. Updates on every GPS fix.
+function TripPanel({ trip, isLive }) {
+  const mins =
+    !trip.arrived && !trip.isEstimate && trip.durationMin != null
+      ? Math.max(1, Math.round(trip.durationMin))
+      : null;
 
-  const mins = Math.max(1, Math.round(route.durationMin));
-  return `${km} km · ${mins} min${mins === 1 ? "" : "s"} away`;
+  return (
+    <div className={`trip-panel ${trip.arrived ? "arrived" : ""}`} aria-live="polite">
+      {isLive && (
+        <span className="trip-live">
+          <span className="trip-live-dot" aria-hidden="true" />
+          Live
+        </span>
+      )}
+
+      <div className="trip-main">
+        <strong>{trip.arrived ? "You've arrived" : formatKm(trip.distanceKm)}</strong>
+        <span>
+          {trip.arrived
+            ? "at the seller's farm"
+            : trip.isEstimate
+            ? "to the seller (straight line)"
+            : "to the seller"}
+        </span>
+      </div>
+
+      {mins != null && <span className="trip-eta">~{mins} min</span>}
+    </div>
+  );
 }
 
 function BuyerMap() {
@@ -142,8 +178,6 @@ function BuyerMap() {
       Number(item.farm_lng)
     );
   };
-
-  const defaultImage = DEFAULT_LISTING_IMAGE;
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -370,6 +404,42 @@ function BuyerMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedListing?.id, buyerLocation]);
 
+  // What's left of the trip, recomputed on every GPS fix: the road route is
+  // only re-requested every so often, so between requests the buyer's
+  // position is snapped onto the route and the rest of the road is summed.
+  // Travel time shrinks in proportion.
+  const trip = useMemo(() => {
+    const farmLat = selectedListing?.farm_lat;
+    const farmLng = selectedListing?.farm_lng;
+    if (!route || !buyerLocation || farmLat == null || farmLng == null) return null;
+
+    const straightKm = haversineDistanceKm(
+      buyerLocation.lat,
+      buyerLocation.lng,
+      Number(farmLat),
+      Number(farmLng)
+    );
+
+    if (straightKm <= ARRIVED_KM) return { arrived: true, distanceKm: straightKm };
+
+    if (route.isEstimate) {
+      return { distanceKm: straightKm, durationMin: null, isEstimate: true };
+    }
+
+    const left = remainingAlongRoute(route.coordinates, buyerLocation);
+    if (!left) return { distanceKm: straightKm, durationMin: null, isEstimate: true };
+
+    // If the buyer has wandered off the road line, include the gap back to it.
+    const distanceKm = left.km + (left.offRouteKm > 0.03 ? left.offRouteKm : 0);
+    const share = route.distanceKm > 0 ? Math.min(1, distanceKm / route.distanceKm) : 1;
+
+    return {
+      distanceKm,
+      durationMin: route.durationMin != null ? route.durationMin * share : null,
+      isEstimate: false,
+    };
+  }, [route, buyerLocation, selectedListing?.farm_lat, selectedListing?.farm_lng]);
+
   const handleViewDetails = (item) => {
     setDetailsListing(item);
 
@@ -458,7 +528,7 @@ function BuyerMap() {
                     Nearest first
                   </button>
                 ) : (
-                  (locationStatus === "denied" || locationStatus === "unsupported") && (
+                  ["denied", "unsupported", "insecure"].includes(locationStatus) && (
                     <p className="location-permission-hint">
                       <MapPin size={13} />
                       Enable location access to sort sellers by distance.
@@ -488,7 +558,7 @@ function BuyerMap() {
                         onClick={() => handleSelectListing(item)}
                       >
                         <div className="seller-card-image">
-                          <img src={item.image_url || defaultImage} alt={item.breed || item.livestock_type} />
+                          <img src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)} alt={item.breed || item.livestock_type} />
                           {isRecentlyPosted(item.created_at) && (
                             <span className="seller-new-badge">
                               <Sparkles size={10} />
@@ -568,7 +638,22 @@ function BuyerMap() {
                 Cancel
               </button>
             </div>
-          ) : liveLocation ? null : manualLocation ? (
+          ) : liveLocation ? (
+            <div className="location-banner live">
+              <span className="live-location-dot" aria-hidden="true" />
+              <span>
+                <strong>Live location</strong> — updates as you move
+              </span>
+              {liveLocation.accuracy != null && (
+                <span
+                  className={`gps-accuracy ${gpsAccuracyLevel(liveLocation.accuracy).toLowerCase()}`}
+                  title={`GPS accuracy: within about ${liveLocation.accuracy} m`}
+                >
+                  Accuracy: {gpsAccuracyLevel(liveLocation.accuracy)}
+                </span>
+              )}
+            </div>
+          ) : manualLocation ? (
             <div className="location-banner">
               <MapPin size={16} />
               <span>Using the location you set on the map.</span>
@@ -580,13 +665,17 @@ function BuyerMap() {
               </button>
             </div>
           ) : (
-            (locationStatus === "denied" || locationStatus === "unsupported") && (
+            ["denied", "unsupported", "insecure", "unavailable"].includes(locationStatus) && (
               <div className="location-banner warn">
                 <MapPin size={16} />
                 <span>
-                  {window.isSecureContext
-                    ? "Location access is blocked."
-                    : "GPS is blocked on this connection (not HTTPS)."}{" "}
+                  {locationStatus === "insecure"
+                    ? "GPS is blocked on this connection (not HTTPS)."
+                    : locationStatus === "unavailable"
+                    ? "Can't get a GPS signal right now."
+                    : locationStatus === "unsupported"
+                    ? "This browser can't share your location."
+                    : "Location access is blocked — allow it in your browser settings."}{" "}
                   Set your location on the map to see the route and distance to sellers.
                 </span>
                 <button type="button" onClick={() => setPickingLocation(true)}>
@@ -635,7 +724,7 @@ function BuyerMap() {
           {selectedListing && (
             <div className="selected-seller-card">
               <img
-                src={selectedListing.image_url || defaultImage}
+                src={selectedListing.image_url || getListingPlaceholder(selectedListing.livestock_type, selectedListing.category)}
                 alt={selectedListing.breed || selectedListing.livestock_type}
               />
 
@@ -667,20 +756,15 @@ function BuyerMap() {
                 </strong>
 
                 <small>Seller: {selectedListing.seller_name}</small>
-                {route ? (
-                  <span className={`distance-badge ${route.isEstimate ? "estimate" : ""}`}>
+                {!trip && getDistanceKm(selectedListing) != null && (
+                  <span className="distance-badge">
                     <Navigation size={12} />
-                    {formatRoute(route)}
+                    {formatDistance(getDistanceKm(selectedListing))}
                   </span>
-                ) : (
-                  getDistanceKm(selectedListing) != null && (
-                    <span className="distance-badge">
-                      <Navigation size={12} />
-                      {formatDistance(getDistanceKm(selectedListing))}
-                    </span>
-                  )
                 )}
               </div>
+
+              {trip && <TripPanel trip={trip} isLive={Boolean(liveLocation)} />}
 
               <div className="selected-actions">
                 <button

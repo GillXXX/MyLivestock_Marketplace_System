@@ -19,7 +19,7 @@ import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
 import BuyNowModal from "../components/BuyNowModal";
 import { haversineDistanceKm, formatDistance, useBuyerLocation } from "../utils/geo";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
+import { API_URL } from "../config";
 import {
   LIVESTOCK_TYPES,
   FARM_PRODUCT_TYPES,
@@ -27,6 +27,7 @@ import {
   getProductIcon,
   formatPrice,
   formatQuantity,
+  getListingPlaceholder,
 } from "../utils/productCatalog";
 import "./Marketplace.css";
 
@@ -68,8 +69,6 @@ function Marketplace() {
       Number(item.farm_lng)
     );
   };
-
-  const defaultImage = DEFAULT_LISTING_IMAGE;
 
   const addToFavorites = async (listingId) => {
     try {
@@ -394,7 +393,7 @@ function Marketplace() {
           </div>
 
           {sortBy === "Nearest Location" &&
-            (locationStatus === "denied" || locationStatus === "unsupported") && (
+            ["denied", "unsupported", "insecure"].includes(locationStatus) && (
               <p className="location-permission-hint">
                 <MapPin size={13} />
                 Enable location access in your browser to sort by distance.
@@ -417,7 +416,7 @@ function Marketplace() {
                 <div className="market-card" key={item.id}>
                   <div className="market-image">
                     <img
-                      src={item.image_url || defaultImage}
+                      src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)}
                       alt={item.breed || item.livestock_type}
                     />
 

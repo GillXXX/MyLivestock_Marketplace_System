@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { X, Send, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
-import { formatPrice } from "../utils/productCatalog";
+import { API_URL } from "../config";
+import { formatPrice, getListingPlaceholder } from "../utils/productCatalog";
 import "./InquiryModal.css";
-
-const DEFAULT_IMAGE = DEFAULT_LISTING_IMAGE;
 
 function InquiryModal({ listing, onClose }) {
   const navigate = useNavigate();
@@ -86,7 +84,7 @@ function InquiryModal({ listing, onClose }) {
             </p>
 
             <div className="inquiry-listing-preview">
-              <img src={listing.image_url || DEFAULT_IMAGE} alt={listing.breed || listing.livestock_type} />
+              <img src={listing.image_url || getListingPlaceholder(listing.livestock_type, listing.category)} alt={listing.breed || listing.livestock_type} />
 
               <div>
                 <strong>{listing.breed || listing.livestock_type}</strong>

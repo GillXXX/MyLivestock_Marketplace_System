@@ -1,10 +1,7 @@
 import { X, BadgeCheck, MapPin, FileText, MessageCircle, ShoppingCart } from "lucide-react";
-import { DEFAULT_LISTING_IMAGE } from "../config";
-import { isLivestock, formatPrice, formatQuantity } from "../utils/productCatalog";
+import { isLivestock, formatPrice, formatQuantity, getListingPlaceholder } from "../utils/productCatalog";
 import { useNavigate } from "react-router-dom";
 import "./ListingDetailsModal.css";
-
-const DEFAULT_IMAGE = DEFAULT_LISTING_IMAGE;
 
 function parseDocuments(documents) {
   if (!documents) return [];
@@ -58,7 +55,7 @@ function ListingDetailsModal({ listing, onClose, onInquire, onBuyNow }) {
       <div className="details-modal" onClick={(e) => e.stopPropagation()}>
         <div className="details-modal-media">
           <div className="details-modal-media-scroll">
-            <img src={listing.image_url || DEFAULT_IMAGE} alt={title} />
+            <img src={listing.image_url || getListingPlaceholder(listing.livestock_type, listing.category)} alt={title} />
           </div>
 
           <button className="details-modal-close" type="button" onClick={onClose}>

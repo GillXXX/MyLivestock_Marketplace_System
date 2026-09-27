@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { ArrowLeft, MapPin, BadgeCheck, Navigation } from "lucide-react";
-import { getProductIcon, formatPrice } from "../utils/productCatalog";
+import { getProductIcon, formatPrice, getListingPlaceholder } from "../utils/productCatalog";
 
 import { useNavigate, useParams } from "react-router-dom";
 import ListingDetailsModal from "../components/ListingDetailsModal";
@@ -10,10 +10,8 @@ import BuyNowModal from "../components/BuyNowModal";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
 import { haversineDistanceKm, formatDistance, useBuyerLocation } from "../utils/geo";
-import { API_URL, DEFAULT_LISTING_IMAGE } from "../config";
+import { API_URL } from "../config";
 import "./SellerProfile.css";
-
-const DEFAULT_IMAGE = DEFAULT_LISTING_IMAGE;
 
 function SellerProfile() {
   const { id } = useParams();
@@ -198,7 +196,7 @@ function SellerProfile() {
               return (
               <div className="seller-listing-card" key={item.id}>
                 <div className="seller-listing-image">
-                  <img src={item.image_url || DEFAULT_IMAGE} alt={item.breed || item.livestock_type} />
+                  <img src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)} alt={item.breed || item.livestock_type} />
 
                   <span className="seller-listing-type">
                     <TypeIcon size={12} />
