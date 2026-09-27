@@ -749,3 +749,281 @@
     margin-left: 0;
   }
 }
+/* PHONE — minimal pass
+   Everything below is scoped under .map-admin-page (admin CSS is global).
+   Stat cards keep their size (2x2 above); the map goes edge to edge and
+   the chrome that repeats the stat cards is dropped. */
+
+.map-admin-page .map-back-btn {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  /* Header: one row — back, title, icon-only refresh */
+
+  .map-admin-page .map-topbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .map-admin-page .map-title-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .map-admin-page .map-title-group > div {
+    min-width: 0;
+  }
+
+  .map-admin-page .map-topbar .eyebrow,
+  .map-admin-page .map-topbar p,
+  .map-admin-page .last-updated {
+    display: none;
+  }
+
+  .map-admin-page .map-topbar h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The label is a bare text node, so font-size: 0 hides it and the
+     icon keeps its own size */
+  .map-admin-page .refresh-pill {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .map-admin-page .map-kpi-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  /* Filters: no panel; full-width search, two selects side by side */
+
+  .map-admin-page .map-filter-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    margin-bottom: 12px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .map-admin-page .map-search-box {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .map-admin-page .map-filter-panel select {
+    height: 40px;
+    min-width: 0;
+    border-radius: 12px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
+  .map-admin-page .map-search-box input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  /* Map: edge to edge (cancels the page's 16px side padding); the heading
+     and live badge go, and the "not pinned" hint repeats the Pinned stat */
+
+  .map-admin-page .map-main-grid {
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .map-admin-page .map-card-large {
+    margin: 0 -16px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .map-admin-page .map-card-large::after,
+  .map-admin-page .map-card-large .card-heading,
+  .map-admin-page .map-card-large .legend-hint {
+    display: none;
+  }
+
+  .map-admin-page .map-card-large .leaflet-map-container {
+    height: clamp(320px, 55vh, 480px) !important;
+    height: clamp(320px, 55svh, 480px) !important;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .map-admin-page .map-card-large .map-legend-bar {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 16px 0;
+  }
+
+  .map-admin-page .map-legend-bar span {
+    font-size: 12px;
+  }
+
+  /* Card headings: title (+ count) only */
+
+  .map-admin-page .card-heading {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .map-admin-page .card-heading p {
+    display: none;
+  }
+
+  .map-admin-page .card-heading h3 {
+    font-size: 15px;
+  }
+
+  /* Seller records: a divided list that flows with the page */
+
+  .map-admin-page .map-main-grid > aside {
+    max-height: none;
+  }
+
+  .map-admin-page .location-records {
+    gap: 0;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .map-admin-page .location-record {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+  }
+
+  .map-admin-page .location-record:last-child {
+    border-bottom: none;
+  }
+
+  .map-admin-page .record-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .map-admin-page .record-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .map-admin-page .record-info strong {
+    display: block;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .map-admin-page .record-info p {
+    margin: 2px 0 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .map-admin-page .record-tags {
+    gap: 4px 6px;
+  }
+
+  .map-admin-page .record-tags span {
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  .map-admin-page .record-action {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .map-admin-page .status-active,
+  .map-admin-page .status-pending {
+    padding: 4px 9px;
+    font-size: 10.5px;
+  }
+
+  /* Insights: tighter rows */
+
+  .map-admin-page .map-insights-grid {
+    gap: 14px;
+  }
+
+  .map-admin-page .distribution-item {
+    margin-top: 12px;
+  }
+
+  .map-admin-page .distribution-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .map-admin-page .distribution-track {
+    height: 8px;
+  }
+
+  .map-admin-page .alert-row {
+    gap: 10px;
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .map-admin-page .alert-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .map-admin-page .alert-row p {
+    font-size: 12.5px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .map-admin-page .map-back-btn:hover,
+  .map-admin-page .location-record.clickable:hover,
+  .map-admin-page .location-record.clickable:hover .record-icon,
+  .map-admin-page .alert-row:hover {
+    transform: none;
+  }
+}

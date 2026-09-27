@@ -11,14 +11,16 @@ import {
   X,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AdminStatCard from "../components/AdminStatCard";
+import useGoBack from "../utils/useGoBack";
 import { API_URL } from "../config";
 import { isWeakPassword, PASSWORD_HINT } from "../utils/password";
 import "./AdminStaff.css";
 
 function AdminStaff() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [staff, setStaff] = useState([]);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
@@ -205,9 +207,9 @@ function AdminStaff() {
     <div className="enterprise-staff-page">
       <header className="staff-page-header">
         <div className="header-left">
-          <Link to="/admin-dashboard" className="back-button">
+          <button type="button" className="back-button" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO ADMINISTRATION</span>

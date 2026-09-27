@@ -743,36 +743,31 @@
     gap: 8px;
   }
 
+  /* Count over name, centered, no icon (same as the admin page) — the
+     icon left too little room and cut names to "Transaction U…" */
   .farmer-notifications-page .notif-category {
-    padding: 10px;
+    padding: 8px 6px;
     border-radius: 12px;
+    text-align: center;
   }
 
   .farmer-notifications-page .notif-category-top {
-    align-items: center;
-    margin-bottom: 6px;
+    justify-content: center;
+    margin-bottom: 2px;
   }
 
   .farmer-notifications-page .notif-category-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 9px;
-  }
-
-  .farmer-notifications-page .notif-category-icon svg {
-    width: 15px;
-    height: 15px;
+    display: none;
   }
 
   .farmer-notifications-page .notif-category-count {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .farmer-notifications-page .notif-category-title {
-    font-size: 10.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 10px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
 
   /* Toolbar: no panel; full-width search, two filters side by side */

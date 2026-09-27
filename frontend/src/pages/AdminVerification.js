@@ -18,16 +18,21 @@ import {
   UserCircle,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
-import { getDocumentRequirement } from "../utils/livestockDocRequirements";
+import {
+  getDocumentRequirement,
+  LIVESTOCK_DOCUMENT_REQUIREMENT,
+} from "../utils/livestockDocRequirements";
 import { LIVESTOCK_TYPES, getProductIcon } from "../utils/productCatalog";
 import { API_URL } from "../config";
 import "./AdminVerification.css";
 
 function AdminVerification() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isStaff = currentUser.role === "mao_staff";
@@ -43,6 +48,7 @@ function AdminVerification() {
   const [searchText, setSearchText] = useState("");
   const [documentFilter, setDocumentFilter] = useState("All Document Types");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [onlyMissing, setOnlyMissing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedFarmer, setSelectedFarmer] = useState(null);
@@ -122,6 +128,12 @@ function AdminVerification() {
     }
   };
 
+  // A live-animal listing that hasn't attached its required document(s)
+  const isMissingDocuments = (doc) => {
+    const requirement = getDocumentRequirement(doc.livestock_type, doc.category);
+    return Boolean(requirement) && getDocumentUrls(doc).length < requirement.minDocuments;
+  };
+
   const handleExport = () => {
     exportToCsv("verification-records.csv", [
       { label: "Document ID", value: (d) => `DOC-${d.id}` },
@@ -160,8 +172,12 @@ function AdminVerification() {
     const matchesStatus =
       statusFilter === "All Status" || displayStatus === statusFilter;
 
-    return matchesSearch && matchesDocument && matchesStatus;
+    const matchesMissing = !onlyMissing || isMissingDocuments(doc);
+
+    return matchesSearch && matchesDocument && matchesStatus && matchesMissing;
   });
+
+  const missingCount = documents.filter(isMissingDocuments).length;
 
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading verification records...</h2>;
@@ -175,9 +191,9 @@ function AdminVerification() {
     <div className="verification-page">
       <header className="verification-topbar">
         <div className="top-left">
-          <Link to="/admin-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span>MAO Document Control</span>
@@ -264,6 +280,22 @@ function AdminVerification() {
           </select>
         </div>
 
+        {/* Phone-only quick filter: jump straight to the rows that need
+            action (live-animal listings without their certificate). */}
+        {(missingCount > 0 || onlyMissing) && (
+          <button
+            type="button"
+            className={`missing-doc-chip ${onlyMissing ? "active" : ""}`}
+            onClick={() => setOnlyMissing((prev) => !prev)}
+            aria-pressed={onlyMissing}
+          >
+            <AlertTriangle size={14} />
+            Incomplete documents
+            <span className="missing-doc-chip-count">{missingCount}</span>
+            {onlyMissing && <X size={14} className="missing-doc-chip-clear" />}
+          </button>
+        )}
+
         <div className="table-responsive">
           <table className="verification-table">
             <thead>
@@ -321,6 +353,14 @@ function AdminVerification() {
                           <div>
                             <strong>{doc.farmer_name}</strong>
                             <p>Registered Farmer</p>
+                            {/* Phone-only: surfaces the "0/1 required" warning
+                                right under the name */}
+                            {isMissingDocuments(doc) && (
+                              <span className="missing-doc-badge">
+                                <span className="missing-doc-dot" />
+                                Certificate not submitted
+                              </span>
+                            )}
                           </div>
                         </button>
                       </td>
@@ -433,6 +473,33 @@ function AdminVerification() {
           {VERIFICATION_REQUIREMENTS.map((req) => (
             <GuideCard key={req.type} {...req} />
           ))}
+        </div>
+
+        {/* Phone-only: every animal type has the same rule, so one line
+            replaces the grid there. Built from the shared requirement so it
+            can't drift from what's enforced. */}
+        <div className="guide-phone-note">
+          <span className="guide-phone-note-title">
+            <ShieldCheck size={14} />
+            Document Requirements
+          </span>
+
+          <dl>
+            <div>
+              <dt>Livestock</dt>
+              <dd>
+                {LIVESTOCK_DOCUMENT_REQUIREMENT.documents[0]}
+                <span className="req-tag required">Required</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Farm products</dt>
+              <dd>
+                Supporting documents
+                <span className="req-tag optional">Optional</span>
+              </dd>
+            </div>
+          </dl>
         </div>
       </section>
 

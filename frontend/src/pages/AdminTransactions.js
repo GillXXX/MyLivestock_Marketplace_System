@@ -15,8 +15,9 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
@@ -25,6 +26,7 @@ import "./AdminTransactions.css";
 
 function AdminTransactions() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState({
@@ -121,9 +123,9 @@ function AdminTransactions() {
     <div className="admin-transactions-page">
       <header className="transactions-top">
         <div className="title-area">
-          <Link to="/admin-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span>MAO Transaction Monitoring</span>

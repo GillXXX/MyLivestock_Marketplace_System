@@ -21,8 +21,9 @@ import {
   Receipt,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { exportSectionsToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
@@ -31,6 +32,7 @@ import "./AdminReports.css";
 
 function AdminReports() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [metrics, setMetrics] = useState({
     totalFarmers: 0,
@@ -192,9 +194,9 @@ function AdminReports() {
   return (
     <div className="reports-page">
       <header className="reports-hero">
-        <Link to="/admin-dashboard" className="back-btn">
+        <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={20} />
-        </Link>
+        </button>
 
         <div>
           <span className="eyebrow">MAO Monitoring and Analytics</span>

@@ -155,8 +155,15 @@ function FarmerNotifications() {
     }
   };
 
+  // "Sep 27, 3:04 PM" — short enough to fit beside the type on a phone
+  // (the old full toLocaleString() got cut off there).
   const formatTime = (time) => {
-    return new Date(time).toLocaleString();
+    return new Date(time).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   if (loading) {

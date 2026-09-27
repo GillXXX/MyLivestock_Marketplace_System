@@ -64,7 +64,7 @@
   max-width: 720px;
 }
 
-.export-btn {
+.verification-page .export-btn {
   height: 50px;
   border: none;
   border-radius: 15px;
@@ -785,7 +785,7 @@
     font-size: 13px;
   }
 
-  .export-btn {
+  .verification-page .export-btn {
     height: 42px;
     padding: 0 14px;
     font-size: 13px;
@@ -844,5 +844,575 @@
 
   .guide-card {
     padding: 14px;
+  }
+}
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.verification-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Scoped under .verification-page (admin CSS is global and class names
+   like .back-btn/.export-btn/.farmer-cell/.avatar repeat across pages).
+   Stat cards keep their design; the queue table becomes a divided list. */
+
+@media (max-width: 768px) {
+  /* Header: back + title + compact Export button on one row */
+
+  .verification-page .verification-topbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .verification-page .top-left {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .verification-page .top-left > div {
+    min-width: 0;
+  }
+
+  .verification-page .verification-topbar span,
+  .verification-page .verification-topbar p {
+    display: none;
+  }
+
+  .verification-page .verification-topbar h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .verification-page .export-btn {
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 12px;
+    font-size: 12.5px;
+  }
+
+  /* Stat cards: same design, 2x2 instead of one tall column */
+
+  .verification-page .verification-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Queue panel: no box, slim title */
+
+  .verification-page .verification-panel {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .verification-page .panel-header h3 {
+    font-size: 15px;
+  }
+
+  .verification-page .panel-header p {
+    display: none;
+  }
+
+  /* Toolbar: full-width search, two filters side by side */
+
+  .verification-page .verification-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 10px 0 8px;
+    padding: 0;
+  }
+
+  .verification-page .verification-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+    background: white;
+  }
+
+  .verification-page .verification-search input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .verification-page .verification-toolbar select {
+    height: 40px;
+    min-width: 0;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: white;
+    font-size: 13px;
+  }
+
+  /* Table → divided list. Each row:
+       [J] Juan Dela Cruz                    [Pending]
+       [Swine]                                  DOC-12
+       Barangay health certificate            5/2/2026
+       📄 cert.pdf  1/1 required
+       [👁] [⬇] [✓] [✕]                                  */
+
+  .verification-page .table-responsive {
+    overflow: visible;
+  }
+
+  .verification-page .verification-table thead {
+    display: none;
+  }
+
+  .verification-page .verification-table,
+  .verification-page .verification-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .verification-page .verification-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .verification-page .verification-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .verification-page .verification-table tbody tr:hover {
+    background: none;
+  }
+
+  .verification-page .verification-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    font-size: 13px;
+  }
+
+  .verification-page .verification-table td:only-child {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    padding: 20px 0;
+  }
+
+  /* farmer */
+  .verification-page .verification-table td:nth-child(2) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  /* status */
+  .verification-page .verification-table td:nth-child(7) {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  /* product pill */
+  .verification-page .verification-table td:nth-child(3) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* DOC id */
+  .verification-page .verification-table td:nth-child(1) {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: right;
+    font-size: 12px;
+  }
+
+  /* document type */
+  .verification-page .verification-table td:nth-child(4) {
+    grid-column: 1;
+    grid-row: 3;
+    color: var(--muted);
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* date */
+  .verification-page .verification-table td:nth-child(6) {
+    grid-column: 2;
+    grid-row: 3;
+    text-align: right;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* file + completeness */
+  .verification-page .verification-table td:nth-child(5) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* actions */
+  .verification-page .verification-table td:nth-child(8) {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    padding-top: 4px;
+  }
+
+  .verification-page .farmer-cell {
+    min-width: 0;
+  }
+
+  .verification-page .farmer-cell > div {
+    min-width: 0;
+  }
+
+  .verification-page .farmer-cell strong {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .verification-page .farmer-cell p {
+    display: none;
+  }
+
+  .verification-page .file-cell {
+    flex: 1;
+    min-width: 0;
+    font-size: 12.5px;
+  }
+
+  .verification-page .file-cell svg {
+    flex-shrink: 0;
+  }
+
+  .verification-page .file-cell span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .verification-page .doc-completeness {
+    flex-shrink: 0;
+    margin-top: 0;
+  }
+
+  .verification-page .doc-status {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .verification-page .verification-actions button {
+    width: 44px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  /* Requirements guide: one compact row per type, no document list */
+
+  .verification-page .verification-guide {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .verification-page .verification-guide-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .verification-page .verification-guide-header h3 {
+    font-size: 15px;
+  }
+
+  .verification-page .verification-guide-header p {
+    display: none;
+  }
+
+  .verification-page .guide-count-pill {
+    flex-shrink: 0;
+  }
+
+  .verification-page .guide-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .verification-page .guide-card {
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .verification-page .guide-card::after,
+  .verification-page .guide-doc-list,
+  .verification-page .guide-logic-pill {
+    display: none;
+  }
+
+  .verification-page .guide-card-top {
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .verification-page .guide-card-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .verification-page .guide-card strong {
+    margin: 0;
+    font-size: 12.5px;
+  }
+
+  /* Farmer details pop-up becomes a bottom sheet */
+
+  .verification-page .doc-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .verification-page .doc-modal {
+    max-width: none;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 16px calc(16px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.97);
+    animation: verification-sheet-up 0.25s ease both;
+  }
+
+  .verification-page .doc-modal::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .verification-page .doc-modal-close {
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .verification-page .doc-modal-head {
+    padding-right: 44px;
+  }
+
+  .verification-page .doc-modal-view-all {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+
+/* PHONE-ONLY ADDITIONS: missing-document badge + filter chip, and a
+   one-line requirements note in place of the guide grid. Hidden on
+   desktop, which keeps its table column and full guide cards. */
+
+.verification-page .missing-doc-chip,
+.verification-page .missing-doc-badge,
+.verification-page .guide-phone-note {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Long farmer names end in "…" instead of running under the status */
+  .verification-page .farmer-cell-link {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Status line under the farmer's name — quiet text + dot, not a pill */
+  .verification-page .missing-doc-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    color: #b42318;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .verification-page .missing-doc-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #d92d20;
+    box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.15);
+  }
+
+  /* The same warning lower in the row would now repeat it */
+  .verification-page .doc-completeness.incomplete {
+    display: none;
+  }
+
+  /* Filter chip — neutral outline like the other filters; brand green
+     when applied, with the count as a small red badge */
+  .verification-page .missing-doc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    margin: 0 0 12px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    color: var(--primary-dark);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .verification-page .missing-doc-chip svg {
+    flex-shrink: 0;
+    color: #b42318;
+  }
+
+  .verification-page .missing-doc-chip.active {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: white;
+  }
+
+  .verification-page .missing-doc-chip.active svg {
+    color: #fda29b;
+  }
+
+  .verification-page .missing-doc-chip-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: #d92d20;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .verification-page .missing-doc-chip .missing-doc-chip-clear {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Requirements guide → compact reference panel (every animal type has
+     the same rule, so one row replaces the six cards) */
+  .verification-page .verification-guide-header,
+  .verification-page .guide-grid {
+    display: none;
+  }
+
+  .verification-page .verification-guide {
+    padding: 14px;
+  }
+
+  .verification-page .guide-phone-note {
+    display: block;
+  }
+
+  .verification-page .guide-phone-note-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .verification-page .guide-phone-note-title svg {
+    color: var(--primary);
+  }
+
+  .verification-page .guide-phone-note dl {
+    margin: 0;
+  }
+
+  .verification-page .guide-phone-note dl > div {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .verification-page .guide-phone-note dt {
+    color: var(--primary-dark);
+    font-size: 12.5px;
+    font-weight: 800;
+  }
+
+  .verification-page .guide-phone-note dd {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--text);
+    font-size: 12.5px;
+  }
+
+  .verification-page .req-tag {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+
+  .verification-page .req-tag.required {
+    background: rgba(15, 61, 46, 0.08);
+    color: var(--primary);
+  }
+
+  .verification-page .req-tag.optional {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+}
+
+@keyframes verification-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .verification-page .back-btn:hover,
+  .verification-page .export-btn:hover,
+  .verification-page .verification-actions button:hover,
+  .verification-page .guide-card:hover,
+  .verification-page .guide-card:hover .guide-card-icon {
+    transform: none;
   }
 }

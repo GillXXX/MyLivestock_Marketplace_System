@@ -13,7 +13,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import LeafletMap from "../utils/LeafletMap";
@@ -31,6 +32,7 @@ const POLL_INTERVAL_MS = 15000;
 
 function AdminMapMonitoring() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
   const mapRef = useRef(null);
 
   const [locations, setLocations] = useState([]);
@@ -186,9 +188,9 @@ function AdminMapMonitoring() {
     <div className="map-admin-page">
       <header className="map-topbar">
         <div className="map-title-group">
-          <Link to="/admin-dashboard" className="map-back-btn">
+          <button type="button" className="map-back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO LOCATION MONITORING</span>

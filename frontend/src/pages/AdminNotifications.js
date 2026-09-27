@@ -14,13 +14,15 @@ import {
   Search,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminNotifications.css";
 
 function AdminNotifications() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isStaff = currentUser.role === "mao_staff";
@@ -189,8 +191,15 @@ function AdminNotifications() {
     return "gold";
   };
 
+  // "Sep 27, 3:04 PM" — short enough to fit beside the type on a phone
+  // (the old full toLocaleString() got cut off there).
   const formatTime = (time) => {
-    return new Date(time).toLocaleString();
+    return new Date(time).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   const visibleCategories = CATEGORY_DEFS.filter(
@@ -208,9 +217,9 @@ function AdminNotifications() {
   return (
     <div className="admin-notifications-page">
       <div className="notifications-header">
-        <Link to="/admin-dashboard" className="back-btn">
+        <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={20} />
-        </Link>
+        </button>
 
         <div>
           <span className="notif-eyebrow">MAO ADMIN CENTER</span>

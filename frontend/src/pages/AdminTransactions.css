@@ -567,3 +567,271 @@
     font-size: 12.5px;
   }
 }
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.admin-transactions-page .back-btn {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Stat cards keep their size (already 2x2 above); only the chrome, the
+   workflow overview and the records table are simplified. */
+
+@media (max-width: 768px) {
+  /* Header: back + title, full-width Export under it */
+
+  .admin-transactions-page .title-area {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .admin-transactions-page .title-area span,
+  .admin-transactions-page .title-area p {
+    display: none;
+  }
+
+  .admin-transactions-page .title-area h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  .admin-transactions-page .transactions-top {
+    align-items: stretch;
+  }
+
+  .admin-transactions-page .export-btn {
+    width: 100%;
+    height: 44px;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  /* Structured Trading Workflow: one-row stepper, no descriptions */
+
+  .admin-transactions-page .workflow-overview {
+    padding: 14px 12px;
+    border-radius: 18px;
+  }
+
+  .admin-transactions-page .workflow-overview h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .admin-transactions-page .workflow-overview > div > p,
+  .admin-transactions-page .workflow-step p,
+  .admin-transactions-page .workflow-step-number,
+  .admin-transactions-page .workflow-step::after,
+  .admin-transactions-page .workflow-chevron {
+    display: none;
+  }
+
+  .admin-transactions-page .workflow-steps {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .admin-transactions-page .workflow-step {
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    text-align: center;
+  }
+
+  .admin-transactions-page .workflow-step-top {
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .admin-transactions-page .workflow-step-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
+
+  .admin-transactions-page .workflow-step-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .admin-transactions-page .workflow-step strong {
+    font-size: 10.5px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  /* Toolbar: no panel; full-width search, two filters side by side */
+
+  .admin-transactions-page .transaction-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .admin-transactions-page .transaction-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .admin-transactions-page .transaction-search input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .admin-transactions-page .transaction-toolbar select {
+    height: 40px;
+    min-width: 0;
+    border-radius: 12px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  /* Records: drop the outer panel; the table becomes a divided list —
+       [JS] Seller name / Buyer: name        [PENDING]
+       Swine                                   ₱12,000
+                                               2 head
+       ▬▬ ▬▬ ▬▬ ▬▬  Negotiation
+       TRX-12                                 9/20/2026 */
+
+  .admin-transactions-page .transactions-card {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .admin-transactions-page .card-header {
+    margin-bottom: 4px;
+  }
+
+  .admin-transactions-page .card-header p {
+    display: none;
+  }
+
+  .admin-transactions-page .table-responsive {
+    overflow: visible;
+  }
+
+  .admin-transactions-page .transactions-table thead {
+    display: none;
+  }
+
+  .admin-transactions-page .transactions-table,
+  .admin-transactions-page .transactions-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-transactions-page .transactions-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "parties status"
+      "product amount"
+      "flow flow"
+      "trx date";
+    align-items: center;
+    gap: 6px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  }
+
+  .admin-transactions-page .transactions-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .admin-transactions-page .transactions-table td,
+  .admin-transactions-page .transactions-table tbody tr:hover td {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .admin-transactions-page .transactions-table td:nth-child(1) { grid-area: trx; }
+  .admin-transactions-page .transactions-table td:nth-child(2) { grid-area: product; font-weight: 800; color: #071f16; }
+  .admin-transactions-page .transactions-table td:nth-child(3) { grid-area: parties; }
+  .admin-transactions-page .transactions-table td:nth-child(4) { grid-area: amount; text-align: right; }
+  .admin-transactions-page .transactions-table td:nth-child(5) { grid-area: date; text-align: right; color: #98a2b3; font-size: 11.5px; }
+  .admin-transactions-page .transactions-table td:nth-child(6) {
+    grid-area: flow;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .admin-transactions-page .transactions-table td:nth-child(7) { grid-area: status; }
+
+  .admin-transactions-page .transactions-table td[colspan] {
+    grid-area: auto;
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #98a2b3;
+  }
+
+  /* "Marketplace trade" repeats on every row */
+  .admin-transactions-page .transactions-table td:nth-child(1) small {
+    display: none;
+  }
+
+  .admin-transactions-page .trx-id {
+    font-size: 11.5px;
+    color: #98a2b3 !important;
+  }
+
+  .admin-transactions-page .party-cell {
+    min-width: 0;
+  }
+
+  .admin-transactions-page .party-cell > div {
+    min-width: 0;
+  }
+
+  .admin-transactions-page .party-cell strong,
+  .admin-transactions-page .party-cell small {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-transactions-page .party-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .admin-transactions-page .workflow-box {
+    margin-bottom: 0;
+  }
+
+  .admin-transactions-page .trx-status {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .admin-transactions-page .workflow-step:hover,
+  .admin-transactions-page .workflow-step:hover .workflow-step-icon {
+    transform: none;
+  }
+}

@@ -711,3 +711,238 @@
     height: 34px;
   }
 }
+
+/* PHONE — minimal inbox
+   Scoped under .admin-notifications-page. Stat cards keep their size and
+   design; they just sit 2x2 (the 560px rule above stacks them). */
+
+.admin-notifications-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  /* Header: title only */
+
+  .admin-notifications-page .notif-eyebrow,
+  .admin-notifications-page .notifications-header p {
+    display: none;
+  }
+
+  .admin-notifications-page .notifications-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  .admin-notifications-page .notification-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Categories: not all of them repeat the stat cards, so they stay —
+     as a slim one-row strip (count + title) with no panel */
+
+  .admin-notifications-page .notification-categories-panel {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* The panels' gold top stripe (::after) would float as a stray line
+     now that the panels themselves are hidden */
+  .admin-notifications-page .notif-category-header,
+  .admin-notifications-page .notif-category-text,
+  .admin-notifications-page .notif-category-icon,
+  .admin-notifications-page .notif-category::before,
+  .admin-notifications-page .notification-categories-panel::after,
+  .admin-notifications-page .notifications-list-card::after {
+    display: none;
+  }
+
+  .admin-notifications-page .notif-category-strip {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .admin-notifications-page .notif-category {
+    padding: 8px 6px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .admin-notifications-page .notif-category-top {
+    justify-content: center;
+    margin-bottom: 2px;
+  }
+
+  .admin-notifications-page .notif-category-count {
+    font-size: 17px;
+  }
+
+  .admin-notifications-page .notif-category-title {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  /* Toolbar: no panel; full-width search, two filters side by side */
+
+  .admin-notifications-page .notification-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .admin-notifications-page .notification-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .admin-notifications-page .notification-toolbar select {
+    height: 40px;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  /* Inbox: drop the outer panel, keep a slim header */
+
+  .admin-notifications-page .notifications-list-card {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .admin-notifications-page .notifications-card-header {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .admin-notifications-page .notifications-card-header h3 {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-notifications-page .notifications-card-header > div {
+    min-width: 0;
+  }
+
+  .admin-notifications-page .notifications-card-header p {
+    display: none;
+  }
+
+  /* Long emails / names in a title or message wrap instead of spilling */
+  .admin-notifications-page .notification-content h4,
+  .admin-notifications-page .notification-content p {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-notifications-page .mark-all-btn {
+    flex-shrink: 0;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+  }
+
+  .admin-notifications-page .notification-list {
+    gap: 8px;
+  }
+
+  /* Row: [icon] [type · time / title / message] [read / delete] */
+
+  .admin-notifications-page .notification-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-notifications-page .notification-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .admin-notifications-page .notification-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .admin-notifications-page .notification-meta {
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .admin-notifications-page .notification-type-chip {
+    flex-shrink: 0;
+    padding: 0;
+    background: none;
+  }
+
+  .admin-notifications-page .notification-meta small {
+    min-width: 0;
+    font-size: 10.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-notifications-page .notification-content h4 {
+    margin: 3px 0 2px;
+    line-height: 1.3;
+  }
+
+  .admin-notifications-page .notification-content p {
+    font-size: 12.5px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Unread is already shown by the side stripe and tinted background */
+  .admin-notifications-page .notification-tags {
+    display: none;
+  }
+
+  .admin-notifications-page .notification-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .admin-notifications-page .notification-actions button {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .admin-notifications-page .back-btn:hover,
+  .admin-notifications-page .notification-row.clickable:hover,
+  .admin-notifications-page .notification-row:hover .notification-icon,
+  .admin-notifications-page .notification-actions button:hover,
+  .admin-notifications-page .notif-category:hover,
+  .admin-notifications-page .mark-all-btn:hover {
+    transform: none;
+  }
+}

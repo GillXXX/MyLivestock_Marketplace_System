@@ -59,7 +59,9 @@
   line-height: 1.6;
 }
 
-.export-btn {
+/* Scoped: an unscoped .export-btn here also restyled the Export buttons on
+   other pages (e.g. buyer transactions went full width on phones). */
+.enterprise-users-page .export-btn {
   height: 52px;
   border: none;
   border-radius: 16px;
@@ -309,6 +311,10 @@
 .listing-count {
   color: var(--primary-dark);
   font-weight: 950;
+}
+
+.listing-count-na {
+  color: var(--muted);
 }
 
 .table-actions {
@@ -620,7 +626,7 @@
     font-size: 13px;
   }
 
-  .export-btn {
+  .enterprise-users-page .export-btn {
     height: 42px;
     padding: 0 14px;
     font-size: 13px;
@@ -677,8 +683,8 @@
     width: 100%;
   }
 
-  .filter-btn,
-  .export-btn {
+  .enterprise-users-page .filter-btn,
+  .enterprise-users-page .export-btn {
     width: 100%;
     justify-content: center;
   }
@@ -847,4 +853,459 @@
   color: white;
   border-color: #dc2626;
   transform: translateY(-2px);
+}
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button styles. */
+.enterprise-users-page .back-button {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Scoped under .enterprise-users-page: admin CSS is global and shares
+   names like .eyebrow, .avatar, .doc-chip across pages. Stat cards keep
+   their design (already 2x2 above). */
+
+@media (max-width: 768px) {
+  /* Header: back + title + compact Export on one row */
+
+  .enterprise-users-page .users-page-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .enterprise-users-page .header-left {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .enterprise-users-page .header-left > div {
+    min-width: 0;
+  }
+
+  .enterprise-users-page .users-page-header .eyebrow,
+  .enterprise-users-page .users-page-header p {
+    display: none;
+  }
+
+  .enterprise-users-page .users-page-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-users-page .users-page-header .export-btn {
+    width: auto;
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  /* Users card: no panel; slim title, full-width search, filters in a row */
+
+  .enterprise-users-page .user-management-card,
+  .enterprise-users-page .verification-summary {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .enterprise-users-page .management-toolbar {
+    gap: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .enterprise-users-page .toolbar-title p {
+    display: none;
+  }
+
+  .enterprise-users-page .search-control {
+    height: 44px;
+    border-radius: 14px;
+    background: white;
+  }
+
+  .enterprise-users-page .search-control input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .enterprise-users-page .filter-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .enterprise-users-page .filter-row select {
+    height: 40px;
+    min-width: 0;
+    padding: 0 8px;
+    border-radius: 12px;
+    background: white;
+    font-size: 12.5px;
+  }
+
+  /* Users table → divided list:
+       [A] Juan Dela Cruz              3 listings
+           USR-12 • Veruela
+       Farmer  Active  Verified            5/2/2026
+       juan@mail.com · 0917…
+                               [👁] [✓] [⊘] [🗑] */
+
+  .enterprise-users-page .enterprise-table-wrapper {
+    overflow: visible;
+  }
+
+  .enterprise-users-page .enterprise-users-table,
+  .enterprise-users-page .enterprise-users-table tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .enterprise-users-page .enterprise-users-table thead {
+    display: none;
+  }
+
+  /* Only the 3 pill columns are content-sized; everything wider (name,
+     contact, actions) spans into the last, shrinkable column so it gets
+     cut off with "…" instead of stretching the row past the screen. */
+  .enterprise-users-page .enterprise-users-table tbody tr {
+    display: grid;
+    grid-template-columns: max-content max-content max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 6px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  }
+
+  .enterprise-users-page .enterprise-users-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .enterprise-users-page .enterprise-users-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    font-size: 12.5px;
+  }
+
+  .enterprise-users-page .enterprise-users-table tbody tr:hover td {
+    background: none;
+  }
+
+  /* 1 User — row 1, full width */
+  .enterprise-users-page .enterprise-users-table td:nth-child(1) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  /* 6 Listings — row 2, right of the pills */
+  .enterprise-users-page .enterprise-users-table td:nth-child(6) {
+    grid-column: 4;
+    grid-row: 2;
+    justify-self: end;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .enterprise-users-page .enterprise-users-table td:nth-child(6)::after {
+    content: " listings";
+    font-weight: 600;
+  }
+
+  /* Buyers have no listings — nothing to show on phone */
+  .enterprise-users-page .enterprise-users-table td.listings-na {
+    display: none;
+  }
+
+  /* Smaller pills so role + status + verification + "N listings" fit
+     on a 360px-wide phone */
+  .enterprise-users-page .role-pill,
+  .enterprise-users-page .status-pill,
+  .enterprise-users-page .enterprise-users-table .verification-pill {
+    padding: 4px 8px;
+    gap: 4px;
+    font-size: 9.5px;
+    white-space: nowrap;
+  }
+
+  .enterprise-users-page .status-pill::before,
+  .enterprise-users-page .enterprise-users-table .verification-pill::before {
+    width: 5px;
+    height: 5px;
+    box-shadow: 0 0 0 2px currentColor;
+  }
+
+  .enterprise-users-page .role-pill svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* 3 Role, 4 Status, 5 Verification — row 2 pills; 7 Joined — row 4 left */
+  .enterprise-users-page .enterprise-users-table td:nth-child(3) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .enterprise-users-page .enterprise-users-table td:nth-child(4) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .enterprise-users-page .enterprise-users-table td:nth-child(5) {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .enterprise-users-page .enterprise-users-table td:nth-child(7) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: start;
+    color: var(--muted);
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .enterprise-users-page .enterprise-users-table td:nth-child(7)::before {
+    content: "Joined ";
+  }
+
+  /* 2 Contact — row 3 */
+  .enterprise-users-page .enterprise-users-table td:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .enterprise-users-page .contact-cell {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .enterprise-users-page .contact-cell strong,
+  .enterprise-users-page .contact-cell p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-users-page .contact-cell strong {
+    min-width: 0;
+  }
+
+  .enterprise-users-page .contact-cell p {
+    flex-shrink: 0;
+  }
+
+  /* 8 Actions — row 4, right-aligned 40px buttons (the join date sits
+     at the left of the same row) */
+  .enterprise-users-page .enterprise-users-table td:nth-child(8) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: end;
+  }
+
+  .enterprise-users-page .table-actions {
+    justify-content: flex-end;
+  }
+
+  .enterprise-users-page .table-actions button {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Empty-state row */
+  .enterprise-users-page .enterprise-users-table td[colspan] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    padding: 20px 0;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .enterprise-users-page .user-cell {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .enterprise-users-page .user-cell > div {
+    min-width: 0;
+  }
+
+  .enterprise-users-page .user-cell strong,
+  .enterprise-users-page .user-cell p {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-users-page .user-cell p {
+    font-size: 11.5px;
+  }
+
+  .enterprise-users-page .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  /* Farmer verification queue: slim header, no inner scroll box */
+
+  .enterprise-users-page .verification-summary {
+    margin-top: 20px;
+    gap: 10px;
+    /* minmax(0, …) lets the column shrink below its content, so long
+       names / farm locations get "…" instead of widening the page */
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .enterprise-users-page .verification-summary > *,
+  .enterprise-users-page .queue-list,
+  .enterprise-users-page .queue-item {
+    min-width: 0;
+  }
+
+  .enterprise-users-page .queue-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .enterprise-users-page .queue-actions .doc-chip {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .enterprise-users-page .verification-summary > div:first-child p {
+    display: none;
+  }
+
+  .enterprise-users-page .queue-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    gap: 10px;
+  }
+
+  .enterprise-users-page .queue-item {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .enterprise-users-page .queue-item-info {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .enterprise-users-page .queue-item-info > div {
+    min-width: 0;
+  }
+
+  .enterprise-users-page .queue-item-info strong,
+  .enterprise-users-page .queue-item-info span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-users-page .queue-pending-badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .enterprise-users-page .queue-actions .doc-chip {
+    min-height: 40px;
+  }
+
+  .enterprise-users-page .queue-actions .approve,
+  .enterprise-users-page .queue-actions .danger {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    margin-left: 0;
+    font-size: 13px;
+  }
+
+  /* Documents viewer → bottom sheet */
+
+  .enterprise-users-page .docs-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .enterprise-users-page .docs-modal {
+    max-width: none;
+    max-height: 85vh;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 16px calc(16px + env(safe-area-inset-bottom));
+    animation: users-sheet-up 0.25s ease both;
+  }
+
+  .enterprise-users-page .docs-modal::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .enterprise-users-page .docs-modal-close {
+    width: 40px;
+    height: 40px;
+    top: 14px;
+    right: 14px;
+  }
+
+  .enterprise-users-page .docs-modal .doc-chip {
+    min-height: 44px;
+  }
+
+  .enterprise-users-page .docs-modal-actions button {
+    min-height: 48px;
+  }
+}
+
+@keyframes users-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .enterprise-users-page .table-actions button:hover,
+  .enterprise-users-page .queue-item:hover,
+  .enterprise-users-page .doc-chip:hover,
+  .enterprise-users-page .queue-actions .approve:hover,
+  .enterprise-users-page .queue-actions .danger:hover,
+  .enterprise-users-page .admin-stat-card:hover,
+  .enterprise-users-page .admin-stat-card:hover .admin-stat-icon {
+    transform: none;
+  }
 }

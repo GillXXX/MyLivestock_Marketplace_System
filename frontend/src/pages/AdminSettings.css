@@ -463,3 +463,144 @@
   font-size: 12px;
   line-height: 1.45;
 }
+
+/* PHONE — minimal pass
+   Scoped under .admin-settings-page. The four status cards keep their size
+   (2x2 above); the form and toggle lists get lighter, and Save Settings is
+   pinned to the bottom so it's reachable from anywhere in the long form. */
+
+.admin-settings-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .admin-settings-page {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  /* Header: title only */
+
+  .admin-settings-page .settings-header {
+    align-items: center;
+  }
+
+  .admin-settings-page .settings-header p {
+    display: none;
+  }
+
+  .admin-settings-page .settings-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  /* Panels: lighter padding, title only */
+
+  .admin-settings-page .settings-panel {
+    margin-bottom: 14px;
+  }
+
+  .admin-settings-page .settings-panel-title {
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .admin-settings-page .settings-panel-title p {
+    display: none;
+  }
+
+  .admin-settings-page .settings-panel-title h3 {
+    font-size: 15px;
+  }
+
+  .admin-settings-page .card-icon-badge {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Form: stacked fields, 16px inputs */
+
+  .admin-settings-page .settings-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-settings-page .settings-group label {
+    margin-bottom: 6px;
+    font-size: 12.5px;
+  }
+
+  .admin-settings-page .settings-group input,
+  .admin-settings-page .settings-group select {
+    height: 46px;
+    border-radius: 13px;
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  /* Toggles: text + switch on one row (icon dropped), switch hit area
+     grown to 44px+ with an invisible pseudo-element on the label */
+
+  .admin-settings-page .settings-list {
+    gap: 8px;
+  }
+
+  .admin-settings-page .setting-toggle {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .admin-settings-page .setting-toggle-icon {
+    display: none;
+  }
+
+  .admin-settings-page .setting-toggle strong {
+    font-size: 13.5px;
+  }
+
+  .admin-settings-page .setting-toggle p {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .admin-settings-page .switch::after {
+    content: "";
+    position: absolute;
+    inset: -8px -6px;
+  }
+
+  /* Save Settings: fixed bottom bar */
+
+  .admin-settings-page .settings-actions {
+    position: fixed;
+    z-index: 50;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: white;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 20px rgba(15, 61, 46, 0.08);
+  }
+
+  .admin-settings-page .save-settings-btn {
+    width: 100%;
+    height: 48px;
+    justify-content: center;
+    border-radius: 14px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .admin-settings-page .back-btn:hover,
+  .admin-settings-page .settings-card:hover,
+  .admin-settings-page .settings-panel:hover,
+  .admin-settings-page .save-settings-btn:hover {
+    transform: none;
+  }
+}

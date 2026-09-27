@@ -920,3 +920,245 @@
     border-radius: 11px;
   }
 }
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.reports-page .back-btn {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Stat cards keep their size (already 2x2 above); print styles are
+   untouched (they're in @media print, which this doesn't match). */
+
+@media (max-width: 768px) {
+  /* Header: back + title only */
+
+  .reports-page .reports-hero {
+    align-items: center;
+  }
+
+  .reports-page .reports-hero .eyebrow,
+  .reports-page .reports-hero p {
+    display: none;
+  }
+
+  .reports-page .reports-hero h1 {
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  /* Controls: no panel; the two filters side by side, the generated-at
+     note on its own line, Export + Print as a row of equal buttons */
+
+  .reports-page .report-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .reports-page .filter-box {
+    height: 44px;
+    padding: 0 10px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  .reports-page .filter-box select {
+    min-width: 0;
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .reports-page .generated-at {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin: 0;
+    justify-self: start;
+    font-size: 11.5px;
+    padding: 6px 12px;
+  }
+
+  .reports-page .secondary-action,
+  .reports-page .print-action {
+    height: 44px;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  /* Card headers: title only */
+
+  .reports-page .card-title {
+    align-items: center;
+  }
+
+  .reports-page .card-title p {
+    display: none;
+  }
+
+  /* Product performance: two compact tiles per row */
+
+  .reports-page .perf-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .reports-page .perf-card {
+    padding: 12px;
+    border-radius: 14px;
+    min-width: 0;
+  }
+
+  .reports-page .livestock-card-title {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Trade value trend: the headline figure and note stack */
+
+  .reports-page .trend-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .reports-page .trend-hero-value {
+    font-size: 24px;
+  }
+
+  /* Verification: donut beside the legend when it fits */
+
+  .reports-page .verif-donut-wrap {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .reports-page .verif-donut {
+    width: 110px;
+    height: 110px;
+  }
+
+  .reports-page .verif-legend-row {
+    padding: 6px 4px;
+    gap: 8px;
+  }
+
+  /* Monthly transaction table → divided list:
+       [icon] Swine                  ₱45,000   ↑12%
+       Completed 3   Pending 1
+       ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ (outcome split)        */
+
+  .reports-page .table-responsive {
+    overflow: visible;
+  }
+
+  .reports-page .professional-table thead {
+    display: none;
+  }
+
+  .reports-page .professional-table,
+  .reports-page .professional-table tbody,
+  .reports-page .professional-table tfoot {
+    display: block;
+    width: 100%;
+  }
+
+  .reports-page .professional-table tr {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "product product value trend"
+      "done pend . ."
+      "bar bar bar bar";
+    align-items: center;
+    gap: 6px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(15, 61, 46, 0.08);
+  }
+
+  .reports-page .professional-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .reports-page .professional-table td,
+  .reports-page .professional-table tbody tr:hover td,
+  .reports-page .professional-table tfoot td {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .reports-page .professional-table td:nth-child(1) { grid-area: product; }
+  .reports-page .professional-table td:nth-child(2) { grid-area: done; }
+  .reports-page .professional-table td:nth-child(3) { grid-area: pend; }
+  .reports-page .professional-table td:nth-child(4) { grid-area: bar; }
+  .reports-page .professional-table td:nth-child(5) { grid-area: value; text-align: right; }
+  .reports-page .professional-table td:nth-child(6) { grid-area: trend; }
+
+  .reports-page .professional-table td:nth-child(2)::before {
+    content: "Completed ";
+    color: #98a2b3;
+    font-weight: 700;
+  }
+
+  .reports-page .professional-table td:nth-child(3)::before {
+    content: "Pending ";
+    color: #98a2b3;
+    font-weight: 700;
+  }
+
+  .reports-page .professional-table td[colspan] {
+    grid-area: auto;
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #98a2b3;
+  }
+
+  .reports-page .professional-table td[colspan]::before {
+    content: none;
+  }
+
+  .reports-page .outcome-bar,
+  .reports-page .outcome-bar-empty {
+    width: 100%;
+  }
+
+  /* Totals row: set apart with a heavier top rule */
+  .reports-page .professional-table tfoot tr {
+    border-top: 2px solid rgba(15, 61, 46, 0.14);
+    border-bottom: none;
+  }
+
+  .reports-page .professional-table tfoot td {
+    font-weight: 900;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .reports-page .back-btn:hover,
+  .reports-page .primary-action:hover,
+  .reports-page .secondary-action:hover,
+  .reports-page .print-action:hover,
+  .reports-page .perf-card:hover {
+    transform: none;
+  }
+}

@@ -2035,3 +2035,320 @@
     border-radius: 16px;
   }
 }
+
+/* ADMIN DASHBOARD — minimal phone pass
+   Same approach as the buyer/farmer dashboards: the header, hero and KPI
+   cards keep their design (KPIs just sit 2x2); only the list sections,
+   quick actions and the farmer pop-up are simplified. Scoped under
+   .pro-main, which only the admin dashboard uses. */
+
+@media (max-width: 768px) {
+  /* Header: title on the left, refresh (sync) button in the upper
+     right. The bell + profile already live in the sticky mobile bar. */
+  .pro-main .pro-topbar {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pro-main .pro-topbar > div:first-child {
+    min-width: 0;
+  }
+
+  .pro-main .pro-actions {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+  }
+
+  .pro-main .refresh-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pro-main .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Same phone size as the buyer/farmer stat cards (AdminStatCard's
+     768px rules): 12px padding, 32px icon, 19px number, 9.5px label,
+     10px note. The sparkline is desktop-only so the cards stay the same
+     height as theirs. */
+  .pro-main .kpi-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .pro-main .kpi-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .pro-main .kpi-card h2 {
+    font-size: 19px;
+    margin: 8px 0 0;
+  }
+
+  .pro-main .kpi-card p {
+    font-size: 9.5px;
+  }
+
+  .pro-main .kpi-card small {
+    font-size: 10px;
+  }
+
+  .pro-main .kpi-delta {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .pro-main .kpi-sparkline {
+    display: none;
+  }
+
+  /* Let grid cards shrink to the screen: without this, a long one-line
+     name in the Verification Queue / Flagged rows (nowrap + "…") set the
+     card's minimum width and pushed it ~95px past the screen edge. */
+  .pro-main .pro-grid,
+  .pro-main .pro-grid.insights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pro-main .pro-grid > * {
+    min-width: 0;
+  }
+
+  .pro-main .farmer-cell-link {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Card headers: title + action only */
+
+  .pro-main .card-head {
+    align-items: center;
+  }
+
+  .pro-main .card-head p {
+    display: none;
+  }
+
+  .pro-main .card-head button {
+    flex-shrink: 0;
+  }
+
+  /* Verification Queue: the 4-column table becomes a divided list —
+       [avatar] Farmer name               3d ago
+       Swine · Health Document                     */
+
+  .pro-main .pro-table thead {
+    display: none;
+  }
+
+  .pro-main .pro-table,
+  .pro-main .pro-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .pro-main .pro-table tbody tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pro-main .pro-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .pro-main .pro-table tbody tr:hover {
+    background: none;
+  }
+
+  .pro-main .pro-table td,
+  .pro-main .pro-table td:first-child {
+    display: block;
+    padding: 0;
+    border: none;
+    min-width: 0;
+  }
+
+  .pro-main .pro-table td:nth-child(1) {
+    grid-column: 1 / 3;
+    grid-row: 1;
+  }
+
+  .pro-main .pro-table td:nth-child(4) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .pro-main .pro-table td:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .pro-main .pro-table td:nth-child(3) {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pro-main .pro-table td.empty-row {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    text-align: center;
+  }
+
+  .pro-main .farmer-cell {
+    min-width: 0;
+    font-size: 13.5px;
+  }
+
+  .pro-main .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Flagged listings: plain divided list instead of tinted boxes */
+
+  .pro-main .flagged-list {
+    gap: 0;
+  }
+
+  .pro-main .flagged-row {
+    padding: 10px 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+  }
+
+  .pro-main .flagged-row:last-child {
+    border-bottom: none;
+  }
+
+  .pro-main .flagged-row strong,
+  .pro-main .flagged-row p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pro-main .report-view-all {
+    margin-top: 10px;
+    padding: 12px;
+  }
+
+  /* Map card: legend on one tidy row, hint on its own line */
+
+  .pro-main .map-legend-bar {
+    gap: 8px 14px;
+    margin-bottom: 4px;
+  }
+
+  .pro-main .map-legend-bar span {
+    font-size: 12px;
+  }
+
+  .pro-main .legend-hint {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Quick actions: one row of icon tiles, no descriptions */
+
+  .pro-main .quick-actions {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .pro-main .action-card {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 6px;
+    text-align: center;
+  }
+
+  .pro-main .action-card svg {
+    width: 38px;
+    height: 38px;
+    padding: 9px;
+  }
+
+  .pro-main .action-card strong {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .pro-main .action-card p {
+    display: none;
+  }
+
+  /* Farmer details pop-up becomes a bottom sheet */
+
+  .farmer-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .farmer-modal {
+    max-width: none;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 16px calc(16px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.97);
+    animation: admin-sheet-up 0.25s ease both;
+  }
+
+  .farmer-modal::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .farmer-modal-close {
+    width: 40px;
+    height: 40px;
+  }
+
+  .farmer-modal-view-all {
+    min-height: 48px;
+  }
+}
+
+@keyframes admin-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .pro-main .kpi-card:hover,
+  .pro-main .pro-card:hover,
+  .pro-main .action-card:hover,
+  .pro-main .bar-row:hover,
+  .pro-main .kpi-card:hover .kpi-icon,
+  .pro-main .admin-hero-card .hero-actions a:hover {
+    transform: none;
+  }
+}

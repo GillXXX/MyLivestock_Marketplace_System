@@ -12,12 +12,14 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useGoBack from "../utils/useGoBack";
 import { API_URL } from "../config";
 import "./AdminSettings.css";
 
 function AdminSettings() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -135,9 +137,9 @@ function AdminSettings() {
   return (
     <div className="admin-settings-page">
       <div className="settings-header">
-        <Link to="/admin-dashboard" className="back-btn">
+        <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={20} />
-        </Link>
+        </button>
 
         <div>
           <h1>System Settings</h1>

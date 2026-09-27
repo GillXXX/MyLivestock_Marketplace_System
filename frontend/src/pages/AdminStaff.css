@@ -533,3 +533,299 @@
     font-size: 12.5px;
   }
 }
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button styles. */
+.enterprise-staff-page .back-button {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Scoped under .enterprise-staff-page (admin CSS is global). The three
+   stat cards keep their design. */
+
+@media (max-width: 768px) {
+  /* Header: back + title + compact Add Staff on one row */
+
+  .enterprise-staff-page .staff-page-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .enterprise-staff-page .staff-page-header .header-left {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .enterprise-staff-page .staff-page-header .header-left > div {
+    min-width: 0;
+  }
+
+  .enterprise-staff-page .staff-page-header .eyebrow,
+  .enterprise-staff-page .staff-page-header p {
+    display: none;
+  }
+
+  .enterprise-staff-page .staff-page-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-staff-page .add-staff-btn {
+    width: auto;
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  /* 3 stat cards: 2 + 1 would leave a gap, so the third spans the row */
+  .enterprise-staff-page .staff-kpi-grid > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Staff card: no panel; full-width search, then the status filter */
+
+  .enterprise-staff-page .staff-management-card {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .enterprise-staff-page .staff-toolbar {
+    gap: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .enterprise-staff-page .staff-toolbar .toolbar-title p {
+    display: none;
+  }
+
+  .enterprise-staff-page .staff-toolbar .search-control {
+    height: 44px;
+    border-radius: 14px;
+    background: white;
+  }
+
+  .enterprise-staff-page .staff-toolbar .search-control input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .enterprise-staff-page .staff-filter-row {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 10px;
+  }
+
+  .enterprise-staff-page .staff-filter-row select {
+    height: 40px;
+    border-radius: 12px;
+    background: white;
+    font-size: 13px;
+  }
+
+  /* Staff table → divided list:
+       [M] Maria Santos            Active
+           STF-4
+       maria@mao.gov · 0917…     5/2/2026
+                             [⊘] [🗑]   */
+
+  .enterprise-staff-page .enterprise-staff-table-wrapper {
+    overflow: visible;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table,
+  .enterprise-staff-page .enterprise-staff-table tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table thead {
+    display: none;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  }
+
+  .enterprise-staff-page .enterprise-staff-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    font-size: 12.5px;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table tbody tr:hover td {
+    background: none;
+  }
+
+  /* 1 Staff — row 1 left; 3 Status — row 1 right */
+  .enterprise-staff-page .enterprise-staff-table td:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table td:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* 2 Contact — row 2 left; 4 Joined — row 2 right */
+  .enterprise-staff-page .enterprise-staff-table td:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .enterprise-staff-page .enterprise-staff-table td:nth-child(4) {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+
+  /* 5 Actions — row 3, right-aligned 40px buttons */
+  .enterprise-staff-page .enterprise-staff-table td:nth-child(5) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .enterprise-staff-page .staff-table-actions {
+    justify-content: flex-end;
+  }
+
+  .enterprise-staff-page .staff-table-actions button {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Empty-state row */
+  .enterprise-staff-page .enterprise-staff-table td[colspan] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    padding: 20px 0;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .enterprise-staff-page .staff-cell {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .enterprise-staff-page .staff-cell > div {
+    min-width: 0;
+  }
+
+  .enterprise-staff-page .staff-cell strong,
+  .enterprise-staff-page .staff-cell p,
+  .enterprise-staff-page .staff-contact-cell strong,
+  .enterprise-staff-page .staff-contact-cell p {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-staff-page .staff-contact-cell {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .enterprise-staff-page .staff-contact-cell strong,
+  .enterprise-staff-page .staff-contact-cell p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .enterprise-staff-page .staff-contact-cell strong {
+    min-width: 0;
+  }
+
+  .enterprise-staff-page .staff-contact-cell p {
+    flex-shrink: 0;
+  }
+
+  /* Add Staff form → bottom sheet */
+
+  .enterprise-staff-page .staff-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .enterprise-staff-page .staff-modal {
+    max-width: none;
+    max-height: 85vh;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 16px calc(16px + env(safe-area-inset-bottom));
+    animation: staff-sheet-up 0.25s ease both;
+  }
+
+  .enterprise-staff-page .staff-modal::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .enterprise-staff-page .staff-modal-close {
+    width: 40px;
+    height: 40px;
+    top: 14px;
+    right: 14px;
+  }
+
+  .enterprise-staff-page .staff-modal input {
+    height: 44px;
+    font-size: 16px; /* stops iOS zooming in on focus */
+  }
+}
+
+@keyframes staff-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .enterprise-staff-page .staff-table-actions button:hover,
+  .enterprise-staff-page .staff-modal-submit:hover:not(:disabled),
+  .enterprise-staff-page .admin-stat-card:hover,
+  .enterprise-staff-page .admin-stat-card:hover .admin-stat-icon {
+    transform: none;
+  }
+}

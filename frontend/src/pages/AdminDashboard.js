@@ -526,7 +526,7 @@ function AdminDashboard() {
                   <div className="flagged-row" key={item.id}>
                     <div>
                       <strong>
-                        {item.livestock_type} — {item.breed || "No breed"}
+                        {item.breed ? `${item.livestock_type} — ${item.breed}` : item.livestock_type}
                       </strong>
                       <p>
                         {item.farmer_name} · {formatRelativeTime(item.created_at)}

@@ -14,8 +14,9 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
@@ -25,6 +26,7 @@ import "./AdminListings.css";
 function AdminListings() {
   const navigate = useNavigate();
   const location = useLocation();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [listings, setListings] = useState([]);
   const [stats, setStats] = useState({
@@ -291,9 +293,9 @@ function AdminListings() {
     <div className="admin-listings-page">
       <header className="listings-header">
         <div className="header-left">
-          <Link to="/admin-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO Administration</span>

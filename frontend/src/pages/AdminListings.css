@@ -81,7 +81,7 @@
   margin: 0;
 }
 
-.export-btn {
+.admin-listings-page .export-btn {
   border: none;
   height: 54px;
   padding: 0 22px;
@@ -97,7 +97,7 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.export-btn:hover {
+.admin-listings-page .export-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(15,61,46,0.28);
 }
@@ -668,7 +668,7 @@
     font-size: 13px;
   }
 
-  .export-btn {
+  .admin-listings-page .export-btn {
     height: 42px;
     padding: 0 14px;
     font-size: 13px;
@@ -720,5 +720,344 @@
   .admin-listings-page .professional-table td {
     padding: 10px 12px;
     font-size: 12.5px;
+  }
+}
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.admin-listings-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Scoped under .admin-listings-page (admin CSS is global and class names
+   like .back-btn/.eyebrow/.export-btn repeat across pages). Stat cards
+   keep their design; the table becomes a divided list. */
+
+@media (max-width: 768px) {
+  /* Header: back + title + compact Approval Log button on one row */
+
+  .admin-listings-page .listings-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-listings-page .header-left {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-listings-page .header-left > div {
+    min-width: 0;
+  }
+
+  .admin-listings-page .eyebrow,
+  .admin-listings-page .listings-header p {
+    display: none;
+  }
+
+  .admin-listings-page .listings-header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-listings-page .export-btn {
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 12px;
+    font-size: 12.5px;
+  }
+
+  /* Toolbar: no panel; full-width search, two filters side by side */
+
+  .admin-listings-page .listing-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .admin-listings-page .listing-toolbar::after {
+    display: none;
+  }
+
+  .admin-listings-page .listing-search {
+    grid-column: 1 / -1;
+    height: 44px;
+  }
+
+  .admin-listings-page .listing-search input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .admin-listings-page .listing-toolbar select {
+    height: 40px;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  /* Listings card: no panel, slim title */
+
+  .admin-listings-page .listings-table-card {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .admin-listings-page .listings-table-card::after {
+    display: none;
+  }
+
+  .admin-listings-page .card-title {
+    margin-bottom: 6px;
+    padding-bottom: 8px;
+  }
+
+  .admin-listings-page .card-title h3 {
+    font-size: 15px;
+  }
+
+  .admin-listings-page .card-title p {
+    display: none;
+  }
+
+  /* Bulk bar: count on top, actions wrap below as 40px pills */
+
+  .admin-listings-page .bulk-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .admin-listings-page .bulk-actions button {
+    min-height: 40px;
+    padding: 0 12px;
+  }
+
+  /* Table → divided list. Each row:
+       [☐] [thumb] Swine / LST-12               [Pending]
+           Juan Dela Cruz                     ₱9,000 / head
+           📍 Poblacion                          5/2/2026
+           [✓] [⚑] [✕] [🗑]                                 */
+
+  .admin-listings-page .table-responsive {
+    overflow: visible;
+  }
+
+  .admin-listings-page .professional-table thead {
+    display: none;
+  }
+
+  .admin-listings-page .professional-table,
+  .admin-listings-page .professional-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-listings-page .professional-table tbody tr {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  }
+
+  .admin-listings-page .professional-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .admin-listings-page .professional-table td,
+  .admin-listings-page .professional-table tbody tr:hover td,
+  .admin-listings-page .professional-table tbody tr.row-selected td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    font-size: 13px;
+  }
+
+  .admin-listings-page .professional-table tbody tr.row-selected {
+    background: rgba(22, 163, 74, 0.07);
+    box-shadow: inset 3px 0 0 #16a34a;
+  }
+
+  .admin-listings-page .professional-table td:only-child {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    padding: 20px 0;
+  }
+
+  /* checkbox */
+  .admin-listings-page .professional-table td:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    align-self: center;
+  }
+
+  .admin-listings-page .professional-table td.checkbox-col input {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* listing (thumb + type) */
+  .admin-listings-page .professional-table td:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* status */
+  .admin-listings-page .professional-table td:nth-child(7) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  /* farmer */
+  .admin-listings-page .professional-table td:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* price */
+  .admin-listings-page .professional-table td:nth-child(5) {
+    grid-column: 3;
+    grid-row: 2;
+    text-align: right;
+    font-size: 12.5px;
+  }
+
+  /* location */
+  .admin-listings-page .professional-table td:nth-child(4) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  /* date */
+  .admin-listings-page .professional-table td:nth-child(6) {
+    grid-column: 3;
+    grid-row: 3;
+    text-align: right;
+    font-size: 12px;
+  }
+
+  /* actions */
+  .admin-listings-page .professional-table td:nth-child(8) {
+    grid-column: 2 / -1;
+    grid-row: 4;
+    padding-top: 4px;
+  }
+
+  .admin-listings-page .listing-cell {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .admin-listings-page .listing-cell > div {
+    min-width: 0;
+  }
+
+  .admin-listings-page .listing-cell p {
+    margin-top: 2px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-listings-page .animal-icon,
+  .admin-listings-page .listing-thumb-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 20px;
+    box-shadow: none;
+  }
+
+  .admin-listings-page .subtext {
+    display: none;
+  }
+
+  .admin-listings-page .location-cell {
+    min-width: 0;
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-listings-page .location-cell svg {
+    flex-shrink: 0;
+  }
+
+  .admin-listings-page .status-cell {
+    align-items: flex-end;
+    gap: 3px;
+  }
+
+  .admin-listings-page .status-pill {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .admin-listings-page .review-note {
+    max-width: 110px;
+    font-size: 11px;
+  }
+
+  .admin-listings-page .pending-age {
+    font-size: 11px;
+  }
+
+  .admin-listings-page .action-set {
+    gap: 8px;
+  }
+
+  .admin-listings-page .action-set button {
+    width: 44px;
+    height: 40px;
+    border-radius: 12px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .admin-listings-page .back-btn:hover,
+  .admin-listings-page .export-btn:hover,
+  .admin-listings-page .listing-thumb-btn:hover,
+  .admin-listings-page .bulk-actions button:hover,
+  .admin-listings-page .action-set button:hover {
+    transform: none;
   }
 }

@@ -17,8 +17,9 @@ import {
   X,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminUsers.css";
@@ -30,6 +31,7 @@ function getAvatarUrl(image) {
 
 function AdminUsers() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({
@@ -225,7 +227,7 @@ function AdminUsers() {
         label: "Verification",
         value: (u) => (u.role === "farmer" ? (u.is_verified ? "Verified" : "Unverified") : "N/A"),
       },
-      { label: "Listings", value: (u) => u.listings },
+      { label: "Listings", value: (u) => (u.role === "farmer" ? u.listings : "N/A") },
       { label: "Joined", value: (u) => new Date(u.created_at).toLocaleDateString() },
     ], filteredUsers);
   };
@@ -265,9 +267,9 @@ function AdminUsers() {
     <div className="enterprise-users-page">
       <header className="users-page-header">
         <div className="header-left">
-          <Link to="/admin-dashboard" className="back-button">
+          <button type="button" className="back-button" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO ADMINISTRATION</span>
@@ -446,8 +448,13 @@ function AdminUsers() {
                       </span>
                     </td>
 
-                    <td>
-                      <strong className="listing-count">{user.listings}</strong>
+                    {/* Only farmers post listings — a count for buyers is meaningless */}
+                    <td className={user.role === "farmer" ? "" : "listings-na"}>
+                      {user.role === "farmer" ? (
+                        <strong className="listing-count">{user.listings}</strong>
+                      ) : (
+                        <span className="listing-count-na">—</span>
+                      )}
                     </td>
 
                     <td>{new Date(user.created_at).toLocaleDateString()}</td>
