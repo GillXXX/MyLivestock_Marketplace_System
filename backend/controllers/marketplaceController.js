@@ -185,6 +185,19 @@ const createTransaction = async (req, res) => {
       return res.status(400).json({ message: "This listing is no longer available" });
     }
 
+    // One open deal per buyer per listing — the price and quantity are
+    // worked out inside it, so a second one would only duplicate it.
+    const [[openDeal]] = await db.query(
+      "SELECT id FROM transactions WHERE listing_id = ? AND buyer_id = ? AND status = 'Pending' LIMIT 1",
+      [listingId, buyerId]
+    );
+
+    if (openDeal) {
+      return res.status(409).json({
+        message: "You already have an open deal for this listing. Continue it in Messages.",
+      });
+    }
+
     const amount = Number(listing.price) * orderQuantity;
 
     // Reserving the stock and recording the order happen together or not
@@ -216,9 +229,12 @@ const createTransaction = async (req, res) => {
         [listingId]
       );
 
+      // The buyer starts the deal themselves — Buy Now, or "Proceed to
+      // Negotiation" after asking about the product in chat — so it begins
+      // at Negotiation; Inquiry is the chatting before that.
       [result] = await connection.query(
         `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, quantity, workflow_step, status)
-         VALUES (?, ?, ?, ?, ?, 'Inquiry', 'Pending')`,
+         VALUES (?, ?, ?, ?, ?, 'Negotiation', 'Pending')`,
         [listingId, buyerId, listing.farmer_id, amount, orderQuantity]
       );
 
@@ -237,7 +253,7 @@ const createTransaction = async (req, res) => {
       [
         conversationId,
         buyerId,
-        `🛒 Ordered ${orderQuantity} x ${listing.livestock_type} for ₱${amount.toLocaleString()}. Let's finalize the details!`,
+        `🤝 Ready to negotiate: ${orderQuantity} x ${listing.livestock_type} for ₱${amount.toLocaleString()} at the listed price. Let's agree on the details!`,
         listingId,
       ]
     );
@@ -249,12 +265,12 @@ const createTransaction = async (req, res) => {
 
     await createNotification(
       "Transaction Alert",
-      "New order placed",
-      `A buyer ordered ${orderQuantity} x ${listing.livestock_type} for ₱${amount.toLocaleString()}.`,
+      "Negotiation started",
+      `A buyer started negotiating for ${orderQuantity} x ${listing.livestock_type} (₱${amount.toLocaleString()} at the listed price).`,
       result.insertId
     );
 
-    res.status(201).json({ message: "Order placed successfully", transactionId: result.insertId, conversationId });
+    res.status(201).json({ message: "Negotiation started", transactionId: result.insertId, conversationId });
   } catch (error) {
     console.error("Create transaction error:", error);
     res.status(500).json({ message: "Server error creating order" });

@@ -835,6 +835,46 @@ backdrop-filter: blur(10px);
   color: var(--primary);
 }
 
+/* "Proceed to Negotiation" under the buyer's inquiry, or the open deal's
+   status once it has started. */
+.deal-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.deal-prompt-btn {
+  border: none;
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 6px 16px rgba(15, 61, 46, 0.18);
+}
+
+.deal-prompt-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(15, 61, 46, 0.22);
+}
+
+.deal-prompt-btn:focus-visible,
+.deal-prompt-status:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.deal-prompt-status {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--primary);
+}
+
 .listing-attachment-info {
   display: flex;
   flex-direction: column;

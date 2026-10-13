@@ -3,6 +3,8 @@ const { createNotification } = require("../utils/notify");
 const { getSystemSettings } = require("../utils/systemSettings");
 const {
   CANCEL_REQUEST_AUTO_APPROVE_HOURS,
+  FREE_CANCEL_HOURS,
+  freeCancelCondition,
   closeOrderAndReturnStock,
   autoApproveExpiredCancellations,
 } = require("../utils/orderStock");
@@ -28,6 +30,8 @@ const getBuyerTransactions = async (req, res) => {
         t.cancel_reason,
         t.cancel_outcome,
         t.cancel_responded_at,
+        ${freeCancelCondition("t.")} AS can_cancel_freely,
+        t.created_at + INTERVAL ${FREE_CANCEL_HOURS} HOUR AS free_cancel_until,
         l.livestock_type,
         l.category,
         l.unit,
@@ -166,9 +170,9 @@ const confirmTransaction = async (req, res) => {
   }
 };
 
-// Before the seller has done anything (Inquiry), the buyer cancels outright.
-// Once the seller is working on the order (Negotiation / Confirmation) the
-// buyer can only ask, with a reason; the seller approves or rejects, and an
+// For FREE_CANCEL_HOURS after starting a deal (or on an old order the
+// seller never accepted) the buyer cancels outright. After that they can
+// only ask, with a reason; the seller approves or rejects, and an
 // unanswered request is approved automatically after
 // CANCEL_REQUEST_AUTO_APPROVE_HOURS. One request per order — after a
 // rejection the two sort it out in chat.
@@ -180,7 +184,7 @@ const cancelTransaction = async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT t.id, t.buyer_id, t.listing_id, t.quantity, t.status, t.workflow_step,
-              t.cancel_requested_at, t.cancel_outcome,
+              t.cancel_requested_at, t.cancel_outcome, ${freeCancelCondition("t.")} AS can_cancel_freely,
               l.livestock_type, farmer.full_name AS farmer_name, buyer.full_name AS buyer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
@@ -204,11 +208,12 @@ const cancelTransaction = async (req, res) => {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
-    if (transaction.workflow_step === "Inquiry") {
+    if (transaction.can_cancel_freely) {
       // Return the reserved stock to the listing now that the order fell
-      // through. Only while still at Inquiry — if the seller moved it on
-      // in the meantime, this has to become a request instead.
-      if (!(await closeOrderAndReturnStock(transaction, "Cancelled", { onlyIf: "stillInquiry" }))) {
+      // through. The condition is checked again in the UPDATE — if the
+      // window closed or the seller moved it on meanwhile, this has to
+      // become a request instead.
+      if (!(await closeOrderAndReturnStock(transaction, "Cancelled", { onlyIf: "freeCancel" }))) {
         return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
       }
 
@@ -242,7 +247,7 @@ const cancelTransaction = async (req, res) => {
 
     const [requestResult] = await db.query(
       `UPDATE transactions SET cancel_requested_at = NOW(), cancel_reason = ?
-       WHERE id = ? AND status = 'Pending' AND workflow_step != 'Inquiry' AND cancel_requested_at IS NULL`,
+       WHERE id = ? AND status = 'Pending' AND NOT ${freeCancelCondition()} AND cancel_requested_at IS NULL`,
       [reason, id]
     );
 

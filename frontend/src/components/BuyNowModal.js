@@ -5,7 +5,11 @@ import { API_URL } from "../config";
 import { UNITS, formatQuantity, getListingPlaceholder } from "../utils/productCatalog";
 import "./BuyNowModal.css";
 
-function BuyNowModal({ listing, onClose }) {
+// Starts a deal at Negotiation — from Buy Now, or from "Proceed to
+// Negotiation" in the inquiry chat (title / onStarted passed by Messages;
+// onStarted replaces the "Go to Messages" screen since they're already
+// there).
+function BuyNowModal({ listing, onClose, title: heading = "Buy Now", onStarted }) {
   const navigate = useNavigate();
 
   const listedPrice = Number(listing.price) || 0;
@@ -74,12 +78,19 @@ function BuyNowModal({ listing, onClose }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Failed to place order");
+        setError(data.message || "Failed to start the negotiation");
         setSending(false);
         return;
       }
 
       setSending(false);
+
+      if (onStarted) {
+        onStarted(data);
+        onClose();
+        return;
+      }
+
       setSent(true);
     } catch (error) {
       setError("Cannot connect to backend server");
@@ -99,11 +110,11 @@ function BuyNowModal({ listing, onClose }) {
             <div className="buynow-sent-icon">
               <CheckCircle2 size={32} />
             </div>
-            <h3>Order placed!</h3>
+            <h3>Negotiation started!</h3>
             <p>
-              Your order for {formatQuantity(quantity, unit.value)} of {title} (₱{total.toLocaleString()})
-              was sent to {listing.seller_name}. Head to Messages to finalize the
-              details with the seller.
+              Your deal for {formatQuantity(quantity, unit.value)} of {title} (₱{total.toLocaleString()}
+              at the listed price) was sent to {listing.seller_name}. Head to Messages to agree on
+              the details with the seller.
             </p>
             <div className="buynow-sent-actions">
               <button
@@ -123,10 +134,10 @@ function BuyNowModal({ listing, onClose }) {
           </div>
         ) : (
           <>
-            <h3>Buy Now</h3>
+            <h3>{heading}</h3>
             <p className="buynow-modal-subtitle">
-              Choose how many you want. Your order will be sent to the seller's
-              messages to finalize the deal.
+              Choose how many you want. This starts the negotiation with the seller
+              in Messages — you can still cancel within the first hour.
             </p>
 
             <div className="buynow-listing-preview">
@@ -210,7 +221,7 @@ function BuyNowModal({ listing, onClose }) {
                 disabled={sending || maxQuantity < 1}
               >
                 <ShoppingCart size={16} />
-                {sending ? "Placing Order..." : "Complete Order"}
+                {sending ? "Starting..." : "Start Negotiation"}
               </button>
             </div>
           </>

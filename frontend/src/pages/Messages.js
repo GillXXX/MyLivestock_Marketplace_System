@@ -15,12 +15,14 @@ import {
   X,
   Forward,
   Ban,
+  Handshake,
 } from "lucide-react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
 import { getProductIcon, formatPrice } from "../utils/productCatalog";
 import useGoBack from "../utils/useGoBack";
+import BuyNowModal from "../components/BuyNowModal";
 import "./Messages.css";
 
 const POLL_MESSAGES_MS = 2000;
@@ -109,6 +111,10 @@ function Messages() {
   const [currentUser, setCurrentUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  // The listing this chat is about plus the buyer's open deal for it (from
+  // the messages endpoint), and the listing being proceeded with.
+  const [deal, setDeal] = useState(null);
+  const [proceedListing, setProceedListing] = useState(null);
   const [messages, setMessages] = useState([]);
   const [otherTyping, setOtherTyping] = useState(false);
   const [messageText, setMessageText] = useState("");
@@ -201,6 +207,7 @@ function Messages() {
       if (res.ok) {
         setMessages(data.messages);
         setOtherTyping(Boolean(data.otherTyping));
+        setDeal(data.deal || null);
       }
     } catch (error) {
       // silent fail on background poll
@@ -602,6 +609,22 @@ function Messages() {
 
   const selectedConversation = conversations.find((c) => c.id === selectedId);
   const backLink = currentUser?.role === "farmer" ? "/farmer-dashboard" : "/buyer-dashboard";
+
+  // "Proceed to Negotiation" sits under the buyer's latest message about
+  // this chat's listing (their inquiry) — the buyer decides when they're
+  // happy with the product and starts the deal themselves.
+  const dealAnchorId =
+    currentUser?.role === "buyer" && deal && deal.id
+      ? [...messages]
+          .reverse()
+          .find(
+            (m) =>
+              m.sender_id === currentUser.id &&
+              m.listing_id === deal.id &&
+              !m.deleted_at &&
+              !m.pending
+          )?.id
+      : null;
   const goBack = useGoBack(backLink);
 
   const otherLastReadAt = selectedConversation
@@ -937,6 +960,27 @@ function Messages() {
                                     </Link>
                                   )}
 
+                                  {msg.id === dealAnchorId &&
+                                    (deal.open_transaction_id ? (
+                                      <Link
+                                        to="/buyer-transactions"
+                                        state={{ transactionId: deal.open_transaction_id }}
+                                        className="deal-prompt deal-prompt-status"
+                                      >
+                                        <Handshake size={15} />
+                                        {deal.open_transaction_step} in progress · View deal
+                                      </Link>
+                                    ) : deal.status === "Available" && Number(deal.quantity) > 0 ? (
+                                      <button
+                                        type="button"
+                                        className="deal-prompt deal-prompt-btn"
+                                        onClick={() => setProceedListing(deal)}
+                                      >
+                                        <Handshake size={15} />
+                                        Proceed to Negotiation
+                                      </button>
+                                    ) : null)}
+
                                   {msg.attachment_url && (
                                     <div className="message-media">
                                       {msg.attachment_type === "video" ? (
@@ -1186,6 +1230,15 @@ function Messages() {
             </button>
           </div>
         </div>
+      )}
+
+      {proceedListing && (
+        <BuyNowModal
+          listing={proceedListing}
+          title="Proceed to Negotiation"
+          onClose={() => setProceedListing(null)}
+          onStarted={() => fetchMessages(selectedId)}
+        />
       )}
     </div>
   );

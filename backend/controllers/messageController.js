@@ -163,9 +163,39 @@ const getMessages = async (req, res) => {
       ? access.conversation.buyer_id
       : access.conversation.farmer_id;
 
+    // The listing this chat is about, and the buyer's open deal for it if
+    // there is one — lets the buyer "Proceed to Negotiation" from the chat.
+    const [[deal]] = await db.query(
+      `SELECT
+        l.id,
+        l.livestock_type,
+        l.category,
+        l.breed,
+        l.price,
+        l.quantity,
+        l.unit,
+        l.image_url,
+        l.status,
+        seller.full_name AS seller_name,
+        t.id AS open_transaction_id,
+        t.workflow_step AS open_transaction_step
+      FROM conversations c
+      JOIN livestock_listings l ON c.listing_id = l.id
+      JOIN users seller ON c.farmer_id = seller.id
+      LEFT JOIN transactions t ON t.id = (
+        SELECT t2.id FROM transactions t2
+        WHERE t2.listing_id = c.listing_id AND t2.buyer_id = c.buyer_id AND t2.status = 'Pending'
+        ORDER BY t2.id DESC
+        LIMIT 1
+      )
+      WHERE c.id = ?`,
+      [conversationId]
+    );
+
     res.json({
       messages,
       otherTyping: isTyping(conversationId, otherUserId),
+      deal: deal || null,
     });
   } catch (error) {
     console.error("Get messages error:", error);

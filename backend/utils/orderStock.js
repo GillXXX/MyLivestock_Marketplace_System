@@ -6,11 +6,23 @@ const { createNotification } = require("./notify");
 // seller ignores.
 const CANCEL_REQUEST_AUTO_APPROVE_HOURS = 48;
 
+// The buyer starts a deal themselves (Buy Now, or "Proceed to Negotiation"
+// from the inquiry chat), straight at Negotiation. For this long after
+// starting it they can still back out without asking the seller.
+const FREE_CANCEL_HOURS = 1;
+
+// SQL condition (on `transactions`, optionally aliased) for "the buyer can
+// still cancel outright": still within FREE_CANCEL_HOURS of starting it at
+// Negotiation, or an older order still at Inquiry that the seller never
+// accepted.
+const freeCancelCondition = (alias = "") =>
+  `(${alias}workflow_step = 'Inquiry' OR (${alias}workflow_step = 'Negotiation' AND ${alias}created_at > NOW() - INTERVAL ${FREE_CANCEL_HOURS} HOUR))`;
+
 // Only the server's own fixed conditions are passed as `onlyIf` — never
 // anything from a request.
 const ONLY_IF = {
-  // Buyer cancelling outright: only before the seller has acted on it.
-  stillInquiry: " AND workflow_step = 'Inquiry'",
+  // Buyer cancelling outright: only while that's still allowed.
+  freeCancel: ` AND ${freeCancelCondition()}`,
   // Approving a cancellation request: only one that's still unanswered.
   openCancelRequest: " AND cancel_requested_at IS NOT NULL AND cancel_outcome IS NULL",
 };
@@ -86,6 +98,8 @@ const autoApproveExpiredCancellations = async () => {
 
 module.exports = {
   CANCEL_REQUEST_AUTO_APPROVE_HOURS,
+  FREE_CANCEL_HOURS,
+  freeCancelCondition,
   closeOrderAndReturnStock,
   autoApproveExpiredCancellations,
 };

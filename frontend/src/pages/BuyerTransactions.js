@@ -228,14 +228,15 @@ function BuyerTransactions() {
     setActioningId(null);
   };
 
-  // Before the seller has acted (Inquiry) the order is cancelled outright.
-  // After that it's a request with a reason, which the seller approves or
-  // rejects (approved automatically if they don't answer in time).
+  // Within the first hour of starting a deal (can_cancel_freely, worked out
+  // by the server) it's cancelled outright. After that it's a request with
+  // a reason, which the seller approves or rejects (approved automatically
+  // if they don't answer in time).
   const cancelOffer = async (item) => {
     const { id } = item;
     let reason;
 
-    if (item.workflow_step === "Inquiry") {
+    if (canCancelFreely(item)) {
       if (!window.confirm("Cancel this offer? This cannot be undone.")) {
         return;
       }
@@ -286,6 +287,12 @@ function BuyerTransactions() {
 
     setActioningId(null);
   };
+
+  // The server's answer at load time, re-checked against the clock so the
+  // button switches to "Request Cancellation" once the hour is up.
+  const canCancelFreely = (item) =>
+    Boolean(item.can_cancel_freely) &&
+    (item.workflow_step === "Inquiry" || new Date(item.free_cancel_until) > new Date());
 
   const transactionCsvColumns = [
     { label: "Transaction ID", value: (t) => `TRX-${String(t.id).padStart(3, "0")}` },
@@ -731,7 +738,7 @@ function BuyerTransactions() {
                           <XCircle size={17} />
                           {isActioning
                             ? "Cancelling..."
-                            : item.workflow_step === "Inquiry"
+                            : canCancelFreely(item)
                             ? "Cancel Offer"
                             : "Request Cancellation"}
                         </button>
