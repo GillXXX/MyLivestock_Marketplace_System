@@ -4,7 +4,7 @@
   "private": true,
   "description": "VOLT: builds the React frontend into backend/frontend-build so the Express backend serves the whole site (one Node.js app; Hostinger deploys only backend/).",
   "scripts": {
-    "build": "npm install --prefix frontend && npm run build --prefix frontend && node -e \"const fs=require('fs');fs.rmSync('backend/frontend-build',{recursive:true,force:true});fs.cpSync('frontend/build','backend/frontend-build',{recursive:true})\"",
+    "build": "cd frontend && npm install && npm run build && cd .. && node -e \"const fs=require('fs');fs.rmSync('backend/frontend-build',{recursive:true,force:true});fs.cpSync('frontend/build','backend/frontend-build',{recursive:true})\"",
     "start": "npm start --prefix backend"
   },
   "engines": {
