@@ -160,22 +160,23 @@ app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
 app.use("/api/public", publicRoutes);
 
-// Deployment check: which settings are present (never their values) and
-// whether the database answers, so a broken deploy can be diagnosed from
-// the browser without server log access.
+// Deployment check: is the app up, are its required settings present and
+// does the database answer. Only names missing settings and a yes/no for
+// the database — the actual database error (which can include its user and
+// host) goes to the server log, never to the browser.
 app.get("/api/health", async (req, res) => {
-  const settings = {};
-  for (const key of ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME", "JWT_SECRET", "GOOGLE_CLIENT_ID"]) {
-    settings[key] = Boolean(process.env[key]);
-  }
-  let database;
+  const missingSettings = ["DB_HOST", "DB_USER", "DB_NAME", "JWT_SECRET", "GOOGLE_CLIENT_ID"].filter(
+    (key) => !process.env[key]
+  );
+  let database = "ok";
   try {
     await require("./config/db").query("SELECT 1 FROM users LIMIT 1");
-    database = "ok";
   } catch (error) {
-    database = `${error.code || "ERROR"}: ${error.message}`;
+    console.error("Health check database error:", error);
+    database = "error";
   }
-  res.json({ settings, database });
+  const healthy = database === "ok" && missingSettings.length === 0;
+  res.status(healthy ? 200 : 503).json({ status: healthy ? "ok" : "error", database, missingSettings });
 });
 
 app.get("/api/profile", protect, (req, res) => {
