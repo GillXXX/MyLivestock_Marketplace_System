@@ -693,7 +693,7 @@
 
 .buyer-shell .recommended-title h4 {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 13.5px;
   line-height: 1.2;
   font-weight: 800;
   color: var(--primary-dark);
@@ -702,7 +702,7 @@
 .buyer-shell .recommended-title strong {
   flex-shrink: 0;
   color: var(--primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -1349,7 +1349,7 @@
   }
 
   .buyer-shell .admin-stat-card h2 {
-    font-size: 19px;
+    font-size: 17.5px;
     margin: 8px 0 0;
   }
 

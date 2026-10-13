@@ -535,7 +535,7 @@
   color: var(--primary-dark);
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 950;
   box-shadow: 0 6px 14px rgba(184,132,44,0.4);
   white-space: nowrap;
@@ -589,7 +589,7 @@
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   font-weight: 850;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -604,7 +604,7 @@
   align-items: center;
   gap: 5px;
   color: var(--primary-dark);
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 
 .seller-verified-icon {
@@ -928,7 +928,7 @@
   }
 
   .market-price-tag {
-    font-size: 14px;
+    font-size: 13px;
     padding: 6px 12px;
   }
 
@@ -937,7 +937,7 @@
   }
 
   .market-meta-row {
-    font-size: 13px;
+    font-size: 12px;
     flex-wrap: wrap;
   }
 
@@ -954,7 +954,7 @@
   .seller-avatar {
     width: 36px;
     height: 36px;
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .seller-row-info {
@@ -963,14 +963,14 @@
 
   .seller-row-info strong {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .seller-row-info p {
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -989,7 +989,7 @@
   .buy-now-btn {
     height: 48px;
     min-width: 0;
-    font-size: 14px;
+    font-size: 13px;
     gap: 6px;
     padding: 0 8px;
     white-space: nowrap;

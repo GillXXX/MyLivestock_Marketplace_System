@@ -411,7 +411,7 @@ body {
 
 .premium-card-title h3 {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 13.5px;
   line-height: 1.2;
   font-weight: 800;
   color: var(--primary-dark);
@@ -427,7 +427,7 @@ body {
 .premium-card-title strong {
   flex-shrink: 0;
   color: var(--primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -651,7 +651,7 @@ body {
   }
 
   .admin-stat-card h2 {
-    font-size: 19px;
+    font-size: 17.5px;
     margin: 8px 0 0;
   }
 
@@ -699,25 +699,25 @@ body {
   }
 
   .premium-card-title h3 {
-    font-size: 17px;
+    font-size: 15.5px;
   }
 
   .premium-card-title strong {
-    font-size: 16px;
+    font-size: 14.5px;
   }
 
   .premium-card-subtitle {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .premium-meta-col div {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .premium-card-actions button,
   .premium-card-actions a {
     height: 46px;
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .listing-edit-btn,

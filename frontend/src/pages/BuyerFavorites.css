@@ -262,7 +262,7 @@
 
 .saved-title h3 {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 13.5px;
   line-height: 1.2;
   font-weight: 800;
   color: var(--primary-dark);
@@ -293,7 +293,7 @@
 .saved-title strong {
   flex-shrink: 0;
   color: var(--primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -490,19 +490,19 @@
   }
 
   .saved-title h3 {
-    font-size: 18px;
+    font-size: 16.5px;
   }
 
   .saved-title strong {
-    font-size: 17px;
+    font-size: 15.5px;
   }
 
   .saved-seller-link {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .saved-meta div {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .saved-actions {
@@ -511,7 +511,7 @@
 
   .saved-actions button {
     height: 48px;
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 

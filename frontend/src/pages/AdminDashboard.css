@@ -809,7 +809,7 @@
 
 .kpi-card h2 {
   font-family: "JetBrains Mono", "Segoe UI", monospace;
-  font-size: 34px;
+  font-size: 31.5px;
   font-weight: 800;
   letter-spacing: -0.5px;
   margin: 16px 0 0;
@@ -2087,7 +2087,7 @@
   }
 
   .pro-main .kpi-card h2 {
-    font-size: 19px;
+    font-size: 17.5px;
     margin: 8px 0 0;
   }
 
