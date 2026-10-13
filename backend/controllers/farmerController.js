@@ -2,7 +2,11 @@ const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const { createNotification } = require("../utils/notify");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
-const { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } = require("../utils/validators");
+const {
+  isStrongPassword,
+  PASSWORD_REQUIREMENTS_MESSAGE,
+  pickProfileFields,
+} = require("../utils/validators");
 const { closeOrderAndReturnStock } = require("../utils/orderStock");
 
 const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
@@ -262,43 +266,25 @@ exports.updateFarmerProfile = async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
 
-    const {
-      full_name,
-      phone,
-      location,
-      farm_location,
-      farm_lat,
-      farm_lng,
-      about,
-    } = req.body;
+    const { error, fields } = pickProfileFields(
+      req.body,
+      ["phone", "location", "farm_location", "about"],
+      [
+        ["farm_lat", 90],
+        ["farm_lng", 180],
+      ]
+    );
 
-    const lat = farm_lat === "" || farm_lat === undefined ? null : farm_lat;
-    const lng = farm_lng === "" || farm_lng === undefined ? null : farm_lng;
-
-    let profileImage = null;
-
-    if (req.file) {
-      profileImage = getFileUrl(req.file, req);
+    if (error) {
+      return res.status(400).json({ message: error });
     }
 
-    if (profileImage) {
-      await db.query(
-        `
-        UPDATE users
-        SET full_name = ?, phone = ?, location = ?, farm_location = ?, farm_lat = ?, farm_lng = ?, about = ?, profile_image = ?
-        WHERE id = ?
-        `,
-        [full_name, phone, location, farm_location, lat, lng, about, profileImage, userId]
-      );
-    } else {
-      await db.query(
-        `
-        UPDATE users
-        SET full_name = ?, phone = ?, location = ?, farm_location = ?, farm_lat = ?, farm_lng = ?, about = ?
-        WHERE id = ?
-        `,
-        [full_name, phone, location, farm_location, lat, lng, about, userId]
-      );
+    if (req.file) {
+      fields.profile_image = getFileUrl(req.file, req);
+    }
+
+    if (Object.keys(fields).length > 0) {
+      await db.query("UPDATE users SET ? WHERE id = ?", [fields, userId]);
     }
 
     res.json({ message: "Profile updated successfully" });

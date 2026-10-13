@@ -262,7 +262,9 @@ const login = async (req, res) => {
 
     const user = users[0];
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Accounts created through the old Google sign-up have no password
+    // (they sign in with Google), which bcrypt would throw on.
+    const isMatch = user.password ? await bcrypt.compare(password, user.password) : false;
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -294,7 +296,7 @@ const googleLogin = async (req, res) => {
     }
 
     const tokenInfoRes = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`
     );
     const tokenInfo = await tokenInfoRes.json();
 

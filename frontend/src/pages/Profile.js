@@ -183,13 +183,13 @@ function Profile() {
 
       const formData = new FormData();
 
-      formData.append("full_name", profile.full_name);
-      formData.append("phone", profile.phone);
-      formData.append("location", profile.location);
-      formData.append("farm_location", profile.farm_location);
+      formData.append("full_name", profile.full_name || "");
+      formData.append("phone", profile.phone || "");
+      formData.append("location", profile.location || "");
+      formData.append("farm_location", profile.farm_location || "");
       formData.append("farm_lat", profile.farm_lat ?? "");
       formData.append("farm_lng", profile.farm_lng ?? "");
-      formData.append("about", profile.about);
+      formData.append("about", profile.about || "");
 
       if (selectedImage) {
         formData.append("profile_image", selectedImage);

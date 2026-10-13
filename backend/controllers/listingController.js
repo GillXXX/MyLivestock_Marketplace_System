@@ -87,7 +87,7 @@ const getMyListings = async (req, res) => {
         SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS activeListings,
         SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingReview,
         COALESCE(SUM(views), 0) AS marketplaceViews,
-        COALESCE(SUM(CASE WHEN status != 'Removed' THEN price ELSE 0 END), 0) AS estimatedValue
+        COALESCE(SUM(CASE WHEN status != 'Removed' THEN price * quantity ELSE 0 END), 0) AS estimatedValue
       FROM livestock_listings
       WHERE farmer_id = ?`,
       [farmerId]

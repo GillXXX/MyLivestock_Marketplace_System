@@ -1,6 +1,7 @@
 // controllers/buyerProfileController.js
 const db = require("../config/db");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
+const { pickProfileFields } = require("../utils/validators");
 
 const getBuyerProfile = async (req, res) => {
   try {
@@ -31,24 +32,18 @@ const getBuyerProfile = async (req, res) => {
 const updateBuyerProfile = async (req, res) => {
   try {
     const buyerId = req.user.id;
-    const { full_name, phone, location, about } = req.body;
+    const { error, fields } = pickProfileFields(req.body, ["phone", "location", "about"]);
 
-    let profileImage = null;
-
-    if (req.file) {
-      profileImage = getFileUrl(req.file, req);
+    if (error) {
+      return res.status(400).json({ message: error });
     }
 
-    if (profileImage) {
-      await db.query(
-        "UPDATE users SET full_name = ?, phone = ?, location = ?, about = ?, profile_image = ? WHERE id = ?",
-        [full_name, phone, location, about, profileImage, buyerId]
-      );
-    } else {
-      await db.query(
-        "UPDATE users SET full_name = ?, phone = ?, location = ?, about = ? WHERE id = ?",
-        [full_name, phone, location, about, buyerId]
-      );
+    if (req.file) {
+      fields.profile_image = getFileUrl(req.file, req);
+    }
+
+    if (Object.keys(fields).length > 0) {
+      await db.query("UPDATE users SET ? WHERE id = ?", [fields, buyerId]);
     }
 
     res.json({ message: "Profile updated successfully" });
