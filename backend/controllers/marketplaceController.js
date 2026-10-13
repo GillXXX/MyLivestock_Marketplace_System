@@ -118,12 +118,14 @@ const createInquiry = async (req, res) => {
     }
 
     const [listingRows] = await db.query(
-      "SELECT id, farmer_id FROM livestock_listings WHERE id = ?",
+      "SELECT id, farmer_id FROM livestock_listings WHERE id = ? AND status = 'Available'",
       [listingId]
     );
 
+    // Drafts, listings still awaiting review and removed ones aren't on
+    // the marketplace, so they can't be asked about either.
     if (listingRows.length === 0) {
-      return res.status(404).json({ message: "Listing not found" });
+      return res.status(404).json({ message: "This listing is no longer available" });
     }
 
     const farmerId = listingRows[0].farmer_id;

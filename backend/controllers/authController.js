@@ -300,7 +300,17 @@ const googleLogin = async (req, res) => {
     );
     const tokenInfo = await tokenInfoRes.json();
 
+    if (!tokenInfoRes.ok) {
+      console.error("Google token check failed:", tokenInfo);
+      return res.status(401).json({ message: "Google sign-in expired or was rejected. Please try again." });
+    }
+
+    // GOOGLE_CLIENT_ID (backend) must be the same client as
+    // REACT_APP_GOOGLE_CLIENT_ID (frontend build), or every token fails here.
     if (!tokenInfo.aud || tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID) {
+      console.error(
+        `Google token is for client ${tokenInfo.aud}, but GOOGLE_CLIENT_ID is ${process.env.GOOGLE_CLIENT_ID || "(not set)"}`
+      );
       return res.status(401).json({ message: "Invalid Google token" });
     }
 
@@ -311,6 +321,7 @@ const googleLogin = async (req, res) => {
     const profile = await profileRes.json();
 
     if (!profile.email) {
+      console.error("Google profile has no email:", profileRes.status, profile);
       return res.status(400).json({
         message: "Could not get an email from Google.",
       });
@@ -365,8 +376,10 @@ const googleLogin = async (req, res) => {
       fullName: profile.name || "",
     });
   } catch (error) {
+    // Something on our side (database, network to Google, ...) — not the
+    // person's Google account — so say so instead of a generic "failed".
     console.error("Google login error:", error);
-    res.status(401).json({ message: "Google sign-in failed" });
+    res.status(500).json({ message: "Server error during Google sign-in. Please try again." });
   }
 };
 

@@ -25,3 +25,20 @@ export const completeAuth = (data, navigate) => {
 
   return true;
 };
+
+// Turns what Google's popup reports back into something a person can act
+// on, instead of one generic "failed" for every cause. Covers both OAuth
+// errors (onError) and popup problems (onNonOAuthError). Returns "" when
+// the person simply closed the popup themselves.
+export const describeGoogleError = (error) => {
+  const type = error?.type || error?.error;
+
+  if (type === "popup_closed") return "";
+  if (type === "popup_failed_to_open") {
+    return "The Google sign-in window was blocked. Please allow pop-ups for this site and try again.";
+  }
+  if (type === "access_denied") return "Google sign-in was cancelled.";
+
+  const detail = error?.error_description || type;
+  return detail ? `Google sign-in failed (${detail}).` : "Google sign-in failed.";
+};

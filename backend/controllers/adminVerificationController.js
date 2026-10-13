@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { setListingReviewStatus } = require("./adminListingController");
 
 const getAdminVerification = async (req, res) => {
   try {
@@ -54,14 +55,11 @@ const updateVerificationStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    if (!["Available", "Pending", "Flagged", "Rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
-    }
+    const error = await setListingReviewStatus(req.params.id, status);
 
-    await db.query("UPDATE livestock_listings SET status = ? WHERE id = ?", [
-      status,
-      req.params.id,
-    ]);
+    if (error) {
+      return res.status(error.status).json({ message: error.message });
+    }
 
     res.json({ message: "Verification status updated successfully" });
   } catch (error) {

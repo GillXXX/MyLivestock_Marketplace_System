@@ -12,7 +12,7 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { API_URL } from "../config";
-import { completeAuth } from "../utils/auth";
+import { completeAuth, describeGoogleError } from "../utils/auth";
 import logo from "../assets/logo.png";
 import "./Login.css";
 
@@ -96,7 +96,8 @@ function Login() {
         setMessage("Cannot connect to backend server");
       }
     },
-    onError: () => setMessage("Google sign-in failed"),
+    onError: (error) => setMessage(describeGoogleError(error)),
+    onNonOAuthError: (error) => setMessage(describeGoogleError(error)),
   });
 
   return (

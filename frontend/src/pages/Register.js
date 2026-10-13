@@ -5,7 +5,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { API_URL } from "../config";
-import { completeAuth } from "../utils/auth";
+import { completeAuth, describeGoogleError } from "../utils/auth";
 import { isWeakPassword, PASSWORD_HINT } from "../utils/password";
 import logo from "../assets/logo.png";
 import "./Register.css";
@@ -187,7 +187,8 @@ function Register() {
         setMessage("Cannot connect to backend server");
       }
     },
-    onError: () => setMessage("Google sign-up failed"),
+    onError: (error) => setMessage(describeGoogleError(error)),
+    onNonOAuthError: (error) => setMessage(describeGoogleError(error)),
   });
 
   return (
