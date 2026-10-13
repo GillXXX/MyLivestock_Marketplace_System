@@ -47,6 +47,9 @@ function Post() {
   const [existingImageUrl, setExistingImageUrl] = useState("");
   const [existingDocuments, setExistingDocuments] = useState([]);
   const [isVerified, setIsVerified] = useState(true);
+  // System Settings > "Require document verification" (sent with the
+  // farmer profile); when off, supporting documents are optional.
+  const [documentsRequired, setDocumentsRequired] = useState(true);
 
   // typeChoice is the dropdown value: a known type, or one of the two
   // "Other" options, in which case the farmer types the name in customType.
@@ -151,6 +154,7 @@ function Post() {
 
         if (res.ok) {
           setIsVerified(Boolean(data.is_verified));
+          setDocumentsRequired(data.documentsRequired !== false);
         }
       } catch (error) {
         // If this check fails, let the actual submit attempt surface the error.
@@ -226,7 +230,7 @@ function Post() {
     const requirement = getDocumentRequirement(productType, category);
     const documentCount = selectedDocuments.length || existingDocuments.length;
 
-    if (requirement && documentCount < requirement.minDocuments) {
+    if (documentsRequired && requirement && documentCount < requirement.minDocuments) {
       setMessage(formatRequirementMessage(productType, category));
       return;
     }
@@ -400,7 +404,9 @@ function Post() {
 
                 {productType && (
                   <p className="doc-requirement-hint">
-                    {formatRequirementMessage(productType, category)}
+                    {documentsRequired
+                      ? formatRequirementMessage(productType, category)
+                      : "Optional — MAO currently doesn't require documents for listings."}
                   </p>
                 )}
               </>

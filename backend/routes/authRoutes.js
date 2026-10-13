@@ -7,6 +7,7 @@ const {
   completeProfile,
   login,
   googleLogin,
+  completeGoogleSignup,
   forgotPassword,
   resetPassword,
 } = require("../controllers/authController");
@@ -24,6 +25,7 @@ router.post("/register/complete", codeRequestLimiter, completeRegistration);
 router.post("/complete-profile", protect, completeProfile);
 router.post("/login", loginLimiter, login);
 router.post("/google", loginLimiter, googleLogin);
+router.post("/google/complete", loginLimiter, completeGoogleSignup);
 router.post("/forgot-password", resetLimiter, forgotPassword);
 router.post("/reset-password", resetLimiter, resetPassword);
 

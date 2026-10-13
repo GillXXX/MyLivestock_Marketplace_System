@@ -8,6 +8,7 @@ const {
   pickProfileFields,
 } = require("../utils/validators");
 const { closeOrderAndReturnStock } = require("../utils/orderStock");
+const { getSystemSettings } = require("../utils/systemSettings");
 
 const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
 
@@ -251,10 +252,15 @@ exports.getFarmerProfile = async (req, res) => {
       [userId]
     );
 
+    const settings = await getSystemSettings();
+
     res.json({
       ...rows[0],
       activeListings: activeRows[0].activeListings || 0,
       totalSales: salesRows[0].totalSales || 0,
+      // System Settings > "Require document verification", so the listing
+      // form asks for the same documents the server will insist on.
+      documentsRequired: settings.document_verification !== 0,
     });
   } catch (error) {
     console.log(error);

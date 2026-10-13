@@ -1,5 +1,6 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
+const { getSystemSettings } = require("../utils/systemSettings");
 
 const getAdminUsers = async (req, res) => {
   try {
@@ -31,19 +32,22 @@ const getAdminUsers = async (req, res) => {
     const farmers = users.filter((u) => u.role === "farmer");
     const buyers = users.filter((u) => u.role === "buyer");
     const verifiedFarmers = farmers.filter((u) => u.is_verified).length;
+    // Only farmers who actually sent documents are waiting on MAO — ones
+    // who never submitted aren't in anyone's review queue.
+    const verificationQueue = farmers.filter((u) => u.verification_status === "Pending");
 
     res.json({
       stats: {
         farmers: farmers.length,
         buyers: buyers.length,
-        pendingVerification: farmers.length - verifiedFarmers,
+        pendingVerification: verificationQueue.length,
         verifiedRate:
           farmers.length > 0
             ? `${Math.round((verifiedFarmers / farmers.length) * 100)}%`
             : "0%",
       },
       users,
-      verificationQueue: farmers.filter((u) => u.verification_status === "Pending"),
+      verificationQueue,
     });
   } catch (error) {
     console.error("Admin users error:", error);
@@ -142,6 +146,14 @@ const setUserActive = async (req, res) => {
 
     if (typeof isActive !== "boolean") {
       return res.status(400).json({ message: "isActive must be true or false" });
+    }
+
+    // System Settings > "Allow account deactivation". Reactivating stays
+    // allowed so no one is left locked out after the switch is turned off.
+    if (!isActive && (await getSystemSettings()).account_deactivation === 0) {
+      return res.status(403).json({
+        message: "Account deactivation is turned off in System Settings.",
+      });
     }
 
     const [[user]] = await db.query(

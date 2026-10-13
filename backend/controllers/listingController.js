@@ -68,6 +68,13 @@ const DEFAULT_STATUS_MAP = {
   Draft: "Draft",
 };
 
+// System Settings > "Require document verification". When it is turned
+// off, supporting documents are optional for every listing.
+const getActiveDocumentRequirement = async (type, category) => {
+  const settings = await getSystemSettings();
+  return settings.document_verification === 0 ? null : getDocumentRequirement(type, category);
+};
+
 const getDefaultListingStatus = async () => {
   const settings = await getSystemSettings();
   return DEFAULT_STATUS_MAP[settings.default_listing_status] || "Pending";
@@ -151,7 +158,7 @@ const createListing = async (req, res) => {
 
     const uploadedDocuments = req.files?.documents || [];
 
-    const requirement = getDocumentRequirement(livestockType, category);
+    const requirement = await getActiveDocumentRequirement(livestockType, category);
     if (requirement && uploadedDocuments.length < requirement.minDocuments) {
       return res.status(400).json({ message: formatRequirementMessage(livestockType, category) });
     }
@@ -292,7 +299,7 @@ const updateListing = async (req, res) => {
       }
     }
 
-    const requirement = getDocumentRequirement(livestockType, category);
+    const requirement = await getActiveDocumentRequirement(livestockType, category);
     if (requirement && finalDocumentCount < requirement.minDocuments) {
       return res.status(400).json({ message: formatRequirementMessage(livestockType, category) });
     }
@@ -399,7 +406,7 @@ const publishListing = async (req, res) => {
       return res.status(400).json({ message: "Only draft listings can be published" });
     }
 
-    const requirement = getDocumentRequirement(listing.livestock_type, listing.category);
+    const requirement = await getActiveDocumentRequirement(listing.livestock_type, listing.category);
     if (requirement) {
       const [[withDocs]] = await db.query(
         "SELECT documents FROM livestock_listings WHERE id = ?",

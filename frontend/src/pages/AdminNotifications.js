@@ -257,8 +257,8 @@ function AdminNotifications() {
           accent="green"
           icon={<CheckCircle />}
           value={stats.resolvedToday}
-          label="Resolved Today"
-          note="Cleared in the last 24h"
+          label="Resolved"
+          note="Marked as read"
         />
       </section>
 

@@ -91,6 +91,22 @@ function Login() {
           return;
         }
 
+        // No account for this Google email yet: nothing was created. Sign-up
+        // continues on the register page, straight at the farmer/buyer
+        // choice (Google already confirmed the email, so no code).
+        if (data.needsRole) {
+          navigate("/register", {
+            state: {
+              googleSignup: {
+                email: data.email,
+                fullName: data.fullName,
+                signupToken: data.signupToken,
+              },
+            },
+          });
+          return;
+        }
+
         handleAuthSuccess(data);
       } catch (error) {
         setMessage("Cannot connect to backend server");

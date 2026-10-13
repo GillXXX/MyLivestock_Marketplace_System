@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-  Mail, Lock, Eye, EyeOff, KeyRound, User, Phone, ShieldCheck, ArrowRight,
+  Mail, Lock, Eye, EyeOff, KeyRound, User, Phone, ShieldCheck, ArrowRight, ShoppingBag, Tractor,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { API_URL } from "../config";
 import { completeAuth, describeGoogleError } from "../utils/auth";
@@ -14,20 +14,29 @@ const RESEND_COOLDOWN_SECONDS = 30;
 
 function Register() {
   const navigate = useNavigate();
+  // Set when "Continue with Google" on the sign-in page found no account
+  // for that email, so the person picks up here at the details form.
+  const googlePrefill = useLocation().state?.googleSignup;
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // "email" -> "code" -> "details". The account isn't created until the
-  // final step: email is verified before any account details are collected.
-  const [step, setStep] = useState("email");
-  const [email, setEmail] = useState("");
+  // Email sign-up: "email" -> "code" -> "details". Google sign-up goes
+  // straight to "details" — Google already confirmed the email, so there's
+  // no code. Either way the account isn't created until the details form
+  // (role, name, phone, password) is submitted.
+  const [step, setStep] = useState(googlePrefill ? "details" : "email");
+  const [email, setEmail] = useState(googlePrefill?.email || "");
+  // Proof from the server that Google confirmed `email`; set only for a
+  // Google sign-up.
+  const [googleSignupToken, setGoogleSignupToken] = useState(googlePrefill?.signupToken || "");
   const [code, setCode] = useState("");
   const [codeLoading, setCodeLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [detailsForm, setDetailsForm] = useState({
-    fullName: "",
+    role: "",
+    fullName: googlePrefill?.fullName || "",
     phone: "",
     password: "",
     confirmPassword: "",
@@ -130,17 +139,32 @@ function Register() {
 
   const handleCompleteRegistration = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setMessage("");
 
+    if (!detailsForm.role) {
+      setMessage("Please choose whether you are a farmer or a buyer.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const res = await fetch(`${API_URL}/api/auth/register/complete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, ...detailsForm }),
-      });
+      const res = await fetch(
+        googleSignupToken
+          ? `${API_URL}/api/auth/google/complete`
+          : `${API_URL}/api/auth/register/complete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(
+            googleSignupToken
+              ? { signupToken: googleSignupToken, ...detailsForm }
+              : { email, ...detailsForm }
+          ),
+        }
+      );
 
       const data = await res.json();
 
@@ -177,12 +201,12 @@ function Register() {
           return;
         }
 
-        // Google only vouches for the email — a code is still sent to it,
-        // same as manual sign-up, before the account is actually created.
+        // Google confirmed the email, so skip the code. Nothing is created
+        // until the details form (role, name, phone, password) is submitted.
         setEmail(data.email);
-        setDetailsForm((prev) => ({ ...prev, fullName: data.fullName || "" }));
-        setStep("code");
-        setResendCooldown(RESEND_COOLDOWN_SECONDS);
+        setGoogleSignupToken(data.signupToken);
+        setDetailsForm((prev) => ({ ...prev, fullName: data.fullName || prev.fullName }));
+        setStep("details");
       } catch (error) {
         setMessage("Cannot connect to backend server");
       }
@@ -344,8 +368,21 @@ function Register() {
           {step === "details" && (
             <form onSubmit={handleCompleteRegistration}>
               <p className="otp-hint">
-                <strong>{email}</strong> is verified. Finish setting up your account.
+                {googleSignupToken ? (
+                  <>
+                    Signed in with Google as <strong>{email}</strong>. Finish setting up your account.
+                  </>
+                ) : (
+                  <>
+                    <strong>{email}</strong> is verified. Finish setting up your account.
+                  </>
+                )}
               </p>
+
+              <RolePicker
+                value={detailsForm.role}
+                onChange={(role) => setDetailsForm({ ...detailsForm, role })}
+              />
 
               <div className="form-group">
                 <label>Full Name</label>
@@ -420,6 +457,23 @@ function Register() {
                 {loading ? "Creating account..." : "Create Account"}
                 <ArrowRight size={18} />
               </button>
+
+              {googleSignupToken && (
+                <div className="otp-actions">
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => {
+                      setStep("email");
+                      setEmail("");
+                      setGoogleSignupToken("");
+                      setMessage("");
+                    }}
+                  >
+                    Use a different account
+                  </button>
+                </div>
+              )}
             </form>
           )}
 
@@ -431,6 +485,45 @@ function Register() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+// Farmer / buyer choice — required before any account is created. Nothing
+// is preselected, so the person always makes the choice themselves.
+function RolePicker({ value, onChange }) {
+  return (
+    <div className="form-group">
+      <label id="register-role-label">I am a</label>
+      <div className="register-role-grid" role="radiogroup" aria-labelledby="register-role-label">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={value === "buyer"}
+          className={value === "buyer" ? "register-role active" : "register-role"}
+          onClick={() => onChange("buyer")}
+        >
+          <ShoppingBag size={22} />
+          <div>
+            <strong>Buyer</strong>
+            <p>Browse and buy livestock and farm products</p>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          role="radio"
+          aria-checked={value === "farmer"}
+          className={value === "farmer" ? "register-role active" : "register-role"}
+          onClick={() => onChange("farmer")}
+        >
+          <Tractor size={22} />
+          <div>
+            <strong>Farmer</strong>
+            <p>Post and sell your livestock and farm products</p>
+          </div>
+        </button>
+      </div>
     </div>
   );
 }

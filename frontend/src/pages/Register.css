@@ -598,3 +598,65 @@
     font-size: 12.5px;
   }
 }
+
+/* Farmer / buyer choice on the final sign-up step — required before the
+   account is created. Same translucent fill as the inputs above it. */
+.register-role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.register-role {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--primary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-role svg {
+  flex-shrink: 0;
+}
+
+.register-role strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 850;
+  color: var(--text);
+}
+
+.register-role p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #374151;
+}
+
+.register-role:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.register-role:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.register-role.active {
+  border-color: var(--primary);
+  background: rgba(238, 246, 241, 0.92);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+@media (max-width: 420px) {
+  .register-role-grid {
+    grid-template-columns: 1fr;
+  }
+}

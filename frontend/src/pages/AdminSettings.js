@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import {
   ArrowLeft,
-  ShieldCheck,
   UserCog,
   Bell,
   ClipboardCheck,
@@ -31,8 +30,6 @@ function AdminSettings() {
     livestock_types: "",
     default_listing_status: "Pending Approval",
     transaction_workflow: "Strict Workflow",
-    secure_login: true,
-    role_based_access: true,
     account_deactivation: true,
     document_verification: true,
     admin_notifications: true,
@@ -69,8 +66,6 @@ function AdminSettings() {
           livestock_types: data.settings.livestock_types,
           default_listing_status: data.settings.default_listing_status,
           transaction_workflow: data.settings.transaction_workflow,
-          secure_login: Boolean(data.settings.secure_login),
-          role_based_access: Boolean(data.settings.role_based_access),
           account_deactivation: Boolean(data.settings.account_deactivation),
           document_verification: Boolean(data.settings.document_verification),
           admin_notifications: Boolean(data.settings.admin_notifications),
@@ -153,11 +148,11 @@ function AdminSettings() {
       <section className="settings-grid">
         <SettingsCard
           accent="blue"
-          icon={<ShieldCheck />}
-          title="Role-Based Access Control"
-          text="Control system permissions for admin, farmers, and buyers."
-          status={settings.role_based_access ? "Enabled" : "Disabled"}
-          tone={settings.role_based_access ? "success" : "neutral"}
+          icon={<UserCog />}
+          title="Account Deactivation"
+          text="Let admins deactivate farmer and buyer accounts."
+          status={settings.account_deactivation ? "Allowed" : "Off"}
+          tone={settings.account_deactivation ? "success" : "neutral"}
         />
 
         <SettingsCard
@@ -173,7 +168,7 @@ function AdminSettings() {
           accent="green"
           icon={<FileCheck2 />}
           title="Document Verification"
-          text="Require certificates or permits before transaction confirmation."
+          text="Require the barangay health certificate on livestock listings."
           status={settings.document_verification ? "Required" : "Optional"}
           tone={settings.document_verification ? "success" : "neutral"}
         />
@@ -276,7 +271,7 @@ function AdminSettings() {
         <div className="settings-panel-title">
           <div>
             <h3>Security and Access Settings</h3>
-            <p>Manage login, role permissions, and account restrictions.</p>
+            <p>Sign-in and role permissions are always enforced. Manage account and document rules here.</p>
           </div>
 
           <span className="card-icon-badge">
@@ -286,28 +281,10 @@ function AdminSettings() {
 
         <div className="settings-list">
           <SettingToggle
-            accent="blue"
-            icon={<Lock />}
-            title="Require secure login"
-            text="Users must login before accessing marketplace dashboards."
-            active={settings.secure_login}
-            onChange={() => handleToggle("secure_login")}
-          />
-
-          <SettingToggle
-            accent="blue"
-            icon={<ShieldCheck />}
-            title="Enable role-based access"
-            text="Separate access for farmers, buyers, and MAO administrators."
-            active={settings.role_based_access}
-            onChange={() => handleToggle("role_based_access")}
-          />
-
-          <SettingToggle
             accent="purple"
             icon={<UserCog />}
             title="Allow account deactivation"
-            text="Admins can activate or deactivate user accounts."
+            text="Admins can deactivate farmer and buyer accounts. Reactivating is always allowed."
             active={settings.account_deactivation}
             onChange={() => handleToggle("account_deactivation")}
           />
@@ -316,7 +293,7 @@ function AdminSettings() {
             accent="green"
             icon={<FileCheck2 />}
             title="Require document verification"
-            text="Transactions cannot be completed without required documents."
+            text="Livestock listings must include the barangay health certificate. When off, documents are optional."
             active={settings.document_verification}
             onChange={() => handleToggle("document_verification")}
           />

@@ -23,6 +23,7 @@ import {
   VERUELA_CENTER,
   VERUELA_BOUNDARY_GEOJSON,
   VERUELA_BARANGAYS,
+  isInsideVeruela,
 } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
 import { getProductIcon } from "../utils/productCatalog";
@@ -42,7 +43,6 @@ function AdminMapMonitoring() {
     pinnedLocations: 0,
     mappedListings: 0,
     livestockTypes: 0,
-    withinVeruela: "0%",
     pendingReview: 0,
   });
 
@@ -131,6 +131,15 @@ function AdminMapMonitoring() {
   const pinnedFilteredLocations = filteredLocations.filter(
     (item) => item.farm_lat != null && item.farm_lng != null
   );
+
+  // Farms pinned outside the municipal boundary — checked against the
+  // actual Veruela outline, not just assumed.
+  const outsideVeruelaCount = locations.filter(
+    (item) =>
+      item.farm_lat != null &&
+      item.farm_lng != null &&
+      !isInsideVeruela(Number(item.farm_lat), Number(item.farm_lng))
+  ).length;
 
   const barangays = [
     "All Barangays",
@@ -432,15 +441,21 @@ function AdminMapMonitoring() {
             <span className="alert-status warning">Action Needed</span>
           </div>
 
-          <div className="alert-row normal">
-            <div className="alert-icon">
+          <div className={`alert-row ${outsideVeruelaCount > 0 ? "warning" : "normal"}`}>
+            <div className={`alert-icon ${outsideVeruelaCount > 0 ? "warning" : ""}`}>
               <MapPin size={20} />
             </div>
             <div className="alert-body">
               <strong>Coverage status</strong>
-              <p>All current listings are within Veruela scope.</p>
+              <p>
+                {outsideVeruelaCount > 0
+                  ? `${outsideVeruelaCount} seller location(s) are pinned outside Veruela.`
+                  : "All pinned seller locations are within Veruela."}
+              </p>
             </div>
-            <span className="alert-status normal">All Clear</span>
+            <span className={`alert-status ${outsideVeruelaCount > 0 ? "warning" : "normal"}`}>
+              {outsideVeruelaCount > 0 ? "Check Pins" : "All Clear"}
+            </span>
           </div>
         </div>
       </section>

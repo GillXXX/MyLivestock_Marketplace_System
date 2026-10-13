@@ -7,6 +7,7 @@ const { sendPasswordResetEmail, sendRegistrationCodeEmail } = require("../utils/
 const { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } = require("../utils/validators");
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const GOOGLE_SIGNUP_PURPOSE = "google-signup";
 const MAX_OTP_ATTEMPTS = 5;
 
 const generateOtp = () => crypto.randomInt(0, 1000000).toString().padStart(6, "0");
@@ -140,13 +141,18 @@ const verifyRegistrationCode = async (req, res) => {
 
 // Final step — only reachable once verifyRegistrationCode has flipped the
 // pending row to verified. This is where the account actually gets
-// created, with the name/phone/password chosen after verification (role is
-// decided separately in completeProfile, right after the first sign-in).
+// created, with the role, name, phone and password chosen after
+// verification — nothing exists in `users` until the person has picked
+// whether they are a farmer or a buyer.
 const completeRegistration = async (req, res) => {
   try {
-    const { email, fullName, phone, password, confirmPassword } = req.body;
+    const { email, role, fullName, phone, password, confirmPassword } = req.body;
 
-    if (!email || !fullName || !phone || !password || !confirmPassword) {
+    if (role !== "farmer" && role !== "buyer") {
+      return res.status(400).json({ message: "Please choose whether you are a farmer or a buyer" });
+    }
+
+    if (!email || !fullName?.trim() || !phone?.trim() || !password || !confirmPassword) {
       return res.status(400).json({ message: "Please fill in all required fields" });
     }
 
@@ -184,16 +190,16 @@ const completeRegistration = async (req, res) => {
 
     const [result] = await db.query(
       `INSERT INTO users (full_name, email, phone, location, role, password, profile_completed)
-       VALUES (?, ?, ?, ?, ?, ?, 0)`,
-      [fullName, email, phone, "", "buyer", hashedPassword]
+       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+      [fullName.trim(), email, phone.trim(), "", role, hashedPassword]
     );
 
     await db.query("DELETE FROM registration_codes WHERE id = ?", [pending.id]);
 
     await createNotification(
       "User Registration",
-      "New buyer registered",
-      `${fullName} created an account.`
+      `New ${role} registered`,
+      `${fullName.trim()} created a ${role} account.`
     );
 
     const [[user]] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
@@ -338,13 +344,7 @@ const googleLogin = async (req, res) => {
 
     const user = users[0];
 
-    if (intent === "login") {
-      if (!user) {
-        return res.status(404).json({
-          message: "No account found for this email. Please register first.",
-        });
-      }
-
+    if (intent === "login" && user) {
       if (!user.is_active) {
         return res.status(403).json({
           message: "Your account has been deactivated. Contact the MAO administrator.",
@@ -354,24 +354,26 @@ const googleLogin = async (req, res) => {
       return issueSession(res, user);
     }
 
-    // intent === "register": Google only vouches for the email address —
-    // account creation still goes through the same emailed 6-digit code as
-    // manual registration, so this kicks off that flow instead of creating
-    // the account directly. profile.name is handed back purely so the
-    // frontend can pre-fill the name field on the step that follows.
     if (user) {
       return res.status(409).json({ message: "Email already registered. Please sign in instead." });
     }
 
-    try {
-      await issueRegistrationCode(profile.email);
-    } catch (emailError) {
-      console.error("Failed to send registration code email:", emailError);
-      return res.status(500).json({ message: "Could not send the verification code. Please try again." });
-    }
+    // A Google account with no VOLT account yet — from the sign-up page, or
+    // "Continue with Google" on the sign-in page. Google has already
+    // confirmed the email, so no emailed code is needed, but nothing is
+    // created yet either: the person still has to choose farmer or buyer
+    // and fill in their name, phone and password.
+    // The short-lived signup token carries the Google-confirmed email to
+    // completeGoogleSignup, so it can't be swapped for another address.
+    const signupToken = jwt.sign(
+      { purpose: GOOGLE_SIGNUP_PURPOSE, email: profile.email, name: profile.name || "" },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
 
     res.status(200).json({
-      message: "We sent a 6-digit verification code to your email.",
+      needsRole: true,
+      signupToken,
       email: profile.email,
       fullName: profile.name || "",
     });
@@ -380,6 +382,73 @@ const googleLogin = async (req, res) => {
     // person's Google account — so say so instead of a generic "failed".
     console.error("Google login error:", error);
     res.status(500).json({ message: "Server error during Google sign-in. Please try again." });
+  }
+};
+
+// Creates the account for a new Google sign-up — the same role, name,
+// phone and password as an email sign-up, minus the emailed code (Google
+// already confirmed the email). The password lets the account sign in
+// with email too, not only with Google.
+const completeGoogleSignup = async (req, res) => {
+  try {
+    const { signupToken, role, fullName, phone, password, confirmPassword } = req.body;
+
+    if (role !== "farmer" && role !== "buyer") {
+      return res.status(400).json({ message: "Please choose whether you are a farmer or a buyer" });
+    }
+
+    if (!fullName?.trim() || !phone?.trim() || !password || !confirmPassword) {
+      return res.status(400).json({ message: "Please fill in all required fields" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ message: PASSWORD_REQUIREMENTS_MESSAGE });
+    }
+
+    let signup;
+    try {
+      signup = jwt.verify(signupToken, process.env.JWT_SECRET);
+    } catch (error) {
+      signup = null;
+    }
+
+    if (!signup || signup.purpose !== GOOGLE_SIGNUP_PURPOSE || !signup.email) {
+      return res.status(401).json({ message: "Your Google sign-up expired. Please continue with Google again." });
+    }
+
+    const [existingUser] = await db.query("SELECT id FROM users WHERE email = ?", [signup.email]);
+
+    if (existingUser.length > 0) {
+      return res.status(409).json({ message: "Email already registered. Please sign in instead." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const [result] = await db.query(
+      `INSERT INTO users (full_name, email, phone, location, role, password, profile_completed)
+       VALUES (?, ?, ?, '', ?, ?, 1)`,
+      [fullName.trim(), signup.email, phone.trim(), role, hashedPassword]
+    );
+
+    // A manual sign-up for the same email may have been started earlier.
+    await db.query("DELETE FROM registration_codes WHERE email = ?", [signup.email]);
+
+    await createNotification(
+      "User Registration",
+      `New ${role} registered`,
+      `${fullName.trim()} created a ${role} account with Google.`
+    );
+
+    const [[user]] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
+
+    issueSession(res, user);
+  } catch (error) {
+    console.error("Complete Google signup error:", error);
+    res.status(500).json({ message: "Server error creating your account" });
   }
 };
 
@@ -476,6 +545,7 @@ module.exports = {
   completeProfile,
   login,
   googleLogin,
+  completeGoogleSignup,
   forgotPassword,
   resetPassword,
 };
