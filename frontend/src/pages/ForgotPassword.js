@@ -117,6 +117,9 @@ function ForgotPassword() {
                 <span className="login-tag">RESET PASSWORD</span>
                 <h2>Forgot your password?</h2>
                 <p>Enter your email and we'll send you a reset link.</p>
+                <p className="staff-reset-note">
+                  MAO staff: your password is reset by the MAO admin — please ask them.
+                </p>
               </div>
 
               {message && <p className="form-error">{message}</p>}

@@ -21,9 +21,13 @@ const getAdminVerification = async (req, res) => {
         u.farm_location AS farmer_farm_location,
         u.is_verified AS farmer_is_verified,
         u.profile_image AS farmer_profile_image,
-        u.created_at AS farmer_joined_at
+        u.created_at AS farmer_joined_at,
+        l.reviewed_at,
+        reviewer.full_name AS reviewed_by_name,
+        reviewer.role AS reviewed_by_role
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id
+      LEFT JOIN users reviewer ON l.reviewed_by = reviewer.id
       ORDER BY l.created_at DESC
     `);
 
@@ -55,7 +59,7 @@ const updateVerificationStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const error = await setListingReviewStatus(req.params.id, status);
+    const error = await setListingReviewStatus(req.params.id, status, undefined, req.user.id);
 
     if (error) {
       return res.status(error.status).json({ message: error.message });

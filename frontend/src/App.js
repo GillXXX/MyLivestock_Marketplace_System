@@ -163,6 +163,15 @@ function App() {
 
         <Route element={<AdminLayout />}>
           <Route
+            path="/admin-account"
+            element={
+              <RequireAdminRole>
+                <AccountSettings role="admin" />
+              </RequireAdminRole>
+            }
+          />
+
+          <Route
             path="/admin-dashboard"
             element={<AdminDashboard />}
           />

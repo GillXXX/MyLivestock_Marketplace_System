@@ -658,3 +658,10 @@ backdrop-filter: blur(14px);
     font-size: 12.5px;
   }
 }
+
+/* Forgot password: staff passwords are reset by the admin, not by email. */
+.modern-login .login-header .staff-reset-note {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}

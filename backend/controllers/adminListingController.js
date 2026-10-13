@@ -14,10 +14,14 @@ const getAdminListings = async (req, res) => {
         l.status,
         l.image_url,
         l.review_note,
+        l.reviewed_at,
         l.created_at,
-        u.full_name AS farmer_name
+        u.full_name AS farmer_name,
+        reviewer.full_name AS reviewed_by_name,
+        reviewer.role AS reviewed_by_role
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id
+      LEFT JOIN users reviewer ON l.reviewed_by = reviewer.id
       ORDER BY l.created_at DESC
     `);
 
@@ -53,8 +57,9 @@ const REVIEW_STATUSES = ["Available", "Pending", "Flagged", "Rejected"];
 
 // Shared by the Listings and Verification pages. Returns an error
 // { status, message } when the change isn't allowed. reviewNote undefined
-// leaves the existing note as it is.
-const setListingReviewStatus = async (listingId, status, reviewNote) => {
+// leaves the existing note as it is. Records which admin / MAO staff made
+// the change, and when.
+const setListingReviewStatus = async (listingId, status, reviewNote, reviewerId) => {
   if (!REVIEW_STATUSES.includes(status)) {
     return { status: 400, message: "Invalid listing status" };
   }
@@ -62,12 +67,12 @@ const setListingReviewStatus = async (listingId, status, reviewNote) => {
   const [result] =
     reviewNote === undefined
       ? await db.query(
-          "UPDATE livestock_listings SET status = ? WHERE id = ? AND status IN (?)",
-          [status, listingId, REVIEW_STATUSES]
+          "UPDATE livestock_listings SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ? AND status IN (?)",
+          [status, reviewerId, listingId, REVIEW_STATUSES]
         )
       : await db.query(
-          "UPDATE livestock_listings SET status = ?, review_note = ? WHERE id = ? AND status IN (?)",
-          [status, reviewNote, listingId, REVIEW_STATUSES]
+          "UPDATE livestock_listings SET status = ?, review_note = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ? AND status IN (?)",
+          [status, reviewNote, reviewerId, listingId, REVIEW_STATUSES]
         );
 
   if (result.affectedRows === 0) {
@@ -89,7 +94,8 @@ const updateListingStatus = async (req, res) => {
     const error = await setListingReviewStatus(
       req.params.id,
       status,
-      isReviewOutcome && reason ? reason : null
+      isReviewOutcome && reason ? reason : null,
+      req.user.id
     );
 
     if (error) {

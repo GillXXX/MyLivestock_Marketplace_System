@@ -1,3 +1,5 @@
+import { API_URL } from "../config";
+
 // Persists a login/verify-code/Google response and routes the user onward.
 // Shared by Login and Register so both land in the same place. A brand-new
 // account (Google or email code, no upfront form) is flagged incomplete —
@@ -24,6 +26,25 @@ export const completeAuth = (data, navigate) => {
   }
 
   return true;
+};
+
+// Signs out: tells the server first (for admin and MAO staff that records
+// the sign-out time and ends the session, so the token stops working), then
+// clears this browser's login.
+export const logout = (navigate) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    fetch(`${API_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      keepalive: true,
+    }).catch(() => {});
+  }
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  navigate("/login");
 };
 
 // Turns what Google's popup reports back into something a person can act

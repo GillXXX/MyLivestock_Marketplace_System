@@ -11,6 +11,7 @@ import {
   BarChart3,
   BellRing,
   Settings,
+  KeyRound,
   LogOut,
   Menu,
   X,
@@ -19,6 +20,7 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import NotificationBell from "./NotificationBell";
+import { logout } from "../utils/auth";
 import "../pages/AdminDashboard.css";
 
 function AdminLayout() {
@@ -32,11 +34,7 @@ function AdminLayout() {
   const adminFirstName = currentUser.fullName ? currentUser.fullName.split(" ")[0] : "Admin";
   const adminFirstLetter = currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : "A";
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const handleLogout = () => logout(navigate);
 
   const isActive = (path) => (location.pathname === path ? "active" : "");
 
@@ -145,6 +143,13 @@ function AdminLayout() {
           {isSuperAdmin && (
             <Link className={isActive("/admin-settings")} to="/admin-settings">
               <Settings size={20} /> Settings
+            </Link>
+          )}
+
+          {/* MAO staff passwords are managed by the admin (Staff Management). */}
+          {isSuperAdmin && (
+            <Link className={isActive("/admin-account")} to="/admin-account">
+              <KeyRound size={20} /> My Account
             </Link>
           )}
         </nav>

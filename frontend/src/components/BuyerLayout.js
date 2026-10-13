@@ -20,6 +20,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import NotificationBell from "./NotificationBell";
 import { API_URL } from "../config";
+import { logout } from "../utils/auth";
 import "../pages/BuyerDashboard.css";
 
 function BuyerLayout() {
@@ -61,11 +62,7 @@ function BuyerLayout() {
     ? new Date(profile.created_at).getFullYear()
     : null;
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const handleLogout = () => logout(navigate);
 
   const isActive = (path) => (location.pathname === path ? "active" : "");
 

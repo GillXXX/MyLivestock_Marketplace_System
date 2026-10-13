@@ -27,6 +27,8 @@ function AdminListings() {
   const navigate = useNavigate();
   const location = useLocation();
   const goBack = useGoBack("/admin-dashboard");
+  // Deleting is permanent and admin-only; MAO staff reject or flag instead.
+  const canDelete = JSON.parse(localStorage.getItem("user") || "{}").role === "admin";
 
   const [listings, setListings] = useState([]);
   const [stats, setStats] = useState({
@@ -375,9 +377,11 @@ function AdminListings() {
                   <XCircle size={15} /> Reject
                 </button>
 
-                <button type="button" className="bulk-delete" onClick={bulkDelete}>
-                  <Trash2 size={15} /> Delete
-                </button>
+                {canDelete && (
+                  <button type="button" className="bulk-delete" onClick={bulkDelete}>
+                    <Trash2 size={15} /> Delete
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -512,6 +516,15 @@ function AdminListings() {
                                 {daysPending <= 0 ? "Today" : `${daysPending}d pending`}
                               </small>
                             )}
+
+                            {item.reviewed_by_name && (
+                              <small
+                                className="reviewed-by"
+                                title={`Last reviewed by ${item.reviewed_by_name} on ${new Date(item.reviewed_at).toLocaleString()}`}
+                              >
+                                by {item.reviewed_by_name} · {new Date(item.reviewed_at).toLocaleDateString()}
+                              </small>
+                            )}
                           </div>
                         </td>
 
@@ -544,14 +557,16 @@ function AdminListings() {
                               <XCircle size={17} />
                             </button>
 
-                            <button
-                              className="delete"
-                              title="Delete Listing"
-                              type="button"
-                              onClick={() => deleteListing(item.id)}
-                            >
-                              <Trash2 size={17} />
-                            </button>
+                            {canDelete && (
+                              <button
+                                className="delete"
+                                title="Delete Listing"
+                                type="button"
+                                onClick={() => deleteListing(item.id)}
+                              >
+                                <Trash2 size={17} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

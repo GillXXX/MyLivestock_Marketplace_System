@@ -129,6 +129,7 @@ const adminTransactionRoutes = require("./routes/adminTransactionRoutes");
 const adminNotificationRoutes = require("./routes/adminNotificationRoutes");
 const adminReportRoutes = require("./routes/adminReportRoutes");
 const adminSettingRoutes = require("./routes/adminSettingRoutes");
+const adminAccountRoutes = require("./routes/adminAccountRoutes");
 const publicRoutes = require("./routes/publicRoutes");
 
 const protect = require("./middleware/authMiddleware");
@@ -158,6 +159,7 @@ app.use("/api/admin/transactions", adminTransactionRoutes);
 app.use("/api/admin/notifications", adminNotificationRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
+app.use("/api/admin/account", adminAccountRoutes);
 app.use("/api/public", publicRoutes);
 
 // Deployment check: is the app up, are its required settings present and

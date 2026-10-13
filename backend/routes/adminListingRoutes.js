@@ -12,6 +12,7 @@ const {
 
 router.get("/", protect, requireRole("admin", "mao_staff"), getAdminListings);
 router.put("/:id/status", protect, requireRole("admin", "mao_staff"), updateListingStatus);
-router.delete("/:id", protect, requireRole("admin", "mao_staff"), deleteListing);
+// Permanent, so admin only — MAO staff reject or flag a listing instead.
+router.delete("/:id", protect, requireRole("admin"), deleteListing);
 
 module.exports = router;

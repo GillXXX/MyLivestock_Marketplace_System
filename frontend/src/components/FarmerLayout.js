@@ -19,6 +19,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import NotificationBell from "./NotificationBell";
 import { API_URL } from "../config";
+import { logout } from "../utils/auth";
 import "../pages/FarmerDashboard.css";
 
 function FarmerLayout() {
@@ -58,11 +59,7 @@ function FarmerLayout() {
     : null;
   const memberSinceYear = profile?.joinedYear || null;
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const handleLogout = () => logout(navigate);
 
   const isActive = (path) => (location.pathname === path ? "active" : "");
 

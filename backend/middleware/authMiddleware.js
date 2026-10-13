@@ -39,6 +39,20 @@ const protect = async (req, res, next) => {
       });
     }
 
+    // Admin / MAO staff tokens carry a recorded session (sid); once that
+    // session is signed out, the token stops working even though it hasn't
+    // expired.
+    if (decoded.sid) {
+      const [[session]] = await db.query(
+        "SELECT logged_out_at FROM staff_sessions WHERE id = ? AND user_id = ?",
+        [decoded.sid, decoded.id]
+      );
+
+      if (!session || session.logged_out_at) {
+        return res.status(401).json({ message: "You've been signed out. Please sign in again." });
+      }
+    }
+
     // Same staleness problem as is_active above: trusting decoded.role would
     // let a demoted admin/staff account keep using its old token's elevated
     // role for up to 7 days. Always use the DB's current role instead.

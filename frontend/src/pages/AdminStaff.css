@@ -307,6 +307,88 @@
   --action-shadow: rgba(220, 38, 38, 0.5);
 }
 
+.staff-table-actions .info {
+  --action-color: #2563eb;
+  --action-tint: rgba(37, 99, 235, 0.12);
+  --action-shadow: rgba(37, 99, 235, 0.5);
+}
+
+/* Last Activity column: latest sign-in and sign-out. */
+.staff-activity-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.staff-activity-cell span:first-child {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.staff-activity-none {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* LOGIN HISTORY MODAL */
+
+.staff-history-modal {
+  max-width: 520px;
+}
+
+.staff-history-list {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staff-history-list li {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: white;
+}
+
+.staff-history-times {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 13px;
+}
+
+.staff-history-times strong {
+  color: var(--primary-dark);
+}
+
+.staff-history-times span {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.staff-history-times span.open {
+  color: #a3690a;
+}
+
+.staff-history-list small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+
+.staff-history-empty {
+  margin: 18px 0 0;
+  color: var(--muted);
+}
+
 /* ADD STAFF MODAL */
 
 .staff-modal-overlay {
@@ -501,7 +583,7 @@
   }
 
   .admin-stat-card h2 {
-    font-size: 19px;
+    font-size: 17.5px;
     margin: 8px 0 0;
   }
 
@@ -827,5 +909,18 @@
   .enterprise-staff-page .admin-stat-card:hover,
   .enterprise-staff-page .admin-stat-card:hover .admin-stat-icon {
     transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Last Activity sits in half the row on phones: let it wrap, right-aligned. */
+  .enterprise-staff-page .staff-activity-cell {
+    white-space: normal;
+    text-align: right;
+    font-size: 11.5px;
+  }
+
+  .enterprise-staff-page .staff-activity-none {
+    font-size: 11.5px;
   }
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
+import { logout } from "../utils/auth";
 import { isWeakPassword, PASSWORD_HINT } from "../utils/password";
 import useGoBack from "../utils/useGoBack";
 import "./AccountSettings.css";
@@ -31,7 +32,7 @@ const ROLE_CONFIG = {
     notificationsPath: "/buyer-notifications",
     notificationsText: "Review inquiry and transaction alerts",
     notificationsAccent: "purple",
-    statusText: "Verified Buyer",
+    statusText: "Buyer account",
   },
   farmer: {
     portalTag: "FARMER PORTAL",
@@ -43,9 +44,31 @@ const ROLE_CONFIG = {
     notificationsPath: "/farmer-notifications",
     notificationsText: "Review listing and transaction alerts",
     notificationsAccent: "purple",
-    statusText: "Verified Farmer • MAO approved",
+    // Replaced by the farmer's actual verification status once loaded.
+    statusText: "Farmer account",
   },
 };
+
+// A farmer's account status, from verification_status on their profile.
+// The admin's own account (MAO staff passwords are managed by the admin in
+// Staff Management, so staff don't get this page).
+const ADMIN_CONFIG = {
+  portalTag: "ADMIN PORTAL",
+  dashboardPath: "/admin-dashboard",
+  changePasswordEndpoint: "/api/admin/account/change-password",
+  profilePath: null,
+  notificationsPath: "/admin-notifications",
+  notificationsText: "Review system alerts",
+  notificationsAccent: "purple",
+  statusText: "Administrator",
+};
+
+const FARMER_STATUS_TEXT = {
+  Approved: "Verified Farmer • MAO approved",
+  Pending: "Verification pending • MAO is reviewing your documents",
+  Rejected: "Verification rejected • see your Profile to resubmit",
+};
+const FARMER_NOT_SUBMITTED_TEXT = "Not verified yet • submit your documents in Profile";
 
 const STRENGTH_LEVELS = [
   { label: "Very weak", tone: "weak" },
@@ -71,8 +94,34 @@ function getPasswordStrength(password) {
 
 function AccountSettings({ role }) {
   const navigate = useNavigate();
-  const config = ROLE_CONFIG[role];
+  const config = role === "admin" ? ADMIN_CONFIG : ROLE_CONFIG[role];
   const goBack = useGoBack(config.dashboardPath);
+  const [statusText, setStatusText] = useState(config.statusText);
+
+  // Farmers see their real verification status — only MAO-approved
+  // farmers are "verified" (and only they can post listings).
+  useEffect(() => {
+    if (role !== "farmer") return undefined;
+    let cancelled = false;
+
+    fetch(`${API_URL}/api/farmer/profile`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((profile) => {
+        if (cancelled || !profile) return;
+        setStatusText(
+          profile.is_verified
+            ? FARMER_STATUS_TEXT.Approved
+            : FARMER_STATUS_TEXT[profile.verification_status] || FARMER_NOT_SUBMITTED_TEXT
+        );
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role]);
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -136,6 +185,7 @@ function AccountSettings({ role }) {
 
       setFeedback({ type: "success", text: "Password updated successfully." });
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
     } catch (error) {
       setFeedback({ type: "error", text: "Cannot connect to backend server" });
     }
@@ -143,11 +193,7 @@ function AccountSettings({ role }) {
     setLoading(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const handleLogout = () => logout(navigate);
 
   return (
     <div className={`account-settings-page role-${role}`}>
@@ -169,8 +215,8 @@ function AccountSettings({ role }) {
         </div>
 
         <div className="settings-hero-copy">
-          <h2>{config.statusText}</h2>
-          <p>Your credentials and account access are protected end-to-end.</p>
+          <h2>{statusText}</h2>
+          <p>Manage your password and how you sign in to VOLT.</p>
         </div>
 
         <div className="settings-hero-badge">
@@ -302,6 +348,7 @@ function AccountSettings({ role }) {
             <h3>Quick Links</h3>
             <p>Other places to manage your account.</p>
 
+            {config.profilePath && (
             <Link to={config.profilePath} className={`settings-link-row accent-${config.profileAccent}`}>
               <div className="settings-link-left">
                 <div className="settings-link-icon">
@@ -314,6 +361,7 @@ function AccountSettings({ role }) {
               </div>
               <ChevronRight size={18} className="settings-link-arrow" />
             </Link>
+            )}
 
             <Link to={config.notificationsPath} className={`settings-link-row accent-${config.notificationsAccent}`}>
               <div className="settings-link-left">
@@ -335,7 +383,7 @@ function AccountSettings({ role }) {
                 </div>
                 <div>
                   <strong>Account Status</strong>
-                  <p>{config.statusText}</p>
+                  <p>{statusText}</p>
                 </div>
               </div>
             </div>

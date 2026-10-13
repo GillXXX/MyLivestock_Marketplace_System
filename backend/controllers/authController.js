@@ -13,12 +13,30 @@ const MAX_OTP_ATTEMPTS = 5;
 const generateOtp = () => crypto.randomInt(0, 1000000).toString().padStart(6, "0");
 const hashOtp = (code) => crypto.createHash("sha256").update(String(code)).digest("hex");
 
-const issueSession = (res, user) => {
+// Admin and MAO staff sign-ins are recorded (staff_sessions) so the admin
+// can see when each staff member signed in and out. The session id goes in
+// the token, so signing out ends it on the server too (see protect).
+const STAFF_ROLES = ["admin", "mao_staff"];
+
+const issueSession = async (req, res, user, loginMethod = "password") => {
+  let sessionId = null;
+
+  if (STAFF_ROLES.includes(user.role)) {
+    const [session] = await db.query(
+      "INSERT INTO staff_sessions (user_id, login_method, ip_address, user_agent) VALUES (?, ?, ?, ?)",
+      [user.id, loginMethod, req.ip || null, (req.get("user-agent") || "").slice(0, 255) || null]
+    );
+    sessionId = session.insertId;
+  }
+
+  await db.query("UPDATE users SET last_login_at = NOW() WHERE id = ?", [user.id]);
+
   const token = jwt.sign(
     {
       id: user.id,
       email: user.email,
       role: user.role,
+      ...(sessionId ? { sid: sessionId } : {}),
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
@@ -204,7 +222,7 @@ const completeRegistration = async (req, res) => {
 
     const [[user]] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
 
-    issueSession(res, user);
+    await issueSession(req, res, user);
   } catch (error) {
     console.error("Complete registration error:", error);
     res.status(500).json({ message: "Server error completing registration" });
@@ -282,7 +300,7 @@ const login = async (req, res) => {
       });
     }
 
-    issueSession(res, user);
+    await issueSession(req, res, user);
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Server error during login" });
@@ -351,7 +369,7 @@ const googleLogin = async (req, res) => {
         });
       }
 
-      return issueSession(res, user);
+      return await issueSession(req, res, user, "google");
     }
 
     if (user) {
@@ -445,7 +463,7 @@ const completeGoogleSignup = async (req, res) => {
 
     const [[user]] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
 
-    issueSession(res, user);
+    await issueSession(req, res, user, "google");
   } catch (error) {
     console.error("Complete Google signup error:", error);
     res.status(500).json({ message: "Server error creating your account" });
@@ -460,8 +478,10 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
+    // MAO staff passwords are only ever reset by the admin (Staff
+    // Management), so staff accounts get no reset link.
     const [users] = await db.query(
-      "SELECT id, full_name, email FROM users WHERE email = ?",
+      "SELECT id, full_name, email FROM users WHERE email = ? AND role <> 'mao_staff'",
       [email]
     );
 
@@ -516,7 +536,7 @@ const resetPassword = async (req, res) => {
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const [users] = await db.query(
-      "SELECT id FROM users WHERE reset_token_hash = ? AND reset_token_expires > NOW()",
+      "SELECT id FROM users WHERE reset_token_hash = ? AND reset_token_expires > NOW() AND role <> 'mao_staff'",
       [tokenHash]
     );
 
@@ -538,7 +558,27 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Ends this sign-in on the server: for admin / MAO staff it records the
+// sign-out time and makes the token unusable (protect checks the session).
+// Other accounts have no server-side session, so there's nothing to end.
+const logout = async (req, res) => {
+  try {
+    if (req.user.sid) {
+      await db.query(
+        "UPDATE staff_sessions SET logged_out_at = NOW() WHERE id = ? AND user_id = ? AND logged_out_at IS NULL",
+        [req.user.sid, req.user.id]
+      );
+    }
+
+    res.json({ message: "Logged out" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Server error logging out" });
+  }
+};
+
 module.exports = {
+  logout,
   requestRegistrationCode,
   verifyRegistrationCode,
   completeRegistration,
