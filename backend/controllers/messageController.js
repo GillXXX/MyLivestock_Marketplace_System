@@ -35,62 +35,55 @@ const getConversations = async (req, res) => {
         l.breed,
         farmer.full_name AS farmer_name,
         farmer.is_verified AS farmer_is_verified,
-        buyer.full_name AS buyer_name,
-        (
-          SELECT m.message
-          FROM messages m
-          WHERE m.conversation_id = c.id
-          ORDER BY m.created_at DESC
-          LIMIT 1
-        ) AS last_message,
-        (
-          SELECT m.sender_id
-          FROM messages m
-          WHERE m.conversation_id = c.id
-          ORDER BY m.created_at DESC
-          LIMIT 1
-        ) AS last_sender_id,
-        (
-          SELECT m.created_at
-          FROM messages m
-          WHERE m.conversation_id = c.id
-          ORDER BY m.created_at DESC
-          LIMIT 1
-        ) AS last_time,
-        (
-          SELECT m.attachment_type
-          FROM messages m
-          WHERE m.conversation_id = c.id
-          ORDER BY m.created_at DESC
-          LIMIT 1
-        ) AS last_attachment_type,
-        (
-          SELECT m.deleted_at
-          FROM messages m
-          WHERE m.conversation_id = c.id
-          ORDER BY m.created_at DESC
-          LIMIT 1
-        ) AS last_deleted_at
+        buyer.full_name AS buyer_name
       FROM conversations c
       JOIN livestock_listings l ON c.listing_id = l.id
       JOIN users farmer ON c.farmer_id = farmer.id
       JOIN users buyer ON c.buyer_id = buyer.id
-      WHERE ${query}
-      ORDER BY last_time DESC`,
+      WHERE ${query}`,
       [userId]
     );
 
-    const withTyping = conversations.map((conversation) => {
-      const otherUserId =
-        role === "farmer" ? conversation.buyer_id : conversation.farmer_id;
+    // Each conversation's latest message, fetched for all of them in one
+    // grouped query. (A per-conversation subquery in the join above was
+    // ~10x slower on MariaDB, and this list is polled every few seconds by
+    // everyone with Messages open.) Message ids only grow, so the highest
+    // id is the latest message.
+    const latestByConversation = new Map();
 
-      return {
-        ...conversation,
-        other_typing: isTyping(conversation.id, otherUserId),
-      };
-    });
+    if (conversations.length > 0) {
+      const [latestMessages] = await db.query(
+        `SELECT m.conversation_id, m.message, m.sender_id, m.created_at, m.attachment_type, m.deleted_at
+         FROM messages m
+         JOIN (
+           SELECT MAX(id) AS id FROM messages WHERE conversation_id IN (?) GROUP BY conversation_id
+         ) latest ON m.id = latest.id`,
+        [conversations.map((conversation) => conversation.id)]
+      );
 
-    res.json(withTyping);
+      latestMessages.forEach((m) => latestByConversation.set(m.conversation_id, m));
+    }
+
+    const withLatest = conversations
+      .map((conversation) => {
+        const latest = latestByConversation.get(conversation.id);
+        const otherUserId =
+          role === "farmer" ? conversation.buyer_id : conversation.farmer_id;
+
+        return {
+          ...conversation,
+          last_message: latest?.message ?? null,
+          last_sender_id: latest?.sender_id ?? null,
+          last_time: latest?.created_at ?? null,
+          last_attachment_type: latest?.attachment_type ?? null,
+          last_deleted_at: latest?.deleted_at ?? null,
+          other_typing: isTyping(conversation.id, otherUserId),
+        };
+      })
+      // Newest conversation first; ones with no messages yet last.
+      .sort((a, b) => new Date(b.last_time || 0) - new Date(a.last_time || 0));
+
+    res.json(withLatest);
   } catch (error) {
     console.error("Get conversations error:", error);
     res.status(500).json({ message: "Server error loading conversations" });
@@ -114,10 +107,16 @@ const verifyConversationAccess = async (conversationId, userId) => {
   return { ok: true, conversation: rows[0] };
 };
 
+// The open chat polls this every couple of seconds. With ?after=<last
+// message id> only newer messages come back (plus which messages are
+// deleted, since deleting changes an older row), and the read mark only
+// runs when something new arrived — so an idle chat costs a few indexed
+// lookups instead of resending its whole history.
 const getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const userId = req.user.id;
+    const afterId = Number.parseInt(req.query.after, 10) || 0;
 
     const access = await verifyConversationAccess(conversationId, userId);
 
@@ -146,22 +145,33 @@ const getMessages = async (req, res) => {
       FROM messages m
       JOIN users u ON m.sender_id = u.id
       LEFT JOIN livestock_listings l ON m.listing_id = l.id
-      WHERE m.conversation_id = ?
-      ORDER BY m.created_at ASC`,
-      [conversationId]
+      WHERE m.conversation_id = ? AND m.id > ?
+      ORDER BY m.created_at ASC, m.id ASC`,
+      [conversationId, afterId]
     );
 
     const isFarmer = access.conversation.farmer_id === userId;
-    const readColumn = isFarmer ? "farmer_last_read_at" : "buyer_last_read_at";
-
-    await db.query(
-      `UPDATE conversations SET ${readColumn} = NOW() WHERE id = ?`,
-      [conversationId]
-    );
-
     const otherUserId = isFarmer
       ? access.conversation.buyer_id
       : access.conversation.farmer_id;
+
+    // Nothing new since the last poll means nothing new to mark as read.
+    if (afterId === 0 || messages.length > 0) {
+      const readColumn = isFarmer ? "farmer_last_read_at" : "buyer_last_read_at";
+
+      await db.query(
+        `UPDATE conversations SET ${readColumn} = NOW() WHERE id = ?`,
+        [conversationId]
+      );
+    }
+
+    const [deletedRows] =
+      afterId > 0
+        ? await db.query(
+            "SELECT id FROM messages WHERE conversation_id = ? AND deleted_at IS NOT NULL",
+            [conversationId]
+          )
+        : [[]];
 
     // The listing this chat is about, and the buyer's open deal for it if
     // there is one — lets the buyer "Proceed to Negotiation" from the chat.
@@ -194,6 +204,7 @@ const getMessages = async (req, res) => {
 
     res.json({
       messages,
+      deletedIds: deletedRows.map((row) => row.id),
       otherTyping: isTyping(conversationId, otherUserId),
       deal: deal || null,
     });

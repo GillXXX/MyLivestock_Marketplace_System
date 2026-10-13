@@ -26,6 +26,33 @@ import BuyNowModal from "../components/BuyNowModal";
 import "./Messages.css";
 
 const POLL_MESSAGES_MS = 2000;
+
+// Adds a poll's new messages to the ones on screen and blanks out any that
+// were deleted since (deleting changes an older message, which an
+// "only newer than" poll wouldn't otherwise bring back). dropId removes the
+// optimistic copy of a message once the real one has arrived.
+const mergeMessages = (current, incoming, deletedIds = [], dropId = null) => {
+  const deleted = new Set(deletedIds);
+  const known = new Set(current.map((m) => m.id));
+
+  return [
+    ...current
+      .filter((m) => m.id !== dropId)
+      .map((m) =>
+        deleted.has(m.id) && !m.deleted_at
+          ? {
+              ...m,
+              message: null,
+              attachment_url: null,
+              attachment_type: null,
+              listing_id: null,
+              deleted_at: new Date().toISOString(),
+            }
+          : m
+      ),
+    ...incoming.filter((m) => !known.has(m.id)),
+  ];
+};
 const POLL_CONVERSATIONS_MS = 5000;
 const TYPING_PING_THROTTLE_MS = 1500;
 
@@ -103,6 +130,11 @@ function Messages() {
   const forceScrollRef = useRef(true);
   const textareaRef = useRef(null);
   const lastTypingPingRef = useRef(0);
+  // The open conversation and the newest message id loaded for it, so polls
+  // only ask for newer messages and a late reply for a conversation that's
+  // no longer open is ignored.
+  const openConversationRef = useRef(null);
+  const lastMessageIdRef = useRef(0);
   const cameraPhotoInputRef = useRef(null);
   const cameraVideoInputRef = useRef(null);
   const galleryInputRef = useRef(null);
@@ -193,19 +225,35 @@ function Messages() {
     }
   };
 
-  const fetchMessages = async (conversationId) => {
+  const fetchMessages = async (conversationId, { dropId } = {}) => {
     const auth = getAuth();
     if (!auth || !conversationId) return;
 
+    const afterId = lastMessageIdRef.current;
+
     try {
-      const res = await fetch(`${API_URL}/api/messages/${conversationId}`, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
+      const res = await fetch(
+        `${API_URL}/api/messages/${conversationId}${afterId ? `?after=${afterId}` : ""}`,
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
 
       const data = await res.json();
 
+      // Switched to another conversation (or reloaded it) while this was
+      // in flight — its answer no longer applies.
+      if (openConversationRef.current !== conversationId || lastMessageIdRef.current !== afterId) {
+        return;
+      }
+
       if (res.ok) {
-        setMessages(data.messages);
+        setMessages((current) =>
+          afterId ? mergeMessages(current, data.messages, data.deletedIds, dropId) : data.messages
+        );
+
+        if (data.messages.length > 0) {
+          lastMessageIdRef.current = Math.max(...data.messages.map((m) => m.id));
+        }
+
         setOtherTyping(Boolean(data.otherTyping));
         setDeal(data.deal || null);
       }
@@ -233,11 +281,20 @@ function Messages() {
     setCurrentUser(auth.user);
     fetchConversations(true);
 
+    // No polling while the tab is hidden — catch up as soon as it's back.
     const conversationsInterval = setInterval(() => {
-      fetchConversations(false);
+      if (!document.hidden) fetchConversations(false);
     }, POLL_CONVERSATIONS_MS);
 
-    return () => clearInterval(conversationsInterval);
+    const handleVisible = () => {
+      if (!document.hidden) fetchConversations(false);
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+
+    return () => {
+      clearInterval(conversationsInterval);
+      document.removeEventListener("visibilitychange", handleVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -268,15 +325,26 @@ function Messages() {
     setActionsMessageId(null);
     forceScrollRef.current = true;
 
+    openConversationRef.current = selectedId;
+    lastMessageIdRef.current = 0;
+
     if (!selectedId) return;
 
     fetchMessages(selectedId);
 
     const messagesInterval = setInterval(() => {
-      fetchMessages(selectedId);
+      if (!document.hidden) fetchMessages(selectedId);
     }, POLL_MESSAGES_MS);
 
-    return () => clearInterval(messagesInterval);
+    const handleVisible = () => {
+      if (!document.hidden) fetchMessages(selectedId);
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+
+    return () => {
+      clearInterval(messagesInterval);
+      document.removeEventListener("visibilitychange", handleVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
@@ -477,7 +545,10 @@ function Messages() {
       }
 
       if (res.ok) {
-        await fetchMessages(selectedId);
+        await fetchMessages(selectedId, { dropId: tempId });
+        // A poll that started before the send may have been discarded;
+        // either way the optimistic copy has served its purpose.
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
         fetchConversations(false);
       } else {
         const data = await res.json();
