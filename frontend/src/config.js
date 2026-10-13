@@ -1,9 +1,16 @@
-// Set but empty (REACT_APP_API_URL=) means "same origin": requests go to
-// /api/... on the page's own host and the dev server's proxy forwards them
-// to the backend — needed for the local HTTPS setup. Unset falls back to
-// the local backend.
+// Empty ("") means "same origin": requests go to /api/... on the page's own
+// host — the production setup, where the backend serves this built app
+// (Hostinger), and the local HTTPS setup, where the dev server's proxy
+// forwards them. Set REACT_APP_API_URL only when the API lives on a
+// different domain. Unset: same origin in a production build, the local
+// backend in development.
 const envApiUrl = process.env.REACT_APP_API_URL;
-export const API_URL = envApiUrl !== undefined ? envApiUrl : "http://localhost:5000";
+export const API_URL =
+  envApiUrl !== undefined
+    ? envApiUrl
+    : process.env.NODE_ENV === "production"
+    ? ""
+    : "http://localhost:5000";
 
 // Local, dependency-free fallback avatar (a hotlinked Unsplash photo used to
 // serve as this default and started returning 503s — a bundled data URI

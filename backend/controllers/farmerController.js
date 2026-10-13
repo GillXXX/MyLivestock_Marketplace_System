@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const { createNotification } = require("../utils/notify");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
 const { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } = require("../utils/validators");
+const { closeOrderAndReturnStock } = require("../utils/orderStock");
 
 const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
 
@@ -429,10 +430,16 @@ exports.advanceTransactionStep = async (req, res) => {
     // Negotiation and confirmation are entirely between the buyer and
     // seller — MAO can monitor every transaction, but doesn't get to block
     // it from advancing.
-    await db.query(
-      "UPDATE transactions SET workflow_step = ? WHERE id = ?",
-      [nextStep, id]
+    // Only moves from the step that was just read, so a double-click can't
+    // skip a stage, and not once the order has been closed meanwhile.
+    const [advanceResult] = await db.query(
+      "UPDATE transactions SET workflow_step = ? WHERE id = ? AND workflow_step = ? AND status = 'Pending'",
+      [nextStep, id, transaction.workflow_step]
     );
+
+    if (advanceResult.affectedRows === 0) {
+      return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+    }
 
     await createNotification(
       "Transaction Alert",
@@ -476,13 +483,10 @@ exports.declineTransaction = async (req, res) => {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
-    await db.query("UPDATE transactions SET status = 'Declined' WHERE id = ?", [id]);
-
     // Return the reserved stock to the listing now that the order fell through.
-    await db.query(
-      "UPDATE livestock_listings SET quantity = quantity + ?, status = IF(status = 'Sold', 'Available', status) WHERE id = ?",
-      [transaction.quantity, transaction.listing_id]
-    );
+    if (!(await closeOrderAndReturnStock(transaction, "Declined"))) {
+      return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+    }
 
     await createNotification(
       "Transaction Alert",

@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
 const { getSystemSettings } = require("../utils/systemSettings");
+const { closeOrderAndReturnStock } = require("../utils/orderStock");
 
 const getBuyerTransactions = async (req, res) => {
   try {
@@ -116,10 +117,14 @@ const confirmTransaction = async (req, res) => {
       return res.status(400).json({ message: "Negotiate with the seller before completing this deal" });
     }
 
-    await db.query(
-      "UPDATE transactions SET workflow_step = 'Completed', status = 'Completed' WHERE id = ?",
+    const [completeResult] = await db.query(
+      "UPDATE transactions SET workflow_step = 'Completed', status = 'Completed' WHERE id = ? AND status = 'Pending'",
       [id]
     );
+
+    if (completeResult.affectedRows === 0) {
+      return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+    }
 
     // Stock for this order was already reserved off the listing's quantity
     // when it was placed, and other pending orders may legitimately be for
@@ -168,13 +173,10 @@ const cancelTransaction = async (req, res) => {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
-    await db.query("UPDATE transactions SET status = 'Cancelled' WHERE id = ?", [id]);
-
     // Return the reserved stock to the listing now that the order fell through.
-    await db.query(
-      "UPDATE livestock_listings SET quantity = quantity + ?, status = IF(status = 'Sold', 'Available', status) WHERE id = ?",
-      [transaction.quantity, transaction.listing_id]
-    );
+    if (!(await closeOrderAndReturnStock(transaction, "Cancelled"))) {
+      return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+    }
 
     await createNotification(
       "Transaction Alert",

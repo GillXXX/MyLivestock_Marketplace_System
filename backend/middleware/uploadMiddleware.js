@@ -1,5 +1,5 @@
+const crypto = require("crypto");
 const multer = require("multer");
-const path = require("path");
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB per file
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25MB for chat image/video attachments
@@ -37,8 +37,24 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
+// The saved file's extension comes from its (already allowed) type, never
+// from the uploader's own filename — "evil.html" sent as "image/png" would
+// otherwise be stored as .html and served as a page on this site. The random
+// part keeps files uploaded in the same millisecond (e.g. the two
+// verification documents in one request) from overwriting each other.
+const EXTENSION_BY_MIME_TYPE = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/quicktime": ".mov",
+  "application/pdf": ".pdf",
+};
+
 const generateKey = (req, file, cb) => {
-  cb(null, "profile-" + Date.now() + path.extname(file.originalname));
+  cb(null, `upload-${Date.now()}-${crypto.randomUUID()}${EXTENSION_BY_MIME_TYPE[file.mimetype]}`);
 };
 
 // Object storage is used when S3_BUCKET is configured; otherwise uploads
@@ -127,3 +143,4 @@ module.exports = upload;
 module.exports.getFileUrl = getFileUrl;
 module.exports.isS3Enabled = s3Enabled;
 module.exports.chatUpload = chatUpload;
+module.exports.SAFE_UPLOAD_EXTENSIONS = new Set(Object.values(EXTENSION_BY_MIME_TYPE));

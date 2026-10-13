@@ -217,8 +217,11 @@ const completeProfile = async (req, res) => {
       return res.status(400).json({ message: "Please select a valid role" });
     }
 
+    // Only ever applies once. Afterwards the role stays as it is (a repeat
+    // submit just gets the account back unchanged), so this can't be used
+    // to switch between farmer and buyer later on.
     await db.query(
-      "UPDATE users SET role = ?, profile_completed = 1 WHERE id = ?",
+      "UPDATE users SET role = ?, profile_completed = 1 WHERE id = ? AND profile_completed = 0",
       [role, req.user.id]
     );
 

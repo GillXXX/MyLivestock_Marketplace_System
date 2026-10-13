@@ -277,7 +277,7 @@ function Post() {
         return;
       }
 
-      alert(isEditMode ? "Listing updated successfully!" : "Listing published successfully!");
+      alert(data.message || (isEditMode ? "Listing updated successfully!" : "Listing published successfully!"));
       navigate("/listings");
     } catch (error) {
       setMessage("Cannot connect to backend server");

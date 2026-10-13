@@ -183,36 +183,50 @@ const createTransaction = async (req, res) => {
       return res.status(400).json({ message: "This listing is no longer available" });
     }
 
-    // Reserve the stock atomically (rather than trusting the quantity we
-    // already fetched) so two buyers racing to order the last few head
-    // can't both succeed past what's actually available.
-    const [reserveResult] = await db.query(
-      "UPDATE livestock_listings SET quantity = quantity - ? WHERE id = ? AND status = 'Available' AND quantity >= ?",
-      [orderQuantity, listingId, orderQuantity]
-    );
-
-    if (reserveResult.affectedRows === 0) {
-      return res.status(400).json({
-        message: `Only ${listing.quantity} available for this listing`,
-      });
-    }
-
-    const [[remaining]] = await db.query(
-      "SELECT quantity FROM livestock_listings WHERE id = ?",
-      [listingId]
-    );
-
-    if (remaining.quantity <= 0) {
-      await db.query("UPDATE livestock_listings SET status = 'Sold' WHERE id = ?", [listingId]);
-    }
-
     const amount = Number(listing.price) * orderQuantity;
 
-    const [result] = await db.query(
-      `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, quantity, workflow_step, status)
-       VALUES (?, ?, ?, ?, ?, 'Inquiry', 'Pending')`,
-      [listingId, buyerId, listing.farmer_id, amount, orderQuantity]
-    );
+    // Reserving the stock and recording the order happen together or not
+    // at all, so a failure partway through can't leave stock taken off the
+    // listing with no order to show for it.
+    const connection = await db.getConnection();
+    let result;
+
+    try {
+      await connection.beginTransaction();
+
+      // Reserve the stock atomically (rather than trusting the quantity we
+      // already fetched) so two buyers racing to order the last few head
+      // can't both succeed past what's actually available.
+      const [reserveResult] = await connection.query(
+        "UPDATE livestock_listings SET quantity = quantity - ? WHERE id = ? AND status = 'Available' AND quantity >= ?",
+        [orderQuantity, listingId, orderQuantity]
+      );
+
+      if (reserveResult.affectedRows === 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: `Only ${listing.quantity} available for this listing`,
+        });
+      }
+
+      await connection.query(
+        "UPDATE livestock_listings SET status = 'Sold' WHERE id = ? AND quantity <= 0",
+        [listingId]
+      );
+
+      [result] = await connection.query(
+        `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, quantity, workflow_step, status)
+         VALUES (?, ?, ?, ?, ?, 'Inquiry', 'Pending')`,
+        [listingId, buyerId, listing.farmer_id, amount, orderQuantity]
+      );
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
 
     const conversationId = await findOrCreateConversation(listingId, listing.farmer_id, buyerId);
 

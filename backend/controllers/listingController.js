@@ -34,8 +34,15 @@ const validateListingInput = (body) => {
     return { error: "Please choose a valid selling unit" };
   }
 
-  if (Number(quantity) < 1) {
-    return { error: "Quantity must be at least 1" };
+  // price is DECIMAL(10,2) and quantity an INT column.
+  const priceValue = Number(price);
+  if (!Number.isFinite(priceValue) || priceValue <= 0 || priceValue >= 100000000) {
+    return { error: "Please enter a valid price" };
+  }
+
+  const quantityValue = Number(quantity);
+  if (!Number.isInteger(quantityValue) || quantityValue < 1 || quantityValue > 1000000) {
+    return { error: "Quantity must be a whole number of at least 1" };
   }
 
   return {
@@ -45,8 +52,8 @@ const validateListingInput = (body) => {
     breed: breed || null,
     age: age || null,
     weight: weight || null,
-    price,
-    quantity,
+    price: Math.round(priceValue * 100) / 100,
+    quantity: quantityValue,
     healthStatus: healthStatus || null,
     location,
   };
@@ -238,7 +245,7 @@ const updateListing = async (req, res) => {
     const { id } = req.params;
 
     const [existingRows] = await db.query(
-      "SELECT image_url, documents FROM livestock_listings WHERE id = ? AND farmer_id = ?",
+      "SELECT image_url, documents, status FROM livestock_listings WHERE id = ? AND farmer_id = ?",
       [id, farmerId]
     );
 
@@ -296,10 +303,19 @@ const updateListing = async (req, res) => {
         )
       : existingRows[0].documents;
 
+    // An approved listing that gets edited goes back to MAO for review —
+    // otherwise approval could be used once and then the product, price or
+    // documents swapped for anything. Skipped when the admin has set new
+    // listings to be auto-approved, since nothing is reviewed then anyway.
+    const needsReReview =
+      existingRows[0].status === "Available" &&
+      (await getDefaultListingStatus()) !== "Available";
+    const newStatus = needsReReview ? "Pending" : existingRows[0].status;
+
     await db.query(
       `UPDATE livestock_listings
       SET livestock_type = ?, category = ?, breed = ?, age = ?, weight = ?, price = ?, quantity = ?,
-          unit = ?, health_status = ?, location = ?, description = ?, image_url = ?, documents = ?
+          unit = ?, health_status = ?, location = ?, description = ?, image_url = ?, documents = ?, status = ?
       WHERE id = ? AND farmer_id = ?`,
       [
         livestockType,
@@ -315,10 +331,27 @@ const updateListing = async (req, res) => {
         description,
         finalImageUrl,
         documentsJson,
+        newStatus,
         id,
         farmerId,
       ]
     );
+
+    if (needsReReview) {
+      const [[farmer]] = await db.query(
+        "SELECT full_name FROM users WHERE id = ?",
+        [farmerId]
+      );
+
+      await createNotification(
+        "Listing Approval",
+        "Listing edited",
+        `${farmer.full_name} edited an approved ${livestockType} listing — it needs review again.`,
+        id
+      );
+
+      return res.json({ message: "Listing updated and sent back for review" });
+    }
 
     res.json({ message: "Listing updated successfully" });
   } catch (error) {
