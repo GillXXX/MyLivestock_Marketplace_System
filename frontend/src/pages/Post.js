@@ -391,7 +391,7 @@ function Post() {
             {isProduct ? (
               <>
                 <h3>
-                  Supporting Documents <span className="optional-mark">(Optional)</span>
+                  Supporting Document <span className="optional-mark">(Optional)</span>
                 </h3>
 
                 <p>Farm products don't need a health certificate, but you can attach any permit or certificate you have.</p>
@@ -414,7 +414,7 @@ function Post() {
 
             <label className="upload-btn" htmlFor="livestockDocuments">
               <FileText size={18} />
-              Choose Documents
+              {isProduct ? "Choose Document" : "Choose Certificate"}
             </label>
 
             <input
@@ -427,7 +427,9 @@ function Post() {
 
             {selectedDocuments.length > 0 ? (
               <div className="doc-chip-list">
-                <span className="doc-chip-label">Selected (will replace existing):</span>
+                <span className="doc-chip-label">
+                  {existingDocuments.length > 0 ? "Selected (replaces the current one):" : "Selected:"}
+                </span>
 
                 {selectedDocuments.map((file, index) => (
                   <span className="doc-chip" key={index}>
@@ -445,7 +447,9 @@ function Post() {
               </div>
             ) : existingDocuments.length > 0 ? (
               <div className="doc-chip-list">
-                <span className="doc-chip-label">Current documents:</span>
+                <span className="doc-chip-label">
+                  {isProduct ? "Current document:" : "Current certificate:"}
+                </span>
 
                 {existingDocuments.map((docUrl, index) => (
                   <a
@@ -456,7 +460,14 @@ function Post() {
                     key={index}
                   >
                     <FileText size={14} />
-                    <span className="doc-chip-name">Document {index + 1}</span>
+                    <span className="doc-chip-name">
+                      {/* Listings from before the one-document limit may still have several. */}
+                      {existingDocuments.length > 1
+                        ? `Document ${index + 1}`
+                        : isProduct
+                        ? "View document"
+                        : "View certificate"}
+                    </span>
                   </a>
                 ))}
               </div>
