@@ -224,3 +224,14 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   if (SERVE_FRONTEND) console.log(`Serving the website from ${FRONTEND_BUILD_DIR}`);
 });
+
+// Approve cancellation requests sellers left unanswered past the deadline.
+// The transaction pages also run this before showing anything, so this
+// timer only covers orders nobody is looking at.
+const { autoApproveExpiredCancellations } = require("./utils/orderStock");
+const runCancellationAutoApprove = () =>
+  autoApproveExpiredCancellations().catch((error) =>
+    console.error("Cancellation auto-approve error:", error)
+  );
+runCancellationAutoApprove();
+setInterval(runCancellationAutoApprove, 10 * 60 * 1000);

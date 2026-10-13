@@ -299,6 +299,14 @@ function AdminTransactions() {
                         <span className="trx-status-dot"></span>
                         {trx.status}
                       </span>
+
+                      {trx.cancel_requested_at && (
+                        <small className="stage-label trx-cancel-note" title={trx.cancel_reason || ""}>
+                          {trx.cancel_outcome
+                            ? `Buyer cancel request: ${trx.cancel_outcome.toLowerCase()}`
+                            : "Buyer requested cancellation"}
+                        </small>
+                      )}
                     </td>
                   </tr>
                 ))

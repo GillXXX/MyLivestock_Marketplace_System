@@ -454,6 +454,12 @@
   color: #667085;
 }
 
+.admin-transactions-page .trx-cancel-note {
+  display: block;
+  margin-top: 6px;
+  color: #a3690a;
+}
+
 @media (max-width: 1100px) {
   .admin-transactions-page .transaction-stats,
   .admin-transactions-page .transaction-toolbar {

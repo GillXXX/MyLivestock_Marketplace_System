@@ -17,6 +17,7 @@ import {
   Handshake,
   ClipboardCheck,
   ChevronRight,
+  Hourglass,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -92,6 +93,7 @@ function FarmerTransactions() {
   });
 
   const [actioningId, setActioningId] = useState(null);
+  const [cancelAutoApproveHours, setCancelAutoApproveHours] = useState(48);
 
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -125,6 +127,7 @@ function FarmerTransactions() {
       setTransactions(data.transactions);
       setFilteredTransactions(data.transactions);
       setStats(data.stats);
+      if (data.cancelAutoApproveHours) setCancelAutoApproveHours(data.cancelAutoApproveHours);
       setLoading(false);
     } catch (error) {
       setMessage("Cannot connect to backend server");
@@ -195,6 +198,48 @@ function FarmerTransactions() {
 
       if (!res.ok) {
         alert(data.message || "Failed to decline transaction");
+        setActioningId(null);
+        return;
+      }
+
+      await fetchTransactions();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+
+    setActioningId(null);
+  };
+
+  // Answer a buyer's cancellation request. Approving cancels the order and
+  // returns the stock; rejecting keeps the order going.
+  const respondToCancellation = async (id, decision) => {
+    const question =
+      decision === "approve"
+        ? "Approve the cancellation? The order will be cancelled and the stock returned to your listing."
+        : "Reject the cancellation? The order continues — consider messaging the buyer to explain.";
+
+    if (!window.confirm(question)) {
+      return;
+    }
+
+    setActioningId(id);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_URL}/api/farmer/transactions/${id}/cancellation`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ decision }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to respond to the cancellation request");
         setActioningId(null);
         return;
       }
@@ -386,6 +431,8 @@ function FarmerTransactions() {
                 const isTerminal = item.status === "Declined" || item.status === "Cancelled";
                 const SpeciesIcon = getProductIcon(item.livestock_type, item.category);
                 const isActioning = actioningId === item.id;
+                const cancelPending =
+                  item.status === "Pending" && item.cancel_requested_at && !item.cancel_outcome;
 
                 return (
                 <div className="premium-transaction-card" key={item.id}>
@@ -416,8 +463,8 @@ function FarmerTransactions() {
                           {Number(item.buyer_total_deals) > 1 ? (
                             <>
                               {item.buyer_completed_deals} completed
-                              {Number(item.buyer_fallthrough_deals) > 0 &&
-                                ` · ${item.buyer_fallthrough_deals} fell through`}
+                              {Number(item.buyer_cancelled_deals) > 0 &&
+                                ` · ${item.buyer_cancelled_deals} cancelled by buyer`}
                             </>
                           ) : (
                             "New buyer · no prior deal history"
@@ -472,11 +519,37 @@ function FarmerTransactions() {
                         <XCircle size={18} />
                         <p>
                           This offer was {item.status.toLowerCase()} while at the{" "}
-                          {item.workflow_step} stage.
+                          {item.workflow_step} stage
+                          {item.cancel_outcome === "Approved" && " — you approved the buyer's cancellation"}
+                          {item.cancel_outcome === "Auto-approved" &&
+                            " — the buyer's cancellation was approved automatically"}
+                          .
                         </p>
                       </div>
                     ) : (
                       <div className="workflow-wrapper">
+                        {cancelPending && (
+                          <div className="cancel-request-note">
+                            <Hourglass size={18} />
+                            <p>
+                              {item.buyer_name} asked to cancel: "{item.cancel_reason}". Approve or
+                              reject by{" "}
+                              {new Date(
+                                new Date(item.cancel_requested_at).getTime() +
+                                  cancelAutoApproveHours * 60 * 60 * 1000
+                              ).toLocaleString()}
+                              , or it will be approved automatically.
+                            </p>
+                          </div>
+                        )}
+
+                        {item.status === "Pending" && item.cancel_outcome === "Rejected" && (
+                          <div className="cancel-request-note">
+                            <XCircle size={18} />
+                            <p>You rejected the buyer's cancellation request — this order continues.</p>
+                          </div>
+                        )}
+
                         <div className="workflow-header">
                           <h4>Transaction Workflow</h4>
                           <p>Current Stage: {item.workflow_step}</p>
@@ -511,7 +584,32 @@ function FarmerTransactions() {
                         Message Buyer
                       </Link>
 
+                      {cancelPending && (
+                        <>
+                          <button
+                            type="button"
+                            className="message-btn-premium"
+                            disabled={isActioning}
+                            onClick={() => respondToCancellation(item.id, "approve")}
+                          >
+                            <CheckCircle size={17} />
+                            {isActioning ? "Saving..." : "Approve Cancellation"}
+                          </button>
+
+                          <button
+                            type="button"
+                            className="decline-btn-premium"
+                            disabled={isActioning}
+                            onClick={() => respondToCancellation(item.id, "reject")}
+                          >
+                            <XCircle size={17} />
+                            {isActioning ? "Saving..." : "Reject Cancellation"}
+                          </button>
+                        </>
+                      )}
+
                       {item.status === "Pending" &&
+                        !cancelPending &&
                         item.workflow_step !== "Confirmation" &&
                         (() => {
                           const nextStep =
@@ -530,11 +628,11 @@ function FarmerTransactions() {
                           );
                         })()}
 
-                      {item.status === "Pending" && item.workflow_step === "Confirmation" && (
+                      {item.status === "Pending" && !cancelPending && item.workflow_step === "Confirmation" && (
                         <span className="waiting-buyer-note">Waiting for buyer to confirm</span>
                       )}
 
-                      {item.status === "Pending" && (
+                      {item.status === "Pending" && !cancelPending && (
                         <button
                           type="button"
                           className="decline-btn-premium"

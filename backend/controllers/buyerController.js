@@ -174,6 +174,49 @@ async function buildBuyerNotifications(buyerId) {
       });
     });
 
+    // The seller's answer to each of this buyer's cancellation requests.
+    const [cancelAnswers] = await db.query(
+      `
+      SELECT t.id, t.cancel_outcome, t.cancel_responded_at, l.livestock_type, farmer.full_name AS seller_name
+      FROM transactions t
+      JOIN livestock_listings l ON t.listing_id = l.id
+      JOIN users farmer ON t.farmer_id = farmer.id
+      WHERE t.buyer_id = ? AND t.cancel_outcome IS NOT NULL
+      ORDER BY t.cancel_responded_at DESC
+      LIMIT 10
+      `,
+      [buyerId]
+    );
+
+    const CANCEL_ANSWER_TEXT = {
+      Approved: (item) => [
+        "Cancellation approved",
+        `${item.seller_name} approved your request — the ${item.livestock_type} order is cancelled.`,
+      ],
+      "Auto-approved": (item) => [
+        "Cancellation approved",
+        `${item.seller_name} didn't respond in time, so the ${item.livestock_type} order was cancelled automatically.`,
+      ],
+      Rejected: (item) => [
+        "Cancellation rejected",
+        `${item.seller_name} rejected your request to cancel the ${item.livestock_type} order. Message the seller to sort it out.`,
+      ],
+    };
+
+    cancelAnswers.forEach((item) => {
+      const [title, message] = CANCEL_ANSWER_TEXT[item.cancel_outcome](item);
+
+      notifications.push({
+        id: `CA-${item.id}`,
+        type: "Transaction Update",
+        title,
+        message,
+        time: item.cancel_responded_at,
+        status: "Unread",
+        transactionId: item.id,
+      });
+    });
+
     notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
 
     return notifications;

@@ -1,11 +1,19 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
 const { getSystemSettings } = require("../utils/systemSettings");
-const { closeOrderAndReturnStock } = require("../utils/orderStock");
+const {
+  CANCEL_REQUEST_AUTO_APPROVE_HOURS,
+  closeOrderAndReturnStock,
+  autoApproveExpiredCancellations,
+} = require("../utils/orderStock");
+
+const CANCEL_REASON_MAX_LENGTH = 255;
 
 const getBuyerTransactions = async (req, res) => {
   try {
     const buyerId = req.user.id;
+
+    await autoApproveExpiredCancellations();
 
     const [transactions] = await db.query(
       `SELECT
@@ -16,6 +24,10 @@ const getBuyerTransactions = async (req, res) => {
         t.status,
         t.created_at,
         t.updated_at,
+        t.cancel_requested_at,
+        t.cancel_reason,
+        t.cancel_outcome,
+        t.cancel_responded_at,
         l.livestock_type,
         l.category,
         l.unit,
@@ -65,6 +77,7 @@ const getBuyerTransactions = async (req, res) => {
       // negotiation/verification is underway (Flexible) or only once it has
       // formally reached the Confirmation stage (Strict, the default).
       workflowMode: settings.transaction_workflow === "Flexible Workflow" ? "Flexible" : "Strict",
+      cancelAutoApproveHours: CANCEL_REQUEST_AUTO_APPROVE_HOURS,
     });
   } catch (error) {
     console.error("Buyer transactions error:", error);
@@ -80,7 +93,8 @@ const confirmTransaction = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await db.query(
-      `SELECT t.id, t.buyer_id, t.listing_id, t.workflow_step, t.status, l.livestock_type, farmer.full_name AS farmer_name
+      `SELECT t.id, t.buyer_id, t.listing_id, t.workflow_step, t.status, t.cancel_requested_at, t.cancel_outcome,
+              l.livestock_type, farmer.full_name AS farmer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users farmer ON t.farmer_id = farmer.id
@@ -102,6 +116,12 @@ const confirmTransaction = async (req, res) => {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
+    if (transaction.cancel_requested_at && !transaction.cancel_outcome) {
+      return res.status(400).json({
+        message: "You asked to cancel this order. Wait for the seller to respond before completing it.",
+      });
+    }
+
     // Strict Workflow requires the deal to have formally reached the
     // Confirmation stage before it can be closed. Flexible Workflow trusts
     // the buyer/farmer to close whenever they've agreed, skipping the
@@ -118,7 +138,8 @@ const confirmTransaction = async (req, res) => {
     }
 
     const [completeResult] = await db.query(
-      "UPDATE transactions SET workflow_step = 'Completed', status = 'Completed' WHERE id = ? AND status = 'Pending'",
+      `UPDATE transactions SET workflow_step = 'Completed', status = 'Completed'
+       WHERE id = ? AND status = 'Pending' AND (cancel_requested_at IS NULL OR cancel_outcome IS NOT NULL)`,
       [id]
     );
 
@@ -145,16 +166,26 @@ const confirmTransaction = async (req, res) => {
   }
 };
 
+// Before the seller has done anything (Inquiry), the buyer cancels outright.
+// Once the seller is working on the order (Negotiation / Confirmation) the
+// buyer can only ask, with a reason; the seller approves or rejects, and an
+// unanswered request is approved automatically after
+// CANCEL_REQUEST_AUTO_APPROVE_HOURS. One request per order — after a
+// rejection the two sort it out in chat.
 const cancelTransaction = async (req, res) => {
   try {
     const buyerId = req.user.id;
     const { id } = req.params;
+    const reason = typeof req.body.reason === "string" ? req.body.reason.trim() : "";
 
     const [rows] = await db.query(
-      `SELECT t.id, t.buyer_id, t.listing_id, t.quantity, t.status, l.livestock_type, farmer.full_name AS farmer_name
+      `SELECT t.id, t.buyer_id, t.listing_id, t.quantity, t.status, t.workflow_step,
+              t.cancel_requested_at, t.cancel_outcome,
+              l.livestock_type, farmer.full_name AS farmer_name, buyer.full_name AS buyer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users farmer ON t.farmer_id = farmer.id
+       JOIN users buyer ON t.buyer_id = buyer.id
        WHERE t.id = ?`,
       [id]
     );
@@ -173,19 +204,63 @@ const cancelTransaction = async (req, res) => {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
-    // Return the reserved stock to the listing now that the order fell through.
-    if (!(await closeOrderAndReturnStock(transaction, "Cancelled"))) {
+    if (transaction.workflow_step === "Inquiry") {
+      // Return the reserved stock to the listing now that the order fell
+      // through. Only while still at Inquiry — if the seller moved it on
+      // in the meantime, this has to become a request instead.
+      if (!(await closeOrderAndReturnStock(transaction, "Cancelled", { onlyIf: "stillInquiry" }))) {
+        return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+      }
+
+      await createNotification(
+        "Transaction Alert",
+        "Offer cancelled",
+        `${transaction.livestock_type} offer to ${transaction.farmer_name} was cancelled by the buyer.`,
+        id
+      );
+
+      return res.json({ message: "Offer cancelled successfully", cancelled: true });
+    }
+
+    if (transaction.cancel_requested_at && !transaction.cancel_outcome) {
+      return res.status(409).json({ message: "You already asked to cancel this order. Waiting for the seller." });
+    }
+
+    if (transaction.cancel_outcome === "Rejected") {
+      return res.status(409).json({
+        message: "The seller declined your cancellation request. Message the seller to sort it out.",
+      });
+    }
+
+    if (!reason) {
+      return res.status(400).json({ message: "Please give a reason for cancelling" });
+    }
+
+    if (reason.length > CANCEL_REASON_MAX_LENGTH) {
+      return res.status(400).json({ message: `Reason must be ${CANCEL_REASON_MAX_LENGTH} characters or fewer` });
+    }
+
+    const [requestResult] = await db.query(
+      `UPDATE transactions SET cancel_requested_at = NOW(), cancel_reason = ?
+       WHERE id = ? AND status = 'Pending' AND workflow_step != 'Inquiry' AND cancel_requested_at IS NULL`,
+      [reason, id]
+    );
+
+    if (requestResult.affectedRows === 0) {
       return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
     }
 
     await createNotification(
       "Transaction Alert",
-      "Offer cancelled",
-      `${transaction.livestock_type} offer to ${transaction.farmer_name} was cancelled by the buyer.`,
+      "Cancellation requested",
+      `${transaction.buyer_name} asked ${transaction.farmer_name} to cancel the ${transaction.livestock_type} order: "${reason}"`,
       id
     );
 
-    res.json({ message: "Offer cancelled successfully" });
+    res.json({
+      message: `Cancellation requested. The seller has ${CANCEL_REQUEST_AUTO_APPROVE_HOURS} hours to respond, or it will be approved automatically.`,
+      requested: true,
+    });
   } catch (error) {
     console.error("Cancel transaction error:", error);
     res.status(500).json({ message: "Server error cancelling transaction" });

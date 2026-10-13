@@ -379,11 +379,6 @@ function Register() {
                 )}
               </p>
 
-              <RolePicker
-                value={detailsForm.role}
-                onChange={(role) => setDetailsForm({ ...detailsForm, role })}
-              />
-
               <div className="form-group">
                 <label>Full Name</label>
                 <div className="input-wrapper">
@@ -452,6 +447,12 @@ function Register() {
                   />
                 </div>
               </div>
+
+              {/* Last, right before the account is created. */}
+              <RolePicker
+                value={detailsForm.role}
+                onChange={(role) => setDetailsForm({ ...detailsForm, role })}
+              />
 
               <button className="register-btn" type="submit" disabled={loading}>
                 {loading ? "Creating account..." : "Create Account"}

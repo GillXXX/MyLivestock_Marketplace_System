@@ -20,6 +20,7 @@ import {
   Handshake,
   ClipboardCheck,
   ChevronRight,
+  Hourglass,
 } from "lucide-react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -129,6 +130,7 @@ function BuyerTransactions() {
     purchaseValue: 0,
   });
   const [workflowMode, setWorkflowMode] = useState("Strict");
+  const [cancelAutoApproveHours, setCancelAutoApproveHours] = useState(48);
   const [actioningId, setActioningId] = useState(null);
 
   const [searchText, setSearchText] = useState("");
@@ -170,6 +172,7 @@ function BuyerTransactions() {
       setFilteredTransactions(data.transactions);
       setStats(data.stats);
       setWorkflowMode(data.workflowMode || "Strict");
+      if (data.cancelAutoApproveHours) setCancelAutoApproveHours(data.cancelAutoApproveHours);
       setLoading(false);
 
       const requestedId = location.state?.transactionId;
@@ -225,9 +228,28 @@ function BuyerTransactions() {
     setActioningId(null);
   };
 
-  const cancelOffer = async (id) => {
-    if (!window.confirm("Cancel this offer? This cannot be undone.")) {
-      return;
+  // Before the seller has acted (Inquiry) the order is cancelled outright.
+  // After that it's a request with a reason, which the seller approves or
+  // rejects (approved automatically if they don't answer in time).
+  const cancelOffer = async (item) => {
+    const { id } = item;
+    let reason;
+
+    if (item.workflow_step === "Inquiry") {
+      if (!window.confirm("Cancel this offer? This cannot be undone.")) {
+        return;
+      }
+    } else {
+      reason = window.prompt(
+        `The seller is already working on this order, so they need to approve the cancellation (or it's approved automatically after ${cancelAutoApproveHours} hours).\n\nWhy do you want to cancel?`
+      );
+
+      if (reason === null) return;
+
+      if (!reason.trim()) {
+        alert("Please give a reason for cancelling.");
+        return;
+      }
     }
 
     setActioningId(id);
@@ -240,8 +262,10 @@ function BuyerTransactions() {
         {
           method: "PUT",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ reason }),
         }
       );
 
@@ -252,6 +276,8 @@ function BuyerTransactions() {
         setActioningId(null);
         return;
       }
+
+      if (data.requested) alert(data.message);
 
       await fetchTransactions();
     } catch (error) {
@@ -514,6 +540,9 @@ function BuyerTransactions() {
                 const LivestockIcon = getProductIcon(item.livestock_type, item.category);
                 const isTerminal = item.status === "Declined" || item.status === "Cancelled";
                 const isActioning = actioningId === item.id;
+                const cancelPending =
+                  item.status === "Pending" && item.cancel_requested_at && !item.cancel_outcome;
+                const cancelRejected = item.status === "Pending" && item.cancel_outcome === "Rejected";
 
                 return (
                 <div
@@ -591,11 +620,40 @@ function BuyerTransactions() {
                         <XCircle size={18} />
                         <p>
                           This offer was {item.status.toLowerCase()} while at the{" "}
-                          {item.workflow_step} stage.
+                          {item.workflow_step} stage
+                          {item.cancel_outcome === "Approved" && " — the seller approved your cancellation"}
+                          {item.cancel_outcome === "Auto-approved" &&
+                            " — approved automatically because the seller didn't respond"}
+                          .
                         </p>
                       </div>
                     ) : (
                       <div className="workflow-wrapper">
+                        {cancelPending && (
+                          <div className="cancel-request-note">
+                            <Hourglass size={18} />
+                            <p>
+                              You asked to cancel: "{item.cancel_reason}". Waiting for the seller —
+                              approved automatically on{" "}
+                              {new Date(
+                                new Date(item.cancel_requested_at).getTime() +
+                                  cancelAutoApproveHours * 60 * 60 * 1000
+                              ).toLocaleString()}{" "}
+                              if they don't respond.
+                            </p>
+                          </div>
+                        )}
+
+                        {cancelRejected && (
+                          <div className="cancel-request-note">
+                            <XCircle size={18} />
+                            <p>
+                              The seller rejected your cancellation request, so this order continues.
+                              Message the seller if you need to sort it out.
+                            </p>
+                          </div>
+                        )}
+
                         <div className="workflow-header">
                           <h4>Transaction Workflow</h4>
                           <p>Current Stage: {item.workflow_step}</p>
@@ -648,6 +706,7 @@ function BuyerTransactions() {
                       </button>
 
                       {item.status === "Pending" &&
+                        !cancelPending &&
                         (workflowMode === "Flexible"
                           ? item.workflow_step !== "Inquiry"
                           : item.workflow_step === "Confirmation") && (
@@ -662,15 +721,19 @@ function BuyerTransactions() {
                           </button>
                         )}
 
-                      {item.status === "Pending" && (
+                      {item.status === "Pending" && !cancelPending && !cancelRejected && (
                         <button
                           type="button"
                           className="decline-btn-premium"
                           disabled={isActioning}
-                          onClick={() => cancelOffer(item.id)}
+                          onClick={() => cancelOffer(item)}
                         >
                           <XCircle size={17} />
-                          {isActioning ? "Cancelling..." : "Cancel Offer"}
+                          {isActioning
+                            ? "Cancelling..."
+                            : item.workflow_step === "Inquiry"
+                            ? "Cancel Offer"
+                            : "Request Cancellation"}
                         </button>
                       )}
                     </div>

@@ -12,6 +12,7 @@ const {
   getFarmerTransactions,
   advanceTransactionStep,
   declineTransaction,
+  respondToCancellation,
   submitVerification,
   getFarmerNotifications,
   markFarmerNotificationRead,
@@ -36,6 +37,8 @@ router.get("/transactions", protect, requireRole("farmer"), getFarmerTransaction
 router.put("/transactions/:id/advance", protect, requireRole("farmer"), advanceTransactionStep);
 
 router.put("/transactions/:id/decline", protect, requireRole("farmer"), declineTransaction);
+
+router.put("/transactions/:id/cancellation", protect, requireRole("farmer"), respondToCancellation);
 
 router.post(
   "/verification",

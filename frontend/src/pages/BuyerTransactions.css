@@ -615,6 +615,30 @@
   margin-bottom: 20px;
 }
 
+/* Buyer cancellation request on a pending order — waiting on, or rejected
+   by, the seller. */
+.cancel-request-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--warning-soft);
+  border-radius: 24px;
+  padding: 16px 20px;
+  color: #8a6500;
+  margin-bottom: 18px;
+}
+
+.cancel-request-note svg {
+  flex-shrink: 0;
+}
+
+.cancel-request-note p {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
 .workflow-declined svg {
   flex-shrink: 0;
 }
