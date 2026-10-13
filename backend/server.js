@@ -44,12 +44,14 @@ app.use(
   })
 );
 
-// Only trust X-Forwarded-For when actually running behind a real reverse
-// proxy (most hosting platforms). Trusting it otherwise would let a client
-// spoof its IP and bypass rate limiting.
-if (process.env.TRUST_PROXY === "true") {
-  app.set("trust proxy", 1);
-}
+// Which proxies' X-Forwarded-For to believe, so login rate limiting sees
+// each visitor's real IP instead of one shared proxy IP (which would make
+// everyone share a single limit). By default only a proxy on this same
+// machine (loopback) — the React dev server's proxy, or a host's local
+// front proxy — so a client connecting directly can't spoof its IP.
+// TRUST_PROXY=true trusts one proxy hop from anywhere, for hosts whose
+// proxy connects from another address.
+app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : "loopback");
 
 const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
   .split(",")
