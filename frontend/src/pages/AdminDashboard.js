@@ -45,7 +45,7 @@ function getAvatarUrl(image) {
 function getAdminHeroMessage(stats) {
   if (stats.pendingVerification > 0) {
     return {
-      headline: "Verification queue needs your attention.",
+      headline: "Listings are waiting for your review.",
       body: `${stats.pendingVerification} listing${
         stats.pendingVerification === 1 ? " is" : "s are"
       } waiting for review, out of ${stats.activeListings} active listings on the marketplace.`,
@@ -309,7 +309,7 @@ function AdminDashboard() {
 
             <div className="hero-actions">
               <Link to="/admin-verification">
-                {dashboardData.stats.pendingVerification > 0 ? "Review Verifications" : "View Verifications"}
+                {dashboardData.stats.pendingVerification > 0 ? "Review Listings" : "View Listing Reviews"}
                 <ArrowUpRight size={18} />
               </Link>
 
@@ -326,7 +326,7 @@ function AdminDashboard() {
           <div className="hero-side">
             <div className="hero-metric">
               <strong>{dashboardData.stats.pendingVerification}</strong>
-              <span>Pending verification</span>
+              <span>Listings to review</span>
             </div>
 
             <div className="hero-mini-stats">
@@ -365,7 +365,7 @@ function AdminDashboard() {
 
           <Kpi
             accent="amber"
-            title="Pending Verification"
+            title="Listings to Review"
             value={dashboardData.stats.pendingVerification}
             trend="Needs action"
             icon={<Clock />}
@@ -438,7 +438,7 @@ function AdminDashboard() {
           <div className="pro-card wide">
             <div className="card-head">
               <div>
-                <h3>Verification Queue</h3>
+                <h3>Listing Review Queue</h3>
                 <p>Pending listings awaiting review, oldest first.</p>
               </div>
 
@@ -461,7 +461,7 @@ function AdminDashboard() {
                 {dashboardData.verificationQueue.length === 0 ? (
                   <tr>
                     <td colSpan="4" className="empty-row">
-                      No pending verifications — all caught up.
+                      No listings waiting for review — all caught up.
                     </td>
                   </tr>
                 ) : (

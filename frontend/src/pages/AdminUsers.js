@@ -308,8 +308,8 @@ function AdminUsers() {
           accent="amber"
           icon={<Clock size={24} />}
           value={stats.pendingVerification}
-          label="Pending Verification"
-          note="Requires MAO review"
+          label="Farmers to Verify"
+          note="Submitted ID and barangay certificate"
         />
 
         <AdminStatCard

@@ -676,10 +676,11 @@ function BuyerTransactions() {
                       <ShieldCheck size={18} />
 
                       <div>
-                        <strong>MAO Verified Transaction</strong>
+                        <strong>MAO Monitored Transaction</strong>
                         <p>
-                          Livestock documents and seller credentials are validated
-                          before final confirmation.
+                          You and the seller handle negotiation and confirmation.
+                          MAO can see this transaction for oversight; listings are
+                          reviewed by MAO before they appear on the marketplace.
                         </p>
                       </div>
                     </div>

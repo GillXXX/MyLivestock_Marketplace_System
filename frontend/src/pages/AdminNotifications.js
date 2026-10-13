@@ -414,8 +414,8 @@ const CATEGORY_DEFS = [
   },
   {
     key: "documentVerification",
-    title: "Document Verification",
-    text: "Certificates and permits pending",
+    title: "Farmer Verification",
+    text: "Farmer ID and barangay certificate submissions",
     icon: <ShieldCheck size={18} />,
     accent: "amber",
   },
@@ -428,8 +428,8 @@ const CATEGORY_DEFS = [
   },
   {
     key: "userReports",
-    title: "User Reports",
-    text: "Farmer and buyer account updates",
+    title: "New Registrations",
+    text: "New farmer and buyer accounts",
     icon: <Users size={18} />,
     accent: "purple",
   },
