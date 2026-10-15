@@ -15,6 +15,7 @@ import {
   VERUELA_BARANGAYS,
   findBarangay,
   isInsideVeruela,
+  PUROK_OPTIONS,
 } from "../utils/veruelaGeo";
 import { API_URL, DEFAULT_AVATAR } from "../config";
 import "./Profile.css";
@@ -27,6 +28,8 @@ function Profile() {
   const barangayCertInputRef = useRef(null);
   const [pinError, setPinError] = useState("");
   const [jumpBarangay, setJumpBarangay] = useState("");
+  // The purok dropdown is on "Other" and the farmer types theirs.
+  const [purokOther, setPurokOther] = useState(false);
   const [locating, setLocating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -40,6 +43,9 @@ function Profile() {
     farm_location: "",
     farm_lat: null,
     farm_lng: null,
+    barangay: "",
+    purok: "",
+    sitio: "",
     about: "",
     role: "",
     activeListings: 0,
@@ -82,7 +88,8 @@ function Profile() {
         return;
       }
 
-      setProfile(data);
+      setProfile({ ...data, barangay: data.barangay || "", purok: data.purok || "", sitio: data.sitio || "" });
+      setPurokOther(Boolean(data.purok) && !PUROK_OPTIONS.includes(data.purok));
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -109,6 +116,25 @@ function Profile() {
   const handleClearPin = () => {
     setPinError("");
     setProfile((prev) => ({ ...prev, farm_lat: null, farm_lng: null }));
+  };
+
+  // Picking the barangay also brings the map there, ready to pin the farm.
+  const handleBarangayChange = (e) => {
+    const name = e.target.value;
+    setProfile((prev) => ({ ...prev, barangay: name }));
+
+    const barangay = findBarangay(name);
+    if (barangay && profile.farm_lat == null) {
+      setJumpBarangay(name);
+      pickerMapRef.current?.flyTo(barangay.lat, barangay.lng, 15);
+    }
+  };
+
+  const handlePurokSelect = (e) => {
+    const value = e.target.value;
+    const isOther = value === "__other__";
+    setPurokOther(isOther);
+    setProfile((prev) => ({ ...prev, purok: isOther ? "" : value }));
   };
 
   const handleJumpToBarangay = (e) => {
@@ -178,6 +204,11 @@ function Profile() {
   };
 
   const saveProfile = async () => {
+    if (!profile.barangay || !profile.purok.trim()) {
+      alert("Please choose your barangay and purok.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
 
@@ -186,7 +217,9 @@ function Profile() {
       formData.append("full_name", profile.full_name || "");
       formData.append("phone", profile.phone || "");
       formData.append("location", profile.location || "");
-      formData.append("farm_location", profile.farm_location || "");
+      formData.append("barangay", profile.barangay || "");
+      formData.append("purok", profile.purok || "");
+      formData.append("sitio", profile.sitio || "");
       formData.append("farm_lat", profile.farm_lat ?? "");
       formData.append("farm_lng", profile.farm_lng ?? "");
       formData.append("about", profile.about || "");
@@ -269,6 +302,7 @@ function Profile() {
   const securityChecks = [
     { label: "Password protected", done: true },
     { label: "MAO account verified", done: profile.is_verified },
+    { label: "Barangay and purok set", done: Boolean(profile.barangay && profile.purok) },
     { label: "Farm location pinned", done: profile.farm_lat != null },
   ];
   const securityDone = securityChecks.filter((check) => check.done).length;
@@ -493,14 +527,75 @@ function Profile() {
                 </div>
               </div>
 
-              <div className="form-group full-width">
-                <label>Farm / Barangay Location</label>
+              <div className="form-group">
+                <label>Barangay</label>
+                <div className="input-wrapper">
+                  <MapPin size={18} />
+                  <select
+                    name="barangay"
+                    value={profile.barangay}
+                    onChange={handleBarangayChange}
+                    disabled={!isEditing}
+                    required
+                  >
+                    <option value="">{isEditing ? "Choose your barangay" : "Not specified"}</option>
+                    {VERUELA_BARANGAYS.map((barangay) => (
+                      <option key={barangay.name} value={barangay.name}>
+                        {barangay.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Purok</label>
+                <div className="input-wrapper">
+                  <MapPin size={18} />
+                  <select
+                    value={purokOther ? "__other__" : profile.purok}
+                    onChange={handlePurokSelect}
+                    disabled={!isEditing}
+                    required
+                  >
+                    <option value="">{isEditing ? "Choose your purok" : "Not specified"}</option>
+                    {PUROK_OPTIONS.map((purok) => (
+                      <option key={purok} value={purok}>
+                        {purok}
+                      </option>
+                    ))}
+                    <option value="__other__">Other (type your own)</option>
+                  </select>
+                </div>
+              </div>
+
+              {purokOther && (
+                <div className="form-group">
+                  <label>Purok Name</label>
+                  <div className="input-wrapper">
+                    <MapPin size={18} />
+                    <input
+                      type="text"
+                      name="purok"
+                      maxLength={50}
+                      placeholder="Example: Purok Malipayon"
+                      value={profile.purok}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>Sitio / Street (optional)</label>
                 <div className="input-wrapper">
                   <MapPin size={18} />
                   <input
                     type="text"
-                    name="farm_location"
-                    value={profile.farm_location || ""}
+                    name="sitio"
+                    maxLength={100}
+                    value={profile.sitio}
                     onChange={handleChange}
                     readOnly={!isEditing}
                   />

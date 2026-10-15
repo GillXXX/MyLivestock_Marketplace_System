@@ -12,6 +12,8 @@ const getAdminUsers = async (req, res) => {
         u.phone,
         u.location,
         u.farm_location,
+        u.barangay,
+        u.purok,
         u.profile_image,
         u.role,
         u.is_verified,

@@ -28,6 +28,7 @@ import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
 import { getProductIcon } from "../utils/productCatalog";
+import FarmersByBarangayReport from "../components/FarmersByBarangayReport";
 import "./AdminReports.css";
 
 function AdminReports() {
@@ -457,6 +458,8 @@ function AdminReports() {
           </div>
         </div>
       </section>
+
+      <FarmersByBarangayReport />
     </div>
   );
 }

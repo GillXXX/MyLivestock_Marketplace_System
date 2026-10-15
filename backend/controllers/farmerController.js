@@ -12,6 +12,7 @@ const {
   closeOrderAndReturnStock,
   autoApproveExpiredCancellations,
 } = require("../utils/orderStock");
+const { buildAddress, cleanAddressParts } = require("../utils/veruelaPlaces");
 const { getSystemSettings } = require("../utils/systemSettings");
 
 const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
@@ -218,6 +219,9 @@ exports.getFarmerProfile = async (req, res) => {
         farm_location,
         farm_lat,
         farm_lng,
+        barangay,
+        purok,
+        sitio,
         role,
         about,
         profile_image,
@@ -278,7 +282,7 @@ exports.updateFarmerProfile = async (req, res) => {
 
     const { error, fields } = pickProfileFields(
       req.body,
-      ["phone", "location", "farm_location", "about"],
+      ["phone", "location", "about"],
       [
         ["farm_lat", 90],
         ["farm_lng", 180],
@@ -287,6 +291,16 @@ exports.updateFarmerProfile = async (req, res) => {
 
     if (error) {
       return res.status(400).json({ message: error });
+    }
+
+    // Barangay / purok / sitio come from dropdowns; the readable farm
+    // address is built from them so every farmer's is written the same way.
+    if (req.body.barangay !== undefined) {
+      const address = cleanAddressParts(req.body);
+      if (address.error) {
+        return res.status(400).json({ message: address.error });
+      }
+      Object.assign(fields, address, { farm_location: buildAddress(address) });
     }
 
     if (req.file) {

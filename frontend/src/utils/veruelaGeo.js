@@ -42,3 +42,8 @@ export function isInsideVeruela(lat, lng) {
 export function findBarangay(name) {
   return VERUELA_BARANGAYS.find((b) => b.name === name) || null;
 }
+
+// Purok choices on the profile. A generic numbered list until the official
+// per-barangay list is available — "Other" lets a farmer type theirs.
+// Mirrors backend/utils/veruelaPlaces.js.
+export const PUROK_OPTIONS = Array.from({ length: 15 }, (_, i) => `Purok ${i + 1}`);

@@ -1,4 +1,6 @@
 const db = require("../config/db");
+const { getCategory } = require("../utils/productCatalog");
+const { VERUELA_BARANGAY_NAMES } = require("../utils/veruelaPlaces");
 
 const getPeriodRange = (period) => {
   const now = new Date();
@@ -326,4 +328,55 @@ const getAdminReports = async (req, res) => {
   }
 };
 
-module.exports = { getAdminReports };
+// Every farmer with their barangay and purok, for the "Farmers by
+// Barangay" report. The page groups, filters and exports them; farmers
+// who haven't picked a barangay yet come back with barangay NULL.
+const getFarmersByBarangay = async (req, res) => {
+  try {
+    const [farmers] = await db.query(`
+      SELECT
+        id,
+        full_name,
+        phone,
+        barangay,
+        purok,
+        sitio,
+        is_verified,
+        verification_status,
+        is_active,
+        created_at
+      FROM users
+      WHERE role = 'farmer'
+      ORDER BY full_name
+    `);
+
+    const [listings] = await db.query(`
+      SELECT farmer_id, livestock_type, category, quantity, unit
+      FROM livestock_listings
+      WHERE status = 'Available'
+    `);
+
+    const listingTotals = new Map();
+    for (const listing of listings) {
+      const totals = listingTotals.get(listing.farmer_id) || { activeListings: 0, livestockHead: 0 };
+      totals.activeListings += 1;
+      if (getCategory(listing.livestock_type, listing.category) === "livestock" && listing.unit !== "kg") {
+        totals.livestockHead += Number(listing.quantity) || 0;
+      }
+      listingTotals.set(listing.farmer_id, totals);
+    }
+
+    res.json({
+      barangays: VERUELA_BARANGAY_NAMES,
+      farmers: farmers.map((farmer) => ({
+        ...farmer,
+        ...(listingTotals.get(farmer.id) || { activeListings: 0, livestockHead: 0 }),
+      })),
+    });
+  } catch (error) {
+    console.error("Farmers by barangay report error:", error);
+    res.status(500).json({ message: "Server error loading farmers by barangay" });
+  }
+};
+
+module.exports = { getAdminReports, getFarmersByBarangay };

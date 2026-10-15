@@ -1,0 +1,161 @@
+.barangay-report-note {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.barangay-report-note.error {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.barangay-report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.barangay-report-filters select {
+  height: 42px;
+  min-width: 170px;
+  padding: 0 12px;
+  border: 1px solid #e8e2d4;
+  border-radius: 12px;
+  background: #f8f5ec;
+  color: #111827;
+  font: inherit;
+  font-size: 14px;
+}
+
+.barangay-report-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  margin-left: auto;
+  padding: 0 14px;
+  border: 1px solid #e8e2d4;
+  border-radius: 12px;
+  background: white;
+  color: #0f3d2e;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.barangay-table-wrap {
+  overflow-x: auto;
+}
+
+.barangay-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.barangay-table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e8e2d4;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.barangay-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.07);
+  color: #111827;
+  white-space: nowrap;
+}
+
+.barangay-table tbody tr[title] {
+  cursor: pointer;
+}
+
+.barangay-table tbody tr:hover td {
+  background: #f8f5ec;
+}
+
+.barangay-table tbody tr.selected td {
+  background: #eef6f1;
+  color: #0f3d2e;
+  font-weight: 800;
+}
+
+.barangay-table tbody tr.unspecified td:first-child {
+  color: #98a2b3;
+  font-style: italic;
+}
+
+.barangay-table tfoot td {
+  border-bottom: none;
+  border-top: 2px solid #e8e2d4;
+  font-weight: 900;
+  color: #0f3d2e;
+}
+
+.barangay-list-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 8px;
+  color: #0f3d2e;
+  font-size: 15px;
+}
+
+.barangay-list-title span {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #eef6f1;
+  font-size: 12px;
+}
+
+.barangay-pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.barangay-pill.yes {
+  background: #eef6f1;
+  color: #0f3d2e;
+}
+
+.barangay-pill.no {
+  background: #fdf3e1;
+  color: #9a6b12;
+}
+
+@media (max-width: 768px) {
+  .barangay-report-filters select {
+    flex: 1 1 45%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .barangay-report-export {
+    margin-left: 0;
+  }
+
+  .barangay-table {
+    font-size: 13px;
+  }
+
+  .barangay-table th,
+  .barangay-table td {
+    padding: 8px 10px;
+  }
+}
+
+@media print {
+  .barangay-report-filters {
+    display: none;
+  }
+}

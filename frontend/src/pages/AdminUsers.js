@@ -22,6 +22,7 @@ import { exportToCsv } from "../utils/exportCsv";
 import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
+import { VERUELA_BARANGAYS } from "../utils/veruelaGeo";
 import "./AdminUsers.css";
 
 function getAvatarUrl(image) {
@@ -47,6 +48,7 @@ function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All Account Status");
   const [verificationFilter, setVerificationFilter] = useState("All Verification");
+  const [barangayFilter, setBarangayFilter] = useState("All Barangays");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -222,6 +224,8 @@ function AdminUsers() {
       { label: "Email", value: (u) => u.email },
       { label: "Phone", value: (u) => u.phone },
       { label: "Role", value: (u) => u.role },
+      { label: "Barangay", value: (u) => u.barangay || "" },
+      { label: "Purok", value: (u) => u.purok || "" },
       { label: "Status", value: (u) => (u.is_active ? "Active" : "Inactive") },
       {
         label: "Verification",
@@ -252,7 +256,14 @@ function AdminUsers() {
       verificationFilter === "All Verification" ||
       (verificationFilter === "Verified" ? Boolean(user.is_verified) : !user.is_verified);
 
-    return matchesSearch && matchesRole && matchesStatus && matchesVerification;
+    // Only farmers record a barangay; "Not specified" finds those who haven't yet.
+    const matchesBarangay =
+      barangayFilter === "All Barangays" ||
+      (barangayFilter === "Not specified"
+        ? user.role === "farmer" && !user.barangay
+        : user.barangay === barangayFilter);
+
+    return matchesSearch && matchesRole && matchesStatus && matchesVerification && matchesBarangay;
   });
 
   if (loading) {
@@ -362,6 +373,14 @@ function AdminUsers() {
             <option>Verified</option>
             <option>Unverified</option>
           </select>
+
+          <select value={barangayFilter} onChange={(e) => setBarangayFilter(e.target.value)}>
+            <option>All Barangays</option>
+            {VERUELA_BARANGAYS.map((barangay) => (
+              <option key={barangay.name}>{barangay.name}</option>
+            ))}
+            <option>Not specified</option>
+          </select>
         </div>
 
         <div className="enterprise-table-wrapper">
@@ -401,7 +420,12 @@ function AdminUsers() {
 
                         <div>
                           <strong>{user.full_name}</strong>
-                          <p>USR-{user.id} • {user.location}</p>
+                          <p>
+                            USR-{user.id} •{" "}
+                            {user.barangay
+                              ? [user.purok, user.barangay].filter(Boolean).join(", ")
+                              : user.location}
+                          </p>
                         </div>
                       </div>
                     </td>
