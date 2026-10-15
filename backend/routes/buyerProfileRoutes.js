@@ -4,6 +4,7 @@ const router = express.Router();
 
 const protect = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/roleMiddleware");
+const { profileLimiter } = require("../middleware/rateLimiter");
 const upload = require("../middleware/uploadMiddleware");
 const {
   getBuyerProfile,
@@ -11,6 +12,6 @@ const {
 } = require("../controllers/buyerProfileController");
 
 router.get("/", protect, requireRole("buyer"), getBuyerProfile);
-router.put("/", protect, requireRole("buyer"), upload.single("profile_image"), updateBuyerProfile);
+router.put("/", protect, requireRole("buyer"), profileLimiter, upload.single("profile_image"), updateBuyerProfile);
 
 module.exports = router;
