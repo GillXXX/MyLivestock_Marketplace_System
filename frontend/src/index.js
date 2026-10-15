@@ -5,6 +5,10 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { API_URL } from './config';
+import { installSessionGuard } from './utils/sessionGuard';
+
+// Sends people to Login when their session expires (see utils/sessionGuard.js).
+installSessionGuard();
 
 // Uploaded files are saved with the full server address of the time they
 // were uploaded (e.g. an old Wi-Fi IP like http://10.254.50.74:5000). From
