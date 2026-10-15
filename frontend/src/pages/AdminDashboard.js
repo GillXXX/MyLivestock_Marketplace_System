@@ -31,6 +31,7 @@ import NotificationBell from "../components/NotificationBell";
 import { VERUELA_CENTER, VERUELA_BOUNDARY_GEOJSON, VERUELA_BARANGAYS } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
 import { getProductIcon } from "../utils/productCatalog";
+import { pollWhenIdle } from "../utils/polling";
 import "./AdminDashboard.css";
 
 const MAP_POLL_INTERVAL_MS = 20000;
@@ -85,6 +86,7 @@ function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
   const [mapPreview, setMapPreview] = useState({ locations: [], stats: null });
+  const mapPollRef = useRef(false);
   const [selectedFarmer, setSelectedFarmer] = useState(null);
 
   const fetchAdminDashboard = useCallback(
@@ -151,7 +153,7 @@ function AdminDashboard() {
     };
 
     fetchMapPreview();
-    const interval = setInterval(fetchMapPreview, MAP_POLL_INTERVAL_MS);
+    const interval = setInterval(pollWhenIdle(mapPollRef, fetchMapPreview), MAP_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 

@@ -22,6 +22,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
 import { getProductIcon, formatPrice } from "../utils/productCatalog";
 import useGoBack from "../utils/useGoBack";
+import { pollWhenIdle } from "../utils/polling";
 import BuyNowModal from "../components/BuyNowModal";
 import DealTermsBar from "../components/DealTermsBar";
 import "./Messages.css";
@@ -142,6 +143,9 @@ function Messages() {
   const cameraMenuRef = useRef(null);
 
   const [currentUser, setCurrentUser] = useState(null);
+  // Whether a background poll is still waiting for its answer (utils/polling.js).
+  const conversationsPollRef = useRef(false);
+  const messagesPollRef = useRef(false);
   const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   // The listing this chat is about plus the buyer's open deal for it (from
@@ -282,14 +286,12 @@ function Messages() {
     setCurrentUser(auth.user);
     fetchConversations(true);
 
-    // No polling while the tab is hidden — catch up as soon as it's back.
-    const conversationsInterval = setInterval(() => {
-      if (!document.hidden) fetchConversations(false);
-    }, POLL_CONVERSATIONS_MS);
+    // No polling while the tab is hidden, offline, or the last poll is
+    // still out — catch up as soon as it's back.
+    const pollConversations = pollWhenIdle(conversationsPollRef, () => fetchConversations(false));
+    const conversationsInterval = setInterval(pollConversations, POLL_CONVERSATIONS_MS);
 
-    const handleVisible = () => {
-      if (!document.hidden) fetchConversations(false);
-    };
+    const handleVisible = pollConversations;
     document.addEventListener("visibilitychange", handleVisible);
 
     return () => {
@@ -333,13 +335,10 @@ function Messages() {
 
     fetchMessages(selectedId);
 
-    const messagesInterval = setInterval(() => {
-      if (!document.hidden) fetchMessages(selectedId);
-    }, POLL_MESSAGES_MS);
+    const pollMessages = pollWhenIdle(messagesPollRef, () => fetchMessages(selectedId));
+    const messagesInterval = setInterval(pollMessages, POLL_MESSAGES_MS);
 
-    const handleVisible = () => {
-      if (!document.hidden) fetchMessages(selectedId);
-    };
+    const handleVisible = pollMessages;
     document.addEventListener("visibilitychange", handleVisible);
 
     return () => {
