@@ -242,6 +242,29 @@ const createListing = async (req, res) => {
   }
 };
 
+const countOpenDeals = async (listingId) => {
+  const [[row]] = await db.query(
+    "SELECT COUNT(*) AS n FROM transactions WHERE listing_id = ? AND status = 'Pending'",
+    [listingId]
+  );
+  return Number(row.n) || 0;
+};
+
+// What a buyer and seller are negotiating on: an open deal's price and
+// amount are worked out from these, so they can't change under it. Returns
+// the first one that differs, or null. Weights are compared as numbers so
+// an older free-text weight ("25kg") resaved as 25 doesn't count.
+const changedDealField = (existing, input) => {
+  if (existing.livestock_type !== input.livestockType) return "animal type";
+  if ((existing.unit || "head") !== input.unit) return "selling unit";
+  if (Number(existing.price) !== Number(input.price)) return "price";
+  const existingKg = parseFloat(existing.weight);
+  if (input.category === "livestock" && Number.isFinite(existingKg) && existingKg !== parseFloat(input.weight)) {
+    return "weight";
+  }
+  return null;
+};
+
 const getListingById = async (req, res) => {
   try {
     const farmerId = req.user.id;
@@ -256,7 +279,10 @@ const getListingById = async (req, res) => {
       return res.status(404).json({ message: "Listing not found" });
     }
 
-    res.json(rows[0]);
+    // So the edit form can lock the fields open deals depend on.
+    const openDeals = await countOpenDeals(id);
+
+    res.json({ ...rows[0], open_deals: openDeals });
   } catch (error) {
     console.error("Get listing error:", error);
     res.status(500).json({ message: "Server error loading listing" });
@@ -269,7 +295,8 @@ const updateListing = async (req, res) => {
     const { id } = req.params;
 
     const [existingRows] = await db.query(
-      "SELECT image_url, documents, status FROM livestock_listings WHERE id = ? AND farmer_id = ?",
+      `SELECT image_url, documents, status, livestock_type, unit, price, weight
+       FROM livestock_listings WHERE id = ? AND farmer_id = ?`,
       [id, farmerId]
     );
 
@@ -282,6 +309,13 @@ const updateListing = async (req, res) => {
 
     if (input.error) {
       return res.status(400).json({ message: input.error });
+    }
+
+    const changed = changedDealField(existingRows[0], input);
+    if (changed && (await countOpenDeals(id)) > 0) {
+      return res.status(409).json({
+        message: `This listing has an open deal, so its ${changed} can't be changed until the deal is completed or cancelled.`,
+      });
     }
 
     const {

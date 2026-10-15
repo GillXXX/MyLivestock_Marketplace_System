@@ -53,6 +53,9 @@ function Post() {
   // System Settings > "Require document verification" (sent with the
   // farmer profile); when off, supporting documents are optional.
   const [documentsRequired, setDocumentsRequired] = useState(true);
+  // Open deals on this listing (edit mode): their price is worked out from
+  // the type, unit, price and weight, so those are locked until they close.
+  const [openDeals, setOpenDeals] = useState(0);
 
   // typeChoice is the dropdown value: a known type, or one of the two
   // "Other" options, in which case the farmer types the name in customType.
@@ -126,6 +129,7 @@ function Post() {
         });
 
         setExistingImageUrl(data.image_url || "");
+        setOpenDeals(Number(data.open_deals) || 0);
 
         try {
           const docs = data.documents ? JSON.parse(data.documents) : [];
@@ -203,6 +207,7 @@ function Post() {
     typeChoice === OTHER_PRODUCT ? "product" : getCategory(typeChoice, "livestock");
   const isProduct = category === "product";
   const unitInfo = UNITS.find((u) => u.value === formData.unit) || UNITS[0];
+  const dealLocked = openDeals > 0;
   const liveWeightEstimate =
     Math.round(getPricePerQuantityUnit({ ...formData, price: Number(formData.price) || 0 }) * 100) / 100;
 
@@ -502,6 +507,15 @@ function Post() {
             </div>
           </div>
 
+          {dealLocked && (
+            <p className="deal-lock-note">
+              <AlertTriangle size={16} />
+              This listing has {openDeals === 1 ? "an open deal" : `${openDeals} open deals`}, so the type,
+              selling unit, price and weight are locked until {openDeals === 1 ? "it is" : "they are"}{" "}
+              completed or cancelled. You can still update the other details.
+            </p>
+          )}
+
           <div className="premium-form-grid">
             <div className="form-group">
               <label>What are you selling?</label>
@@ -509,7 +523,7 @@ function Post() {
               <div className="input-wrapper">
                 <Tag size={18} />
 
-                <select value={typeChoice} onChange={handleTypeChange} required>
+                <select value={typeChoice} onChange={handleTypeChange} disabled={dealLocked} required>
                   <option value="">Choose a product type</option>
                   <optgroup label="Livestock">
                     {LIVESTOCK_TYPES.map((type) => (
@@ -546,6 +560,7 @@ function Post() {
                     }
                     value={customType}
                     onChange={(e) => setCustomType(e.target.value)}
+                    disabled={dealLocked}
                     required
                   />
                 </div>
@@ -616,6 +631,7 @@ function Post() {
                     max="5000"
                     step="0.1"
                     placeholder="Example: 100"
+                    disabled={dealLocked}
                     value={formData.weight}
                     onChange={handleChange}
                     required
@@ -634,6 +650,7 @@ function Post() {
                   name="price"
                   type="number"
                   placeholder={`Price ${unitInfo.label}`}
+                  disabled={dealLocked}
                   value={formData.price}
                   onChange={handleChange}
                   required
@@ -656,7 +673,7 @@ function Post() {
               <div className="input-wrapper">
                 <Hash size={18} />
 
-                <select name="unit" value={formData.unit} onChange={handleChange} required>
+                <select name="unit" value={formData.unit} onChange={handleChange} disabled={dealLocked} required>
                   {!formData.unit && <option value="">Choose a selling unit</option>}
                   {unitsFor(category).map((u) => (
                     <option key={u.value} value={u.value}>{u.label}</option>

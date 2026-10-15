@@ -907,3 +907,27 @@ a.doc-chip:hover {
     transform: none;
   }
 }
+.deal-lock-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  border: 1px solid #f1d9a6;
+  border-radius: 14px;
+  background: #fdf6e7;
+  color: #8a5d0c;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.deal-lock-note svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.input-wrapper select:disabled,
+.input-wrapper input:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
