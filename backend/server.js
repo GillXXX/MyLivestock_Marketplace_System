@@ -82,7 +82,10 @@ if (!process.env.S3_BUCKET) {
       const text = JSON.stringify(body);
       if (text === undefined || !text.includes("/uploads/")) return sendJson(body);
 
-      const base = `${req.protocol}://${req.get("host")}`;
+      // req.host (not the raw Host header) so that behind a trusted proxy
+      // — the dev server's, or a host's — links point at the address the
+      // browser actually used, not the proxy's target (e.g. localhost:5000).
+      const base = `${req.protocol}://${req.host}`;
       res.type("json");
       return res.send(text.replace(STORED_UPLOAD_URL, `${base}/uploads/`));
     };
