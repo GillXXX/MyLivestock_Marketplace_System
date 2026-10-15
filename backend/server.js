@@ -66,6 +66,27 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Uploads are saved to disk before a route decides whether to accept the
+// request, so a refused one (someone else's chat, a form error, a listing
+// they can't edit) would leave its files behind. Delete them whenever the
+// response is an error. With S3 storage, files have no local path.
+app.use((req, res, next) => {
+  res.on("finish", () => {
+    if (res.statusCode < 400) return;
+
+    const files = [
+      ...(req.file ? [req.file] : []),
+      ...(Array.isArray(req.files) ? req.files : Object.values(req.files || {}).flat()),
+    ];
+
+    for (const file of files) {
+      if (file.path) fs.unlink(file.path, () => {});
+    }
+  });
+
+  next();
+});
+
 // Locally stored uploads are saved in the database as absolute URLs that
 // contain whatever host the server was reached on at upload time (a LAN IP
 // that later changes, localhost, ...), which leaves every previously

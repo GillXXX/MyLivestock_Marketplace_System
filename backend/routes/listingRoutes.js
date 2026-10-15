@@ -4,6 +4,7 @@ const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/roleMiddleware");
 const upload = require("../middleware/uploadMiddleware");
+const { listingLimiter } = require("../middleware/rateLimiter");
 const {
   getMyListings,
   createListing,
@@ -19,10 +20,10 @@ const listingUpload = upload.fields([
 ]);
 
 router.get("/my-listings", protect, requireRole("farmer"), getMyListings);
-router.post("/", protect, requireRole("farmer"), listingUpload, createListing);
+router.post("/", protect, requireRole("farmer"), listingLimiter, listingUpload, createListing);
 router.get("/:id", protect, requireRole("farmer"), getListingById);
-router.put("/:id", protect, requireRole("farmer"), listingUpload, updateListing);
-router.put("/:id/publish", protect, requireRole("farmer"), publishListing);
-router.delete("/:id", protect, requireRole("farmer"), deleteListing);
+router.put("/:id", protect, requireRole("farmer"), listingLimiter, listingUpload, updateListing);
+router.put("/:id/publish", protect, requireRole("farmer"), listingLimiter, publishListing);
+router.delete("/:id", protect, requireRole("farmer"), listingLimiter, deleteListing);
 
 module.exports = router;
