@@ -34,6 +34,7 @@ import {
   getProductIcon,
   formatQuantity,
 } from "../utils/productCatalog";
+import DealTermsSummary from "../components/DealTermsSummary";
 import useGoBack from "../utils/useGoBack";
 import "./BuyerTransactions.css";
 
@@ -603,6 +604,7 @@ function BuyerTransactions() {
                     <div className="transaction-right">
                       <strong>₱{Number(item.amount).toLocaleString()}</strong>
                       <span className="transaction-qty">Qty: {formatQuantity(item.quantity || 1, item.unit)}</span>
+                      <DealTermsSummary transaction={item} />
 
                       <span
                         className={
@@ -800,6 +802,7 @@ function BuyerTransactions() {
             <div className="transaction-modal-amount">
               <span>Offer Amount</span>
               <strong>₱{Number(selectedTransaction.amount).toLocaleString()}</strong>
+              <DealTermsSummary transaction={selectedTransaction} />
             </div>
 
             <div className="transaction-modal-info">

@@ -30,6 +30,17 @@ const getBuyerTransactions = async (req, res) => {
         t.cancel_reason,
         t.cancel_outcome,
         t.cancel_responded_at,
+        t.listed_amount,
+        t.offer_unit_price,
+        t.offer_pickup_date,
+        t.offer_pickup_place,
+        t.offer_payment,
+        t.offer_note,
+        t.offer_by,
+        t.terms_agreed_at,
+        t.actual_weight_kg,
+        l.price AS listing_price,
+        l.weight AS listing_weight,
         ${freeCancelCondition("t.")} AS can_cancel_freely,
         t.created_at + INTERVAL ${FREE_CANCEL_HOURS} HOUR AS free_cancel_until,
         l.livestock_type,
@@ -98,6 +109,7 @@ const confirmTransaction = async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT t.id, t.buyer_id, t.listing_id, t.workflow_step, t.status, t.cancel_requested_at, t.cancel_outcome,
+              t.actual_weight_kg, l.unit,
               l.livestock_type, farmer.full_name AS farmer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
@@ -139,6 +151,14 @@ const confirmTransaction = async (req, res) => {
 
     if (!isStrict && transaction.workflow_step === "Inquiry") {
       return res.status(400).json({ message: "Negotiate with the seller before completing this deal" });
+    }
+
+    // Sold by live weight, the amount is only an estimate until the seller
+    // records what the animals actually weighed at pickup.
+    if (transaction.unit === "kg_live" && !transaction.actual_weight_kg) {
+      return res.status(400).json({
+        message: "Wait for the seller to record the actual weight so the final amount is known",
+      });
     }
 
     const [completeResult] = await db.query(

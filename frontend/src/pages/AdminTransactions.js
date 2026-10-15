@@ -22,6 +22,7 @@ import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
 import { formatQuantity } from "../utils/productCatalog";
+import DealTermsSummary from "../components/DealTermsSummary";
 import "./AdminTransactions.css";
 
 function AdminTransactions() {
@@ -285,6 +286,7 @@ function AdminTransactions() {
                     <td className="amount">
                       ₱{Number(trx.amount).toLocaleString()}
                       <small className="amount-qty">Qty: {formatQuantity(trx.quantity || 1, trx.unit)}</small>
+                      <DealTermsSummary transaction={trx} />
                     </td>
 
                     <td>{new Date(trx.created_at).toLocaleDateString()}</td>

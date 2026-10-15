@@ -25,6 +25,7 @@ import AdminStatCard from "../components/AdminStatCard";
 import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
 import { getProductIcon, formatQuantity } from "../utils/productCatalog";
+import DealTermsSummary from "../components/DealTermsSummary";
 import useGoBack from "../utils/useGoBack";
 import "./FarmerTransactions.css";
 
@@ -496,6 +497,7 @@ function FarmerTransactions() {
                       <span className="transaction-qty">
                         Qty: {formatQuantity(item.quantity || 1, item.unit)}
                       </span>
+                      <DealTermsSummary transaction={item} />
 
                       <span
                         className={

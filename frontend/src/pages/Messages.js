@@ -23,6 +23,7 @@ import { API_URL } from "../config";
 import { getProductIcon, formatPrice } from "../utils/productCatalog";
 import useGoBack from "../utils/useGoBack";
 import BuyNowModal from "../components/BuyNowModal";
+import DealTermsBar from "../components/DealTermsBar";
 import "./Messages.css";
 
 const POLL_MESSAGES_MS = 2000;
@@ -917,6 +918,12 @@ function Messages() {
                   <Trash2 size={18} />
                 </button>
               </div>
+
+              <DealTermsBar
+                deal={deal}
+                currentUser={currentUser}
+                onChanged={() => fetchMessages(selectedId)}
+              />
 
               <div className="chat-messages" ref={chatMessagesRef}>
                 {messages.length === 0 ? (

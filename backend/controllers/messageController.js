@@ -174,7 +174,8 @@ const getMessages = async (req, res) => {
         : [[]];
 
     // The listing this chat is about, and the buyer's open deal for it if
-    // there is one — lets the buyer "Proceed to Negotiation" from the chat.
+    // there is one — lets the buyer "Proceed to Negotiation" from the chat,
+    // and both sides negotiate its terms there.
     const [[deal]] = await db.query(
       `SELECT
         l.id,
@@ -185,11 +186,23 @@ const getMessages = async (req, res) => {
         l.quantity,
         l.unit,
         l.weight,
+        l.location,
         l.image_url,
         l.status,
         seller.full_name AS seller_name,
         t.id AS open_transaction_id,
-        t.workflow_step AS open_transaction_step
+        t.workflow_step AS open_transaction_step,
+        t.quantity AS deal_quantity,
+        t.amount AS deal_amount,
+        t.offer_unit_price,
+        t.offer_pickup_date,
+        t.offer_pickup_place,
+        t.offer_payment,
+        t.offer_note,
+        t.offer_by,
+        t.terms_agreed_at,
+        t.actual_weight_kg,
+        (t.cancel_requested_at IS NOT NULL AND t.cancel_outcome IS NULL) AS deal_cancel_pending
       FROM conversations c
       JOIN livestock_listings l ON c.listing_id = l.id
       JOIN users seller ON c.farmer_id = seller.id

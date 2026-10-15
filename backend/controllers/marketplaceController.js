@@ -244,9 +244,9 @@ const createTransaction = async (req, res) => {
       // Negotiation" after asking about the product in chat — so it begins
       // at Negotiation; Inquiry is the chatting before that.
       [result] = await connection.query(
-        `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, quantity, workflow_step, status)
-         VALUES (?, ?, ?, ?, ?, 'Negotiation', 'Pending')`,
-        [listingId, buyerId, listing.farmer_id, amount, orderQuantity]
+        `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, listed_amount, quantity, workflow_step, status)
+         VALUES (?, ?, ?, ?, ?, ?, 'Negotiation', 'Pending')`,
+        [listingId, buyerId, listing.farmer_id, amount, amount, orderQuantity]
       );
 
       await connection.commit();
