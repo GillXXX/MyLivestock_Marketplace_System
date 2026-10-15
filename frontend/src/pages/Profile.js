@@ -791,6 +791,14 @@ function Profile() {
                     </button>
                   </div>
 
+                  <p className="verification-privacy-note">
+                    Your ID and barangay certificate are kept private. Only MAO staff and the system
+                    administrator can open them, to verify your account.{" "}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                      Privacy Notice
+                    </a>
+                  </p>
+
                   <button
                     type="button"
                     className="save-btn"

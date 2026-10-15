@@ -10,6 +10,10 @@ const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const GOOGLE_SIGNUP_PURPOSE = "google-signup";
 const MAX_OTP_ATTEMPTS = 5;
 
+// Sign-up requires agreeing to the Privacy Notice (Data Privacy Act of
+// 2012); when they agreed is saved in users.privacy_consented_at.
+const PRIVACY_CONSENT_MESSAGE = "Please agree to the Privacy Notice to create your account";
+
 const generateOtp = () => crypto.randomInt(0, 1000000).toString().padStart(6, "0");
 const hashOtp = (code) => crypto.createHash("sha256").update(String(code)).digest("hex");
 
@@ -164,7 +168,7 @@ const verifyRegistrationCode = async (req, res) => {
 // whether they are a farmer or a buyer.
 const completeRegistration = async (req, res) => {
   try {
-    const { email, role, fullName, phone, password, confirmPassword } = req.body;
+    const { email, role, fullName, phone, password, confirmPassword, privacyConsent } = req.body;
 
     if (role !== "farmer" && role !== "buyer") {
       return res.status(400).json({ message: "Please choose whether you are a farmer or a buyer" });
@@ -180,6 +184,10 @@ const completeRegistration = async (req, res) => {
 
     if (!isStrongPassword(password)) {
       return res.status(400).json({ message: PASSWORD_REQUIREMENTS_MESSAGE });
+    }
+
+    if (privacyConsent !== true) {
+      return res.status(400).json({ message: PRIVACY_CONSENT_MESSAGE });
     }
 
     const [rows] = await db.query("SELECT * FROM registration_codes WHERE email = ?", [email]);
@@ -207,8 +215,8 @@ const completeRegistration = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(
-      `INSERT INTO users (full_name, email, phone, location, role, password, profile_completed)
-       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+      `INSERT INTO users (full_name, email, phone, location, role, password, profile_completed, privacy_consented_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, NOW())`,
       [fullName.trim(), email, phone.trim(), "", role, hashedPassword]
     );
 
@@ -409,7 +417,7 @@ const googleLogin = async (req, res) => {
 // with email too, not only with Google.
 const completeGoogleSignup = async (req, res) => {
   try {
-    const { signupToken, role, fullName, phone, password, confirmPassword } = req.body;
+    const { signupToken, role, fullName, phone, password, confirmPassword, privacyConsent } = req.body;
 
     if (role !== "farmer" && role !== "buyer") {
       return res.status(400).json({ message: "Please choose whether you are a farmer or a buyer" });
@@ -425,6 +433,10 @@ const completeGoogleSignup = async (req, res) => {
 
     if (!isStrongPassword(password)) {
       return res.status(400).json({ message: PASSWORD_REQUIREMENTS_MESSAGE });
+    }
+
+    if (privacyConsent !== true) {
+      return res.status(400).json({ message: PRIVACY_CONSENT_MESSAGE });
     }
 
     let signup;
@@ -447,8 +459,8 @@ const completeGoogleSignup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(
-      `INSERT INTO users (full_name, email, phone, location, role, password, profile_completed)
-       VALUES (?, ?, ?, '', ?, ?, 1)`,
+      `INSERT INTO users (full_name, email, phone, location, role, password, profile_completed, privacy_consented_at)
+       VALUES (?, ?, ?, '', ?, ?, 1, NOW())`,
       [fullName.trim(), signup.email, phone.trim(), role, hashedPassword]
     );
 

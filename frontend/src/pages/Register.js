@@ -40,6 +40,7 @@ function Register() {
     phone: "",
     password: "",
     confirmPassword: "",
+    privacyConsent: false,
   });
 
   useEffect(() => {
@@ -143,6 +144,11 @@ function Register() {
 
     if (!detailsForm.role) {
       setMessage("Please choose whether you are a farmer or a buyer.");
+      return;
+    }
+
+    if (!detailsForm.privacyConsent) {
+      setMessage("Please agree to the Privacy Notice to create your account.");
       return;
     }
 
@@ -453,6 +459,23 @@ function Register() {
                 value={detailsForm.role}
                 onChange={(role) => setDetailsForm({ ...detailsForm, role })}
               />
+
+              <label className="privacy-consent">
+                <input
+                  type="checkbox"
+                  checked={detailsForm.privacyConsent}
+                  onChange={(e) => setDetailsForm({ ...detailsForm, privacyConsent: e.target.checked })}
+                  required
+                />
+                <span>
+                  I have read and agree to the{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                    Privacy Notice
+                  </a>
+                  , and I consent to VOLT and the Municipal Agriculture Office collecting and using my personal
+                  information as described there.
+                </span>
+              </label>
 
               <button className="register-btn" type="submit" disabled={loading}>
                 {loading ? "Creating account..." : "Create Account"}

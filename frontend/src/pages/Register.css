@@ -660,3 +660,29 @@
     grid-template-columns: 1fr;
   }
 }
+
+.privacy-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0 16px;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.privacy-consent input {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: #0f3d2e;
+  cursor: pointer;
+}
+
+.privacy-consent a {
+  color: #0f3d2e;
+  font-weight: 800;
+  text-decoration: underline;
+}
