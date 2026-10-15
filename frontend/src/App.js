@@ -14,6 +14,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import PrivacyNotice from "./pages/PrivacyNotice";
 
 
 /* =========================
@@ -78,6 +79,11 @@ function App() {
         <Route
           path="/"
           element={<LandingPage />}
+        />
+
+        <Route
+          path="/privacy"
+          element={<PrivacyNotice />}
         />
 
         <Route

@@ -365,12 +365,14 @@ function LandingPage() {
             <a href="#features">Features</a>
             <a href="#workflow">Workflow</a>
             <a href="#livestock">Livestock</a>
+            <a href="#benefits">Benefits</a>
           </div>
 
           <div>
             <strong>Access</strong>
             <a href="/login">Login</a>
             <a href="/register">Register</a>
+            <a href="/privacy">Privacy Notice</a>
           </div>
 
           <div>
