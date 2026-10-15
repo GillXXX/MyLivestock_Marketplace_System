@@ -1,20 +1,14 @@
 import { Link } from "react-router-dom";
 import { Home, ArrowLeft } from "lucide-react";
 import useGoBack from "../utils/useGoBack";
+import { dashboardFor } from "../utils/auth";
 import "./NotFound.css";
-
-const DASHBOARD_BY_ROLE = {
-  admin: "/admin-dashboard",
-  mao_staff: "/admin-dashboard",
-  farmer: "/farmer-dashboard",
-  buyer: "/buyer-dashboard",
-};
 
 function NotFound() {
   // Opened in a new tab (e.g. a broken link) there's no page to go back
   // to, so "Go Back" lands on the signed-in user's dashboard instead.
   const role = JSON.parse(localStorage.getItem("user") || "{}").role;
-  const goBack = useGoBack(DASHBOARD_BY_ROLE[role] || "/");
+  const goBack = useGoBack(dashboardFor(role));
 
   return (
     <div className="not-found-page">

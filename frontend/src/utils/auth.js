@@ -63,3 +63,14 @@ export const describeGoogleError = (error) => {
   const detail = error?.error_description || type;
   return detail ? `Google sign-in failed (${detail}).` : "Google sign-in failed.";
 };
+
+// Where each role lands after signing in, and where a page sends someone
+// whose role it isn't for.
+const DASHBOARD_BY_ROLE = {
+  admin: "/admin-dashboard",
+  mao_staff: "/admin-dashboard",
+  farmer: "/farmer-dashboard",
+  buyer: "/buyer-dashboard",
+};
+
+export const dashboardFor = (role) => DASHBOARD_BY_ROLE[role] || "/";
