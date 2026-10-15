@@ -59,12 +59,15 @@ import BuyerMapExplorer from "./pages/BuyerMap";
 import BuyerProfile from "./pages/BuyerProfile";
 import SellerProfile from "./pages/SellerProfile";
 import BuyerLayout from "./components/BuyerLayout";
+import ConnectionStatus from "./components/ConnectionStatus";
 
 function App() {
 
   return (
 
     <BrowserRouter>
+
+      <ConnectionStatus />
 
       <Routes>
 
