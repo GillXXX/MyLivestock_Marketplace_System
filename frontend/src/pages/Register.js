@@ -288,6 +288,7 @@ function Register() {
                     <Mail size={20} />
                     <input
                       type="email"
+                      maxLength={100}
                       placeholder="example@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -393,6 +394,7 @@ function Register() {
                     type="text"
                     placeholder="Enter full name"
                     value={detailsForm.fullName}
+                    maxLength={100}
                     onChange={(e) => setDetailsForm({ ...detailsForm, fullName: e.target.value })}
                     required
                   />
@@ -407,6 +409,7 @@ function Register() {
                     type="text"
                     placeholder="+63 912 345 6789"
                     value={detailsForm.phone}
+                    maxLength={30}
                     onChange={(e) => setDetailsForm({ ...detailsForm, phone: e.target.value })}
                     required
                   />

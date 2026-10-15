@@ -1,6 +1,13 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
-const { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } = require("../utils/validators");
+const {
+  isStrongPassword,
+  PASSWORD_REQUIREMENTS_MESSAGE,
+  TEXT_LIMITS,
+  tooLong,
+  isValidPhone,
+  PHONE_MESSAGE,
+} = require("../utils/validators");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,8 +22,15 @@ const validateStaffDetails = async ({ fullName, email, phone }, excludeId = null
     return { status: 400, error: "Please fill in all required fields" };
   }
 
-  if (!EMAIL_RE.test(cleanEmail)) {
+  if (!EMAIL_RE.test(cleanEmail) || cleanEmail.length > TEXT_LIMITS.email) {
     return { status: 400, error: "Please enter a valid email address" };
+  }
+
+  const nameError = tooLong(cleanName, TEXT_LIMITS.fullName, "Full name");
+  if (nameError) return { status: 400, error: nameError };
+
+  if (!isValidPhone(cleanPhone)) {
+    return { status: 400, error: PHONE_MESSAGE };
   }
 
   const [existingUser] = await db.query(

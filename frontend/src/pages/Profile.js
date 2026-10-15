@@ -484,6 +484,7 @@ function Profile() {
                   <input
                     type="text"
                     name="full_name"
+                    maxLength={100}
                     value={profile.full_name}
                     onChange={handleChange}
                     readOnly={!isEditing}
@@ -506,6 +507,7 @@ function Profile() {
                   <input
                     type="text"
                     name="phone"
+                    maxLength={30}
                     value={profile.phone}
                     onChange={handleChange}
                     readOnly={!isEditing}
@@ -520,6 +522,7 @@ function Profile() {
                   <input
                     type="text"
                     name="location"
+                    maxLength={150}
                     value={profile.location}
                     onChange={handleChange}
                     readOnly={!isEditing}
@@ -708,6 +711,7 @@ function Profile() {
                 <textarea
                   rows="5"
                   name="about"
+                  maxLength={1000}
                   value={profile.about || ""}
                   onChange={handleChange}
                   readOnly={!isEditing}
