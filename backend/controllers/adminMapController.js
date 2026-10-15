@@ -2,10 +2,6 @@ const db = require("../config/db");
 
 const getAdminMapData = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [locations] = await db.query(`
       SELECT 
         u.id,
@@ -16,7 +12,9 @@ const getAdminMapData = async (req, res) => {
         u.farm_lng,
         COUNT(l.id) AS listings,
         GROUP_CONCAT(DISTINCT l.livestock_type) AS livestock_types,
-        MAX(l.status) AS status
+        -- Flag the farmer as Pending if any listing awaits review (MAX()
+        -- alone picks alphabetically, so "Sold" would hide a Pending one).
+        CASE WHEN SUM(l.status = 'Pending') > 0 THEN 'Pending' ELSE MAX(l.status) END AS status
       FROM users u
       LEFT JOIN livestock_listings l ON u.id = l.farmer_id
       WHERE u.role = 'farmer'
@@ -47,7 +45,7 @@ const getAdminMapData = async (req, res) => {
     `);
 
     const [distribution] = await db.query(`
-      SELECT livestock_type, COUNT(*) AS total
+      SELECT livestock_type, MAX(category) AS category, COUNT(*) AS total
       FROM livestock_listings
       GROUP BY livestock_type
     `);
@@ -64,7 +62,6 @@ const getAdminMapData = async (req, res) => {
         pinnedLocations: pinnedLocations[0].total,
         mappedListings: mappedListings[0].total,
         livestockTypes: livestockTypes[0].total,
-        withinVeruela: "100%",
         pendingReview: pendingReview[0].total,
       },
       locations,

@@ -2,10 +2,8 @@ import { useState } from "react";
 import { X, Send, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
+import { formatPrice, getListingPlaceholder } from "../utils/productCatalog";
 import "./InquiryModal.css";
-
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
 
 function InquiryModal({ listing, onClose }) {
   const navigate = useNavigate();
@@ -72,7 +70,7 @@ function InquiryModal({ listing, onClose }) {
             <h3>Inquiry sent!</h3>
             <p>
               {listing.seller_name} will be notified about your message
-              regarding the {listing.breed}.
+              regarding the {listing.breed || listing.livestock_type}.
             </p>
             <button type="button" onClick={onClose}>
               Done
@@ -86,20 +84,20 @@ function InquiryModal({ listing, onClose }) {
             </p>
 
             <div className="inquiry-listing-preview">
-              <img src={listing.image_url || DEFAULT_IMAGE} alt={listing.breed} />
+              <img src={listing.image_url || getListingPlaceholder(listing.livestock_type, listing.category)} alt={listing.breed || listing.livestock_type} />
 
               <div>
-                <strong>{listing.breed}</strong>
+                <strong>{listing.breed || listing.livestock_type}</strong>
                 <span>{listing.livestock_type}</span>
                 <small>Seller: {listing.seller_name}</small>
               </div>
 
-              <em>₱{Number(listing.price).toLocaleString()}</em>
+              <em>{formatPrice(listing.price, listing.unit)}</em>
             </div>
 
             <textarea
               rows={4}
-              placeholder={`Hi ${listing.seller_name}, is the ${listing.breed} still available?`}
+              placeholder={`Hi ${listing.seller_name}, is the ${listing.breed || listing.livestock_type} still available?`}
               value={text}
               onChange={(e) => {
                 setText(e.target.value);

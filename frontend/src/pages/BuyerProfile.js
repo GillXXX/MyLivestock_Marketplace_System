@@ -17,14 +17,19 @@ import {
   Lock,
   ShoppingBag,
   X,
+  CheckCircle2,
+  Circle,
+  ChevronRight,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL, DEFAULT_AVATAR } from "../config";
+import useGoBack from "../utils/useGoBack";
 import "./Profile.css";
 
 function BuyerProfile() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/buyer-dashboard");
   const fileInputRef = useRef(null);
 
   const [profile, setProfile] = useState(null);
@@ -149,13 +154,21 @@ function BuyerProfile() {
   if (loading) return <h2 style={{ padding: "30px" }}>Loading buyer profile...</h2>;
   if (message) return <h2 style={{ padding: "30px", color: "red" }}>{message}</h2>;
 
+  const securityChecks = [
+    { label: "Password protected", done: true },
+    { label: "Contact number added", done: Boolean(profile.phone) },
+    { label: "Profile photo added", done: Boolean(profile.profile_image) },
+  ];
+  const securityDone = securityChecks.filter((check) => check.done).length;
+  const securityPercent = Math.round((securityDone / securityChecks.length) * 100);
+
   return (
-    <div className="premium-profile-page">
+    <div className={`premium-profile-page buyer-profile-page ${isEditing ? "editing" : ""}`}>
       <div className="profile-page-header">
         <div className="header-left">
-          <Link to="/buyer-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="page-tag">ACCOUNT MANAGEMENT</span>
@@ -212,7 +225,7 @@ function BuyerProfile() {
 
               <p>
                 {profile.about ||
-                  "Livestock buyer using HerdMarket to browse verified listings, inquire with farmers, and track purchase transactions."}
+                  "Livestock buyer using VOLT to browse verified listings, inquire with farmers, and track purchase transactions."}
               </p>
             </div>
           </div>
@@ -261,17 +274,40 @@ function BuyerProfile() {
 
           <div className="account-status-card">
             <div className="status-top">
-              <ShieldCheck size={22} />
+              <div
+                className="security-ring"
+                style={{ "--security-pct": `${securityPercent * 3.6}deg` }}
+              >
+                <div className="security-ring-inner">
+                  <ShieldCheck size={18} />
+                </div>
+              </div>
 
               <div>
                 <h4>Account Security</h4>
-                <p>Your account is protected.</p>
+                <p>
+                  {securityDone === securityChecks.length
+                    ? "Fully protected"
+                    : `${securityDone} of ${securityChecks.length} safeguards active`}
+                </p>
               </div>
+
+              <span className="security-score">{securityPercent}%</span>
             </div>
 
-            <Link to="/buyer-settings">
+            <ul className="security-checklist">
+              {securityChecks.map((check) => (
+                <li key={check.label} className={check.done ? "is-done" : "is-pending"}>
+                  {check.done ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+                  {check.label}
+                </li>
+              ))}
+            </ul>
+
+            <Link to="/buyer-settings" className="security-cta">
               <Lock size={16} />
               Security Settings
+              <ChevronRight size={15} className="security-cta-arrow" />
             </Link>
           </div>
         </aside>
@@ -359,7 +395,7 @@ function BuyerProfile() {
                 </div>
               </div>
 
-              <div className="form-group full-width">
+              <div className="form-group full-width role-field">
                 <label>Role</label>
 
                 <div className="input-wrapper">

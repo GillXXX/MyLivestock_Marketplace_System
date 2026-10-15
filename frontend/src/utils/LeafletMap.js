@@ -69,6 +69,8 @@ function buildBarangayIcon() {
  * layerToggle: show a street/satellite basemap switcher control
  * onMapClick(lat, lng): enables click-to-pick mode
  * pickedPosition: [lat, lng] | null - shows a draggable pick marker
+ * route: [[lat, lng], ...] | null - drawn as a line (e.g. buyer-to-farmer route)
+ * routeIsEstimate: when true, draws the route dashed (straight-line fallback)
  */
 const LeafletMap = forwardRef(function LeafletMap(
   {
@@ -83,7 +85,10 @@ const LeafletMap = forwardRef(function LeafletMap(
     restrictToBounds = false,
     layerToggle = false,
     onMapClick,
+    onUserDrag,
     pickedPosition,
+    route,
+    routeIsEstimate = false,
     className = "",
   },
   ref
@@ -95,11 +100,14 @@ const LeafletMap = forwardRef(function LeafletMap(
   const markersByIdRef = useRef({});
   const barangayLayerRef = useRef(null);
   const boundaryLayerRef = useRef(null);
+  const routeLayerRef = useRef(null);
   const pickMarkerRef = useRef(null);
   const onMapClickRef = useRef(onMapClick);
+  const onUserDragRef = useRef(onUserDrag);
   const [basemap, setBasemap] = useState("street");
 
   onMapClickRef.current = onMapClick;
+  onUserDragRef.current = onUserDrag;
 
   useImperativeHandle(ref, () => ({
     flyTo(lat, lng, targetZoom) {
@@ -112,6 +120,24 @@ const LeafletMap = forwardRef(function LeafletMap(
     openPopup(id) {
       const marker = markersByIdRef.current[id];
       if (marker) marker.openPopup();
+    },
+    fitBounds(points) {
+      if (mapRef.current && points?.length) {
+        mapRef.current.fitBounds(L.latLngBounds(points), {
+          padding: [48, 48],
+          maxZoom: 15,
+        });
+      }
+    },
+    // Fast, non-easing recenter for following a live GPS position — flyTo's
+    // slower easing would fall behind if called on every position update.
+    centerOn(lat, lng, targetZoom) {
+      if (mapRef.current && lat != null && lng != null) {
+        mapRef.current.setView([lat, lng], targetZoom ?? mapRef.current.getZoom(), {
+          animate: true,
+          duration: 0.5,
+        });
+      }
     },
   }));
 
@@ -139,6 +165,12 @@ const LeafletMap = forwardRef(function LeafletMap(
       if (onMapClickRef.current) {
         onMapClickRef.current(e.latlng.lat, e.latlng.lng);
       }
+    });
+
+    // User-initiated pan (not our own programmatic setView/flyTo calls) —
+    // Leaflet fires "dragstart" only from an actual pointer drag.
+    map.on("dragstart", () => {
+      if (onUserDragRef.current) onUserDragRef.current();
     });
 
     mapRef.current = map;
@@ -186,6 +218,25 @@ const LeafletMap = forwardRef(function LeafletMap(
     }).addTo(mapRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boundary, basemap]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (routeLayerRef.current) {
+      routeLayerRef.current.remove();
+      routeLayerRef.current = null;
+    }
+
+    if (!route || route.length < 2) return;
+
+    routeLayerRef.current = L.polyline(route, {
+      color: "#2563eb",
+      weight: 5,
+      opacity: 0.85,
+      dashArray: routeIsEstimate ? "8 8" : null,
+      interactive: false,
+    }).addTo(mapRef.current);
+  }, [route, routeIsEstimate]);
 
   useEffect(() => {
     if (!mapRef.current || !barangayLayerRef.current) return;

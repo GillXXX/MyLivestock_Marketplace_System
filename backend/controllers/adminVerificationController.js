@@ -1,22 +1,36 @@
 const db = require("../config/db");
+const { setListingReviewStatus } = require("./adminListingController");
+
+const REASON_MAX_LENGTH = 500;
 
 const getAdminVerification = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [documents] = await db.query(`
       SELECT
         l.id,
         u.full_name AS farmer_name,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.health_status,
+        l.review_note,
         l.status,
         l.documents,
-        l.created_at
+        l.created_at,
+        u.id AS farmer_id,
+        u.email AS farmer_email,
+        u.phone AS farmer_phone,
+        u.location AS farmer_location,
+        u.farm_location AS farmer_farm_location,
+        u.is_verified AS farmer_is_verified,
+        u.profile_image AS farmer_profile_image,
+        u.created_at AS farmer_joined_at,
+        l.reviewed_at,
+        reviewer.full_name AS reviewed_by_name,
+        reviewer.role AS reviewed_by_role
       FROM livestock_listings l
       JOIN users u ON l.farmer_id = u.id
+      LEFT JOIN users reviewer ON l.reviewed_by = reviewer.id
       ORDER BY l.created_at DESC
     `);
 
@@ -46,20 +60,28 @@ const getAdminVerification = async (req, res) => {
 
 const updateVerificationStatus = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const { status } = req.body;
+    const reason = String(req.body.reason || "").trim();
 
-    if (!["Available", "Pending", "Flagged", "Rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+    // A rejected document needs a reason, so the farmer knows what to fix
+    // before resubmitting. Approving clears any reason left from before.
+    if (status === "Rejected" && !reason) {
+      return res.status(400).json({ message: "Please give a reason for rejecting this document" });
+    }
+    if (reason.length > REASON_MAX_LENGTH) {
+      return res.status(400).json({ message: `The reason must be ${REASON_MAX_LENGTH} characters or fewer` });
     }
 
-    await db.query("UPDATE livestock_listings SET status = ? WHERE id = ?", [
-      status,
+    const error = await setListingReviewStatus(
       req.params.id,
-    ]);
+      status,
+      status === "Rejected" ? reason : null,
+      req.user.id
+    );
+
+    if (error) {
+      return res.status(error.status).json({ message: error.message });
+    }
 
     res.json({ message: "Verification status updated successfully" });
   } catch (error) {

@@ -4,25 +4,35 @@ import {
   ArrowLeft,
   Heart,
   Search,
-  Filter,
   MapPin,
-  Eye,
   MessageCircle,
   Trash2,
   ShieldCheck,
   TrendingUp,
   Wallet,
   Clock3,
+  Store,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
+import BuyNowModal from "../components/BuyNowModal";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
+import {
+  LIVESTOCK_TYPES,
+  FARM_PRODUCT_TYPES,
+  ALL_KNOWN_TYPES,
+  formatPrice,
+  getListingPlaceholder,
+} from "../utils/productCatalog";
+import useGoBack from "../utils/useGoBack";
 import "./BuyerFavorites.css";
 
 function BuyerFavorites() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/buyer-dashboard");
 
   const [savedListings, setSavedListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
@@ -36,13 +46,24 @@ function BuyerFavorites() {
   const [searchText, setSearchText] = useState("");
   const [livestockType, setLivestockType] = useState("All Livestock");
   const [status, setStatus] = useState("All Status");
+  const [sortBy, setSortBy] = useState("Recently Saved");
   const [detailsListing, setDetailsListing] = useState(null);
   const [inquiryListing, setInquiryListing] = useState(null);
+  const [buyNowListing, setBuyNowListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const defaultImage =
-    "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
+  const formatSavedTime = (time) => {
+    if (!time) return "Saved recently";
+
+    const diffDays = Math.floor((Date.now() - new Date(time).getTime()) / 86400000);
+
+    if (diffDays <= 0) return "Saved today";
+    if (diffDays === 1) return "Saved yesterday";
+    if (diffDays < 30) return `Saved ${diffDays}d ago`;
+
+    return `Saved ${new Date(time).toLocaleDateString()}`;
+  };
 
   const fetchFavorites = useCallback(async () => {
     try {
@@ -96,7 +117,9 @@ function BuyerFavorites() {
       );
     }
 
-    if (livestockType !== "All Livestock") {
+    if (livestockType === "Other") {
+      results = results.filter((item) => !ALL_KNOWN_TYPES.includes(item.livestock_type));
+    } else if (livestockType !== "All Livestock") {
       results = results.filter((item) => item.livestock_type === livestockType);
     }
 
@@ -104,8 +127,20 @@ function BuyerFavorites() {
       results = results.filter((item) => item.status === status);
     }
 
+    if (sortBy === "Lowest Price") {
+      results.sort((a, b) => Number(a.price) - Number(b.price));
+    }
+
+    if (sortBy === "Highest Price") {
+      results.sort((a, b) => Number(b.price) - Number(a.price));
+    }
+
+    if (sortBy === "Recently Saved") {
+      results.sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at));
+    }
+
     setFilteredListings(results);
-  }, [searchText, livestockType, status, savedListings]);
+  }, [searchText, livestockType, status, sortBy, savedListings]);
 
   const removeFavorite = async (listingId) => {
     try {
@@ -129,6 +164,17 @@ function BuyerFavorites() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const getStatusClass = (itemStatus) => {
+    if (itemStatus === "Available") return "saved-status available";
+    if (itemStatus === "Sold") return "saved-status sold";
+    return "saved-status pending";
+  };
+
+  const goToSellerProfile = (item) => {
+    if (!item.seller_id) return;
+    navigate(`/seller/${item.seller_id}`);
   };
 
   const handleViewDetails = (item) => {
@@ -155,9 +201,9 @@ function BuyerFavorites() {
     <div className="buyer-favorites-page">
       <div className="favorites-header">
         <div className="header-left">
-          <Link to="/buyer-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="page-tag">BUYER SAVED LISTINGS</span>
@@ -171,28 +217,28 @@ function BuyerFavorites() {
       </div>
 
       <section className="favorites-stats">
-        <StatCard
+        <AdminStatCard
           icon={<Heart />}
           value={stats.savedListings}
           label="Saved Listings"
           note="Your watchlist"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<ShieldCheck />}
           value={stats.verifiedSellers}
           label="Verified Sellers"
           note="MAO monitored"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<Wallet />}
           value={`₱${Number(stats.savedValue).toLocaleString()}`}
           label="Saved Value"
           note="Total estimate"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<TrendingUp />}
           value={stats.activeInquiries}
           label="Active Inquiries"
@@ -215,11 +261,18 @@ function BuyerFavorites() {
           value={livestockType}
           onChange={(e) => setLivestockType(e.target.value)}
         >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option value="All Livestock">All Types</option>
+          <optgroup label="Livestock">
+            {LIVESTOCK_TYPES.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </optgroup>
+          <optgroup label="Farm Products">
+            {FARM_PRODUCT_TYPES.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </optgroup>
+          <option>Other</option>
         </select>
 
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -229,20 +282,39 @@ function BuyerFavorites() {
           <option>Sold</option>
         </select>
 
-        <button type="button">
-          <Filter size={17} />
-          Filter
-        </button>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option>Recently Saved</option>
+          <option>Lowest Price</option>
+          <option>Highest Price</option>
+        </select>
       </section>
 
       <section className="saved-grid">
         {filteredListings.length === 0 ? (
-          <h3>No saved livestock yet.</h3>
+          <div className="saved-empty">
+            <Heart size={32} />
+            <h3>
+              {savedListings.length === 0
+                ? "No saved livestock yet"
+                : "No saved listings match your filters"}
+            </h3>
+            <p>
+              {savedListings.length === 0
+                ? "Listings you favorite in the Marketplace will show up here."
+                : "Try adjusting your search or filters."}
+            </p>
+            {savedListings.length === 0 && (
+              <Link to="/marketplace" className="saved-empty-cta">
+                <Store size={16} />
+                Browse Marketplace
+              </Link>
+            )}
+          </div>
         ) : (
           filteredListings.map((item) => (
             <div className="saved-card" key={item.id}>
               <div className="saved-image">
-                <img src={item.image_url || defaultImage} alt={item.breed} />
+                <img src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)} alt={item.breed || item.livestock_type} />
 
                 <span className="saved-type">{item.livestock_type}</span>
 
@@ -258,11 +330,18 @@ function BuyerFavorites() {
               <div className="saved-body">
                 <div className="saved-title">
                   <div>
-                    <h3>{item.breed}</h3>
-                    <p>{item.seller_name}</p>
+                    <h3>{item.breed || item.livestock_type}</h3>
+                    <button
+                      type="button"
+                      className="saved-seller-link"
+                      onClick={() => goToSellerProfile(item)}
+                      disabled={!item.seller_id}
+                    >
+                      {item.seller_name}
+                    </button>
                   </div>
 
-                  <strong>₱{Number(item.price).toLocaleString()}</strong>
+                  <strong>{formatPrice(item.price, item.unit)}</strong>
                 </div>
 
                 <div className="saved-meta">
@@ -273,20 +352,12 @@ function BuyerFavorites() {
 
                   <div>
                     <Clock3 size={16} />
-                    <span>Saved recently</span>
+                    <span>{formatSavedTime(item.saved_at)}</span>
                   </div>
                 </div>
 
                 <div className="saved-status-row">
-                  <span
-                    className={
-                      item.status === "Available"
-                        ? "saved-status available"
-                        : "saved-status pending"
-                    }
-                  >
-                    {item.status}
-                  </span>
+                  <span className={getStatusClass(item.status)}>{item.status}</span>
 
                   {item.seller_verified ? (
                     <span className="verified-seller">
@@ -307,7 +378,6 @@ function BuyerFavorites() {
                     type="button"
                     onClick={() => handleViewDetails(item)}
                   >
-                    <Eye size={17} />
                     View Details
                   </button>
 
@@ -316,8 +386,7 @@ function BuyerFavorites() {
                     type="button"
                     onClick={() => setInquiryListing(item)}
                   >
-                    <MessageCircle size={17} />
-                    Inquire
+                    <MessageCircle size={16} />
                   </button>
 
                   <button
@@ -325,7 +394,7 @@ function BuyerFavorites() {
                     type="button"
                     onClick={() => removeFavorite(item.id)}
                   >
-                    <Trash2 size={17} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -339,6 +408,7 @@ function BuyerFavorites() {
           listing={detailsListing}
           onClose={() => setDetailsListing(null)}
           onInquire={(item) => setInquiryListing(item)}
+          onBuyNow={(item) => setBuyNowListing(item)}
         />
       )}
 
@@ -348,17 +418,13 @@ function BuyerFavorites() {
           onClose={() => setInquiryListing(null)}
         />
       )}
-    </div>
-  );
-}
 
-function StatCard({ icon, value, label, note }) {
-  return (
-    <div className="favorite-stat-card">
-      <div className="favorite-stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{note}</small>
+      {buyNowListing && (
+        <BuyNowModal
+          listing={buyNowListing}
+          onClose={() => setBuyNowListing(null)}
+        />
+      )}
     </div>
   );
 }

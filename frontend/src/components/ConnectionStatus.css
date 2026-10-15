@@ -1,0 +1,99 @@
+.connection-status {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 40px));
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  background: #1f2937;
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+
+  animation: connection-status-in 0.2s ease-out;
+}
+
+.connection-status-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.connection-status.offline .connection-status-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fca5a5;
+}
+
+.connection-status.restored .connection-status-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: #86efac;
+}
+
+.connection-status-text {
+  flex: 1;
+}
+
+.connection-status-action {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #93c5fd;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.connection-status-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.connection-status-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #d1d5db;
+  cursor: pointer;
+}
+
+.connection-status-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes connection-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .connection-status {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+    font-size: 13px;
+  }
+}

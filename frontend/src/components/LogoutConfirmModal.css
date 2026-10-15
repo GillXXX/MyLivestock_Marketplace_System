@@ -1,0 +1,76 @@
+.logout-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 33, 23, 0.6);
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+.logout-confirm {
+  width: 100%;
+  max-width: 360px;
+  padding: 26px 24px 22px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 16px 45px rgba(15, 61, 46, 0.18);
+  text-align: center;
+}
+
+.logout-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: #eef6f1;
+  color: #0f3d2e;
+}
+
+.logout-confirm h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  color: #0f3d2e;
+}
+
+.logout-confirm p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #667085;
+}
+
+.logout-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.logout-confirm-actions button {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.logout-confirm-cancel {
+  border: 1px solid #e8e2d4;
+  background: #ffffff;
+  color: #0f3d2e;
+}
+
+.logout-confirm-ok {
+  border: none;
+  background: #0f3d2e;
+  color: #ffffff;
+}
+
+.logout-confirm-actions button:focus-visible {
+  outline: 2px solid #d7a24d;
+  outline-offset: 2px;
+}

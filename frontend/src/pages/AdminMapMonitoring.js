@@ -13,21 +13,27 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useGoBack from "../utils/useGoBack";
+import AdminStatCard from "../components/AdminStatCard";
+import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
 import {
   VERUELA_CENTER,
   VERUELA_BOUNDARY_GEOJSON,
   VERUELA_BARANGAYS,
+  isInsideVeruela,
 } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
+import { getProductIcon } from "../utils/productCatalog";
 import "./AdminMapMonitoring.css";
 
 const POLL_INTERVAL_MS = 15000;
 
 function AdminMapMonitoring() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
   const mapRef = useRef(null);
 
   const [locations, setLocations] = useState([]);
@@ -37,12 +43,11 @@ function AdminMapMonitoring() {
     pinnedLocations: 0,
     mappedListings: 0,
     livestockTypes: 0,
-    withinVeruela: "0%",
     pendingReview: 0,
   });
 
   const [searchText, setSearchText] = useState("");
-  const [livestockFilter, setLivestockFilter] = useState("All Livestock");
+  const [livestockFilter, setLivestockFilter] = useState("All Types");
   const [barangayFilter, setBarangayFilter] = useState("All Barangays");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,9 +114,12 @@ function AdminMapMonitoring() {
       address.toLowerCase().includes(search) ||
       livestockTypes.toLowerCase().includes(search);
 
+    // livestock_types is the farmer's listing types joined with commas
     const matchesLivestock =
-      livestockFilter === "All Livestock" ||
-      livestockTypes.includes(livestockFilter);
+      livestockFilter === "All Types" ||
+      livestockTypes
+        .split(",")
+        .some((type) => matchesTypeFilter(type.trim(), livestockFilter));
 
     const matchesBarangay =
       barangayFilter === "All Barangays" ||
@@ -123,6 +131,15 @@ function AdminMapMonitoring() {
   const pinnedFilteredLocations = filteredLocations.filter(
     (item) => item.farm_lat != null && item.farm_lng != null
   );
+
+  // Farms pinned outside the municipal boundary — checked against the
+  // actual Veruela outline, not just assumed.
+  const outsideVeruelaCount = locations.filter(
+    (item) =>
+      item.farm_lat != null &&
+      item.farm_lng != null &&
+      !isInsideVeruela(Number(item.farm_lat), Number(item.farm_lng))
+  ).length;
 
   const barangays = [
     "All Barangays",
@@ -145,13 +162,16 @@ function AdminMapMonitoring() {
         id: item.id,
         lat: Number(item.farm_lat),
         lng: Number(item.farm_lng),
-        color: item.status === "Pending" ? "#e3b463" : "#b8842c",
+        // Matches the legend dots exactly — neon teal for active, neon
+        // gold for pending so it visually demands review.
+        color: item.status === "Pending" ? "#FFD60A" : "#00F5D4",
         shape: "pin",
+        pulse: item.status === "Pending",
         popupHtml: `
           <div class="map-popup">
             <strong>${escapeHtml(item.farmer || "Unknown farmer")}</strong>
             <span>${escapeHtml(item.address || item.location || "No address")}</span>
-            <span>${escapeHtml(item.livestock_types || "No livestock yet")}</span>
+            <span>${escapeHtml(item.livestock_types || "No listings yet")}</span>
             <span>${item.listings} listing(s)</span>
           </div>
         `,
@@ -177,15 +197,15 @@ function AdminMapMonitoring() {
     <div className="map-admin-page">
       <header className="map-topbar">
         <div className="map-title-group">
-          <Link to="/admin-dashboard" className="map-back-btn">
+          <button type="button" className="map-back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO LOCATION MONITORING</span>
             <h1>Map Monitoring</h1>
             <p>
-              Monitor seller locations, livestock listing distribution, and farm
+              Monitor seller locations, listing distribution, and farm
               activity within Veruela, Agusan del Sur.
             </p>
           </div>
@@ -208,32 +228,36 @@ function AdminMapMonitoring() {
       </header>
 
       <section className="map-kpi-grid">
-        <MapStat
+        <AdminStatCard
+          accent="blue"
           icon={<Users />}
           value={stats.sellerLocations}
           label="Seller Locations"
-          trend="Registered farmers"
+          note="Registered farmers"
         />
 
-        <MapStat
+        <AdminStatCard
+          accent="green"
           icon={<LocateFixed />}
           value={`${stats.pinnedLocations}/${stats.sellerLocations}`}
           label="Pinned on Map"
-          trend="Farmers with exact coordinates"
+          note="Farmers with exact coordinates"
         />
 
-        <MapStat
+        <AdminStatCard
+          accent="amber"
           icon={<ClipboardCheck />}
           value={stats.mappedListings}
           label="Mapped Listings"
-          trend="Marketplace records"
+          note="Marketplace records"
         />
 
-        <MapStat
+        <AdminStatCard
+          accent="purple"
           icon={<Layers />}
           value={stats.livestockTypes}
-          label="Livestock Types"
-          trend="Swine, cattle, goat, poultry"
+          label="Product Types"
+          note="Livestock and farm products"
         />
       </section>
 
@@ -242,7 +266,7 @@ function AdminMapMonitoring() {
           <Search size={18} />
 
           <input
-            placeholder="Search farmer, barangay, livestock type..."
+            placeholder="Search farmer, barangay, product type..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
@@ -252,11 +276,8 @@ function AdminMapMonitoring() {
           value={livestockFilter}
           onChange={(e) => setLivestockFilter(e.target.value)}
         >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option>All Types</option>
+          <ProductTypeOptions />
         </select>
 
         <select
@@ -270,7 +291,7 @@ function AdminMapMonitoring() {
       </section>
 
       <section className="map-main-grid">
-        <div className="map-card map-card-large">
+        <div className="map-card map-card-large accent-teal">
           <div className="card-heading">
             <div>
               <h3>Seller Location Overview</h3>
@@ -278,6 +299,7 @@ function AdminMapMonitoring() {
             </div>
 
             <span className="live-badge">
+              <i className="live-dot"></i>
               <Activity size={15} />
               Live &middot; auto-refreshing
             </span>
@@ -287,7 +309,7 @@ function AdminMapMonitoring() {
             ref={mapRef}
             center={VERUELA_CENTER}
             zoom={12}
-            height="420px"
+            height="540px"
             markers={mapMarkers}
             barangayLabels={VERUELA_BARANGAYS}
             boundary={VERUELA_BOUNDARY_GEOJSON}
@@ -310,7 +332,7 @@ function AdminMapMonitoring() {
           </div>
         </div>
 
-        <aside className="map-card">
+        <aside className="map-card accent-blue">
           <div className="card-heading">
             <div>
               <h3>Seller Records</h3>
@@ -332,7 +354,7 @@ function AdminMapMonitoring() {
                   key={item.id}
                   onClick={() => handleRecordClick(item)}
                 >
-                  <div className="record-icon">
+                  <div className={`record-icon ${item.status === "Pending" ? "pending" : ""}`}>
                     <MapPin size={20} />
                   </div>
 
@@ -341,7 +363,7 @@ function AdminMapMonitoring() {
                     <p>{item.address || item.location || "No location provided"}</p>
 
                     <div className="record-tags">
-                      <span>{item.livestock_types || "No livestock yet"}</span>
+                      <span>{item.livestock_types || "No listings yet"}</span>
                       <span>{item.listings} listing(s)</span>
                       {item.farm_lat == null && (
                         <span className="tag-unpinned">Not pinned</span>
@@ -368,47 +390,72 @@ function AdminMapMonitoring() {
       </section>
 
       <section className="map-insights-grid">
-        <div className="map-card">
-          <h3>Livestock Distribution</h3>
+        <div className="map-card accent-green">
+          <div className="card-heading">
+            <div>
+              <h3>Product Distribution</h3>
+              <p>Share of mapped listings by species.</p>
+            </div>
+          </div>
 
           {distribution.length === 0 ? (
-            <p>No livestock distribution data yet.</p>
+            <p>No listing distribution data yet.</p>
           ) : (
             distribution.map((item) => {
-              const percent =
+              const pct =
                 totalDistribution > 0
-                  ? `${(Number(item.total) / totalDistribution) * 100}%`
-                  : "0%";
+                  ? (Number(item.total) / totalDistribution) * 100
+                  : 0;
 
               return (
                 <Distribution
                   key={item.livestock_type}
+                  icon={getProductIcon(item.livestock_type, item.category)}
+                  type={item.livestock_type}
                   label={item.livestock_type}
                   value={item.total}
-                  width={percent}
+                  percent={pct}
+                  width={`${pct}%`}
                 />
               );
             })
           )}
         </div>
 
-        <div className="map-card">
-          <h3>Monitoring Alerts</h3>
-
-          <div className="alert-row">
-            <AlertTriangle size={20} />
+        <div className="map-card accent-amber">
+          <div className="card-heading">
             <div>
-              <strong>Pending location review</strong>
-              <p>{stats.pendingReview} seller/listing record(s) need MAO validation.</p>
+              <h3>Monitoring Alerts</h3>
+              <p>Items that may need MAO attention.</p>
             </div>
           </div>
 
-          <div className="alert-row normal">
-            <MapPin size={20} />
-            <div>
-              <strong>Coverage status</strong>
-              <p>All current listings are within Veruela scope.</p>
+          <div className="alert-row warning">
+            <div className="alert-icon warning">
+              <AlertTriangle size={20} />
             </div>
+            <div className="alert-body">
+              <strong>Pending location review</strong>
+              <p>{stats.pendingReview} seller/listing record(s) need MAO validation.</p>
+            </div>
+            <span className="alert-status warning">Action Needed</span>
+          </div>
+
+          <div className={`alert-row ${outsideVeruelaCount > 0 ? "warning" : "normal"}`}>
+            <div className={`alert-icon ${outsideVeruelaCount > 0 ? "warning" : ""}`}>
+              <MapPin size={20} />
+            </div>
+            <div className="alert-body">
+              <strong>Coverage status</strong>
+              <p>
+                {outsideVeruelaCount > 0
+                  ? `${outsideVeruelaCount} seller location(s) are pinned outside Veruela.`
+                  : "All pinned seller locations are within Veruela."}
+              </p>
+            </div>
+            <span className={`alert-status ${outsideVeruelaCount > 0 ? "warning" : "normal"}`}>
+              {outsideVeruelaCount > 0 ? "Check Pins" : "All Clear"}
+            </span>
           </div>
         </div>
       </section>
@@ -416,27 +463,25 @@ function AdminMapMonitoring() {
   );
 }
 
-function MapStat({ icon, value, label, trend }) {
-  return (
-    <div className="map-stat-card">
-      <div className="map-stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{trend}</small>
-    </div>
-  );
-}
-
-function Distribution({ label, value, width }) {
+function Distribution({ icon: Icon, type, label, value, percent, width }) {
   return (
     <div className="distribution-item">
       <div>
-        <strong>{label}</strong>
-        <span>{value}</span>
+        <span className="distribution-label">
+          <i className={`distribution-icon ${(type || "").toLowerCase()}`}>
+            <Icon size={18} strokeWidth={2.25} />
+          </i>
+          <strong>{label}</strong>
+        </span>
+
+        <span className="distribution-figures">
+          <span className="distribution-percent">{percent.toFixed(0)}%</span>
+          <span className="distribution-value">{value}</span>
+        </span>
       </div>
 
       <div className="distribution-track">
-        <div style={{ width }}></div>
+        <div className={(type || "").toLowerCase()} style={{ width }}></div>
       </div>
     </div>
   );

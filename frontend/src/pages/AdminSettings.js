@@ -2,21 +2,23 @@ import { useEffect, useState } from "react";
 
 import {
   ArrowLeft,
-  ShieldCheck,
   UserCog,
   Bell,
   ClipboardCheck,
   FileCheck2,
   Save,
   Lock,
+  SlidersHorizontal,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useGoBack from "../utils/useGoBack";
 import { API_URL } from "../config";
 import "./AdminSettings.css";
 
 function AdminSettings() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -28,8 +30,6 @@ function AdminSettings() {
     livestock_types: "",
     default_listing_status: "Pending Approval",
     transaction_workflow: "Strict Workflow",
-    secure_login: true,
-    role_based_access: true,
     account_deactivation: true,
     document_verification: true,
     admin_notifications: true,
@@ -66,8 +66,6 @@ function AdminSettings() {
           livestock_types: data.settings.livestock_types,
           default_listing_status: data.settings.default_listing_status,
           transaction_workflow: data.settings.transaction_workflow,
-          secure_login: Boolean(data.settings.secure_login),
-          role_based_access: Boolean(data.settings.role_based_access),
           account_deactivation: Boolean(data.settings.account_deactivation),
           document_verification: Boolean(data.settings.document_verification),
           admin_notifications: Boolean(data.settings.admin_notifications),
@@ -134,9 +132,9 @@ function AdminSettings() {
   return (
     <div className="admin-settings-page">
       <div className="settings-header">
-        <Link to="/admin-dashboard" className="back-btn">
+        <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={20} />
-        </Link>
+        </button>
 
         <div>
           <h1>System Settings</h1>
@@ -149,31 +147,39 @@ function AdminSettings() {
 
       <section className="settings-grid">
         <SettingsCard
-          icon={<ShieldCheck />}
-          title="Role-Based Access Control"
-          text="Control system permissions for admin, farmers, and buyers."
-          status={settings.role_based_access ? "Enabled" : "Disabled"}
+          accent="blue"
+          icon={<UserCog />}
+          title="Account Deactivation"
+          text="Let admins deactivate farmer and buyer accounts."
+          status={settings.account_deactivation ? "Allowed" : "Off"}
+          tone={settings.account_deactivation ? "success" : "neutral"}
         />
 
         <SettingsCard
+          accent="amber"
           icon={<ClipboardCheck />}
           title="Listing Approval"
-          text="Require MAO review before livestock listings appear publicly."
+          text="Require MAO review before listings appear publicly."
           status={settings.default_listing_status}
+          tone="info"
         />
 
         <SettingsCard
+          accent="green"
           icon={<FileCheck2 />}
           title="Document Verification"
-          text="Require certificates or permits before transaction confirmation."
+          text="Require the barangay health certificate on livestock listings."
           status={settings.document_verification ? "Required" : "Optional"}
+          tone={settings.document_verification ? "success" : "neutral"}
         />
 
         <SettingsCard
+          accent="purple"
           icon={<Bell />}
           title="Admin Notifications"
           text="Receive alerts for new listings, documents, and transactions."
           status={settings.admin_notifications ? "Enabled" : "Disabled"}
+          tone={settings.admin_notifications ? "success" : "neutral"}
         />
       </section>
 
@@ -183,6 +189,10 @@ function AdminSettings() {
             <h3>General System Configuration</h3>
             <p>Basic marketplace rules and admin preferences.</p>
           </div>
+
+          <span className="card-icon-badge">
+            <SlidersHorizontal size={20} />
+          </span>
         </div>
 
         <div className="settings-form">
@@ -217,13 +227,17 @@ function AdminSettings() {
           </div>
 
           <div className="settings-group">
-            <label>Allowed Livestock Types</label>
+            <label>Product Types (reference)</label>
             <input
               name="livestock_types"
               type="text"
               value={settings.livestock_types}
               onChange={handleChange}
             />
+            <small className="settings-group-hint">
+              For your records only — farmers choose from the built-in livestock and
+              farm product list, or type their own under "Other".
+            </small>
           </div>
 
           <div className="settings-group">
@@ -257,44 +271,35 @@ function AdminSettings() {
         <div className="settings-panel-title">
           <div>
             <h3>Security and Access Settings</h3>
-            <p>Manage login, role permissions, and account restrictions.</p>
+            <p>Sign-in and role permissions are always enforced. Manage account and document rules here.</p>
           </div>
+
+          <span className="card-icon-badge">
+            <Lock size={20} />
+          </span>
         </div>
 
         <div className="settings-list">
           <SettingToggle
-            icon={<Lock />}
-            title="Require secure login"
-            text="Users must login before accessing marketplace dashboards."
-            active={settings.secure_login}
-            onChange={() => handleToggle("secure_login")}
-          />
-
-          <SettingToggle
-            icon={<ShieldCheck />}
-            title="Enable role-based access"
-            text="Separate access for farmers, buyers, and MAO administrators."
-            active={settings.role_based_access}
-            onChange={() => handleToggle("role_based_access")}
-          />
-
-          <SettingToggle
+            accent="purple"
             icon={<UserCog />}
             title="Allow account deactivation"
-            text="Admins can activate or deactivate user accounts."
+            text="Admins can deactivate farmer and buyer accounts. Reactivating is always allowed."
             active={settings.account_deactivation}
             onChange={() => handleToggle("account_deactivation")}
           />
 
           <SettingToggle
+            accent="green"
             icon={<FileCheck2 />}
             title="Require document verification"
-            text="Transactions cannot be completed without required documents."
+            text="Livestock listings must include the barangay health certificate. When off, documents are optional."
             active={settings.document_verification}
             onChange={() => handleToggle("document_verification")}
           />
 
           <SettingToggle
+            accent="amber"
             icon={<Bell />}
             title="Enable admin notification alerts"
             text="Notify admin when new actions require review."
@@ -314,9 +319,9 @@ function AdminSettings() {
   );
 }
 
-function SettingsCard({ icon, title, text, status }) {
+function SettingsCard({ accent = "green", icon, title, text, status, tone = "info" }) {
   return (
-    <div className="settings-card">
+    <div className={`settings-card accent-${accent}`}>
       <div className="settings-icon">{icon}</div>
 
       <div>
@@ -324,14 +329,14 @@ function SettingsCard({ icon, title, text, status }) {
         <p>{text}</p>
       </div>
 
-      <span>{status}</span>
+      <span className={`settings-status ${tone}`}>{status}</span>
     </div>
   );
 }
 
-function SettingToggle({ icon, title, text, active, onChange }) {
+function SettingToggle({ accent = "green", icon, title, text, active, onChange }) {
   return (
-    <div className="setting-toggle">
+    <div className={`setting-toggle accent-${accent} ${active ? "is-active" : ""}`}>
       <div className="setting-toggle-icon">{icon}</div>
 
       <div>

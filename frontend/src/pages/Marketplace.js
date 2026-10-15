@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 import {
   Search,
@@ -8,19 +8,35 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Eye,
-  Wallet,
-  Weight,
-  Calendar,
+  ShoppingCart,
   BadgeCheck,
-  PawPrint,
+  Sparkles,
+  PackageSearch,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
-import MakeOfferModal from "../components/MakeOfferModal";
+import BuyNowModal from "../components/BuyNowModal";
+import { haversineDistanceKm, formatDistance, useBuyerLocation } from "../utils/geo";
 import { API_URL } from "../config";
+import {
+  LIVESTOCK_TYPES,
+  FARM_PRODUCT_TYPES,
+  ALL_KNOWN_TYPES,
+  getProductIcon,
+  formatPrice,
+  formatQuantity,
+  formatWeight,
+  getListingPlaceholder,
+} from "../utils/productCatalog";
 import "./Marketplace.css";
+
+function isRecentlyPosted(time) {
+  if (!time) return false;
+  const diffDays = (Date.now() - new Date(time).getTime()) / 86400000;
+  return diffDays <= 2;
+}
 
 function Marketplace() {
   const navigate = useNavigate();
@@ -34,15 +50,26 @@ function Marketplace() {
   const [priceRange, setPriceRange] = useState("Price Range");
   const [sortBy, setSortBy] = useState("Sort by Newest");
   const [docsOnly, setDocsOnly] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const filtersRef = useRef(null);
   const [selectedListing, setSelectedListing] = useState(null);
   const [inquiryListing, setInquiryListing] = useState(null);
-  const [offerListing, setOfferListing] = useState(null);
+  const [buyNowListing, setBuyNowListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const { location: buyerLocation, status: locationStatus } = useBuyerLocation();
 
-  const defaultImage =
-    "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
+  const getDistanceKm = (item) => {
+    if (!buyerLocation || item.farm_lat == null || item.farm_lng == null) {
+      return null;
+    }
+    return haversineDistanceKm(
+      buyerLocation.lat,
+      buyerLocation.lng,
+      Number(item.farm_lat),
+      Number(item.farm_lng)
+    );
+  };
 
   const addToFavorites = async (listingId) => {
     try {
@@ -139,6 +166,19 @@ function Marketplace() {
   }, [navigate]);
 
   useEffect(() => {
+    if (!showFilters) return undefined;
+
+    const handleClickOutside = (e) => {
+      if (filtersRef.current && !filtersRef.current.contains(e.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showFilters]);
+
+  useEffect(() => {
     let results = [...listings];
 
     if (searchText.trim() !== "") {
@@ -153,7 +193,9 @@ function Marketplace() {
       );
     }
 
-    if (livestockType !== "All Livestock") {
+    if (livestockType === "Other") {
+      results = results.filter((item) => !ALL_KNOWN_TYPES.includes(item.livestock_type));
+    } else if (livestockType !== "All Livestock") {
       results = results.filter((item) => item.livestock_type === livestockType);
     }
 
@@ -191,11 +233,36 @@ function Marketplace() {
       results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
+    if (sortBy === "Nearest Location") {
+      results.sort((a, b) => {
+        const da = getDistanceKm(a);
+        const db = getDistanceKm(b);
+        if (da == null && db == null) return 0;
+        if (da == null) return 1;
+        if (db == null) return -1;
+        return da - db;
+      });
+    }
+
     setFilteredListings(results);
-  }, [searchText, livestockType, priceRange, sortBy, docsOnly, listings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, livestockType, priceRange, sortBy, docsOnly, listings, buyerLocation]);
 
   if (loading) {
-    return <h2 style={{ padding: "30px" }}>Loading marketplace...</h2>;
+    return (
+      <div className="marketplace-page">
+        <div className="market-skeleton">
+          <div className="skel skel-hero"></div>
+          <div className="skel skel-toolbar"></div>
+          <div className="skel-grid">
+            <div className="skel skel-card"></div>
+            <div className="skel skel-card"></div>
+            <div className="skel skel-card"></div>
+            <div className="skel skel-card"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (message) {
@@ -225,22 +292,11 @@ function Marketplace() {
           <Search size={20} />
 
           <input
-            placeholder="Search livestock, breed, seller, or location..."
+            placeholder="Search livestock, eggs, produce, seller..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
-
-        <select
-          value={livestockType}
-          onChange={(e) => setLivestockType(e.target.value)}
-        >
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
-        </select>
 
         <select
           value={priceRange}
@@ -252,99 +308,81 @@ function Marketplace() {
           <option>₱30,000 above</option>
         </select>
 
-        <button type="button" onClick={() => setShowFilters((prev) => !prev)}>
-          <SlidersHorizontal size={18} />
-          {showFilters ? "Hide Filters" : "Filters"}
-        </button>
+        <div className="filter-dropdown-wrap" ref={filtersRef}>
+          <button
+            type="button"
+            className={docsOnly || livestockType !== "All Livestock" ? "active" : ""}
+            onClick={() => setShowFilters((prev) => !prev)}
+          >
+            <SlidersHorizontal size={18} />
+            Filters
+            {(docsOnly || livestockType !== "All Livestock") && (
+              <span className="filter-active-dot" />
+            )}
+          </button>
+
+          {showFilters && (
+            <div className="filter-dropdown">
+              <div className="filter-title">
+                <Filter size={18} />
+                <h3>Filters</h3>
+              </div>
+
+              {[
+                { label: "Livestock", types: LIVESTOCK_TYPES },
+                { label: "Farm Products", types: [...FARM_PRODUCT_TYPES, "Other"] },
+              ].map((group) => (
+                <div className="filter-group" key={group.label}>
+                  <label>{group.label}</label>
+
+                  <div className="filter-chip-row">
+                    {group.types.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        className={`filter-chip ${livestockType === type ? "active" : ""}`}
+                        onClick={() =>
+                          setLivestockType(livestockType === type ? "All Livestock" : type)
+                        }
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="filter-group">
+                <label>Verification</label>
+                <p className="filter-note">
+                  <ShieldCheck size={14} />
+                  Sellers verified by MAO are marked with a badge below.
+                </p>
+
+                <button
+                  type="button"
+                  className={`filter-toggle-row ${docsOnly ? "active" : ""}`}
+                  onClick={() => setDocsOnly(!docsOnly)}
+                  aria-pressed={docsOnly}
+                >
+                  <span>With health documents</span>
+                  <span className="filter-switch" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
-      <section className="market-layout">
-        {showFilters && (
-        <aside className="filter-panel">
-          <div className="filter-title">
-            <Filter size={20} />
-            <h3>Filters</h3>
-          </div>
-
-          <div className="filter-group">
-            <label>Livestock Type</label>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Swine"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Swine" ? "All Livestock" : "Swine"
-                  )
-                }
-              />{" "}
-              Swine
-            </div>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Cattle"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Cattle" ? "All Livestock" : "Cattle"
-                  )
-                }
-              />{" "}
-              Cattle
-            </div>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Goat"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Goat" ? "All Livestock" : "Goat"
-                  )
-                }
-              />{" "}
-              Goat
-            </div>
-
-            <div>
-              <input
-                type="checkbox"
-                checked={livestockType === "Poultry"}
-                onChange={() =>
-                  setLivestockType(
-                    livestockType === "Poultry" ? "All Livestock" : "Poultry"
-                  )
-                }
-              />{" "}
-              Poultry
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <label>Verification</label>
-            <p className="filter-note">
-              <ShieldCheck size={14} />
-              Sellers verified by MAO are marked with a badge below.
-            </p>
-            <div>
-              <input
-                type="checkbox"
-                checked={docsOnly}
-                onChange={(e) => setDocsOnly(e.target.checked)}
-              />{" "}
-              With health documents
-            </div>
-          </div>
-        </aside>
-        )}
-
-        <main className="market-content">
+      <main className="market-content">
           <div className="market-section-header">
             <div>
-              <h2>Available Livestock</h2>
-              <p>Showing verified marketplace listings for buyers.</p>
+              <h2>
+                Available Listings
+                {/* Phone-only: the hero that shows this count is hidden there */}
+                <span className="market-count">{filteredListings.length}</span>
+              </h2>
+              <p>Livestock and backyard farm products from verified sellers.</p>
             </div>
 
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -355,22 +393,45 @@ function Marketplace() {
             </select>
           </div>
 
+          {sortBy === "Nearest Location" &&
+            ["denied", "unsupported", "insecure"].includes(locationStatus) && (
+              <p className="location-permission-hint">
+                <MapPin size={13} />
+                Enable location access in your browser to sort by distance.
+              </p>
+            )}
+
           <div className="market-grid">
             {filteredListings.length === 0 ? (
-              <h3>No livestock listings found.</h3>
+              <div className="market-empty-state">
+                <PackageSearch size={38} />
+                <h3>No livestock listings found</h3>
+                <p>Try a different keyword or clear your filters to see more listings.</p>
+              </div>
             ) : (
-              filteredListings.map((item) => (
+              filteredListings.map((item) => {
+                const SpeciesIcon = getProductIcon(item.livestock_type, item.category);
+                const metaParts = [formatWeight(item.weight, item.livestock_type, item.category), item.age].filter(Boolean);
+
+                return (
                 <div className="market-card" key={item.id}>
                   <div className="market-image">
                     <img
-                      src={item.image_url || defaultImage}
-                      alt={item.breed}
+                      src={item.image_url || getListingPlaceholder(item.livestock_type, item.category)}
+                      alt={item.breed || item.livestock_type}
                     />
 
                     <span className="market-type-chip">
-                      <PawPrint size={13} />
+                      <SpeciesIcon size={13} />
                       {item.livestock_type}
                     </span>
+
+                    {isRecentlyPosted(item.created_at) && (
+                      <span className="market-new-badge">
+                        <Sparkles size={11} />
+                        New
+                      </span>
+                    )}
 
                     <button
                       className="heart-btn"
@@ -394,9 +455,9 @@ function Marketplace() {
 
                     <div className="market-image-overlay">
                       <div className="market-overlay-text">
-                        <h3>{item.breed}</h3>
+                        <h3>{item.breed || item.livestock_type}</h3>
                         <span className="market-price-tag">
-                          ₱{Number(item.price).toLocaleString()}
+                          {formatPrice(item.price, item.unit)}
                         </span>
                       </div>
                     </div>
@@ -404,14 +465,20 @@ function Marketplace() {
 
                   <div className="market-body">
                     <div className="market-meta-row">
-                      <span>
-                        <Weight size={14} />
-                        {item.weight || "N/A"}
-                      </span>
-                      <span className="meta-divider">•</span>
-                      <span>
-                        <Calendar size={14} />
-                        {item.age || "N/A"}
+                      {metaParts.map((part, index) => (
+                        <Fragment key={index}>
+                          <span>{part}</span>
+                          <span className="meta-divider">•</span>
+                        </Fragment>
+                      ))}
+                      <span
+                        className={
+                          Number(item.quantity) > 0 ? "" : "market-out-of-stock"
+                        }
+                      >
+                        {Number(item.quantity) > 0
+                          ? `${formatQuantity(item.quantity, item.unit)} available`
+                          : "Out of stock"}
                       </span>
                     </div>
 
@@ -433,40 +500,48 @@ function Marketplace() {
                           <MapPin size={13} />
                           {item.location}
                         </p>
+                        {getDistanceKm(item) != null && (
+                          <span className="distance-pill">
+                            {formatDistance(getDistanceKm(item))}
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <button
-                      className="view-details-btn"
-                      type="button"
-                      onClick={() => viewListingDetails(item)}
-                    >
-                      <Eye size={18} />
-                      View Details
-                    </button>
+                    <div className="market-card-actions">
+                      <button
+                        className="view-details-btn"
+                        type="button"
+                        onClick={() => viewListingDetails(item)}
+                      >
+                        <Eye size={15} />
+                        View Details
+                      </button>
+
+                      <button
+                        className="buy-now-btn"
+                        type="button"
+                        onClick={() => setBuyNowListing(item)}
+                        disabled={Number(item.quantity) <= 0}
+                      >
+                        <ShoppingCart size={15} />
+                        {Number(item.quantity) > 0 ? "Buy Now" : "Out of Stock"}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
-        </main>
-      </section>
+      </main>
 
       {selectedListing && (
         <ListingDetailsModal
           listing={selectedListing}
           onClose={() => setSelectedListing(null)}
           onInquire={(item) => setInquiryListing(item)}
-          extraActions={
-            <button
-              type="button"
-              className="secondary-action"
-              onClick={() => setOfferListing(selectedListing)}
-            >
-              <Wallet size={16} />
-              Make an Offer
-            </button>
-          }
+          onBuyNow={(item) => setBuyNowListing(item)}
         />
       )}
 
@@ -477,10 +552,10 @@ function Marketplace() {
         />
       )}
 
-      {offerListing && (
-        <MakeOfferModal
-          listing={offerListing}
-          onClose={() => setOfferListing(null)}
+      {buyNowListing && (
+        <BuyNowModal
+          listing={buyNowListing}
+          onClose={() => setBuyNowListing(null)}
         />
       )}
     </div>

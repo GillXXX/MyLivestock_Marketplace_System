@@ -14,12 +14,18 @@ import {
   Search,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import useGoBack from "../utils/useGoBack";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
 import "./AdminNotifications.css";
 
 function AdminNotifications() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isStaff = currentUser.role === "mao_staff";
 
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState({
@@ -133,6 +139,25 @@ function AdminNotifications() {
     }
   };
 
+  const getNotificationRoute = (type) => {
+    if (type === "Listing Approval") return "/admin-listings";
+    if (type === "Verification Request") return "/admin-verification";
+    if (type === "Transaction Alert") return "/admin-transactions";
+    if (type === "User Registration") return "/admin-users";
+    return null;
+  };
+
+  const handleNotificationClick = (notif) => {
+    const route = getNotificationRoute(notif.type);
+    if (!route) return;
+
+    if (notif.status === "Unread") {
+      handleMarkRead(notif.id);
+    }
+
+    navigate(route);
+  };
+
   const filteredNotifications = notifications.filter((notif) => {
     const search = searchText.toLowerCase();
 
@@ -152,15 +177,34 @@ function AdminNotifications() {
 
   const getIcon = (type) => {
     if (type === "Listing Approval") return <ClipboardCheck size={22} />;
-    if (type === "Document Verification") return <ShieldCheck size={22} />;
+    if (type === "Verification Request") return <ShieldCheck size={22} />;
     if (type === "Transaction Alert") return <FileCheck2 size={22} />;
     if (type === "User Registration") return <Users size={22} />;
     return <BellRing size={22} />;
   };
 
-  const formatTime = (time) => {
-    return new Date(time).toLocaleString();
+  const getTypeAccent = (type) => {
+    if (type === "Listing Approval") return "blue";
+    if (type === "Verification Request") return "amber";
+    if (type === "Transaction Alert") return "green";
+    if (type === "User Registration") return "purple";
+    return "gold";
   };
+
+  // "Sep 27, 3:04 PM" — short enough to fit beside the type on a phone
+  // (the old full toLocaleString() got cut off there).
+  const formatTime = (time) => {
+    return new Date(time).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const visibleCategories = CATEGORY_DEFS.filter(
+    (cat) => !isStaff || cat.key !== "userReports"
+  );
 
   if (loading) {
     return <h2 style={{ padding: "30px" }}>Loading notifications...</h2>;
@@ -173,9 +217,9 @@ function AdminNotifications() {
   return (
     <div className="admin-notifications-page">
       <div className="notifications-header">
-        <Link to="/admin-dashboard" className="back-btn">
+        <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={20} />
-        </Link>
+        </button>
 
         <div>
           <span className="notif-eyebrow">MAO ADMIN CENTER</span>
@@ -188,10 +232,61 @@ function AdminNotifications() {
       </div>
 
       <section className="notification-stats">
-        <NotifStat icon={<BellRing />} value={stats.totalAlerts} label="Total Alerts" />
-        <NotifStat icon={<AlertTriangle />} value={stats.unreadAlerts} label="Unread Alerts" />
-        <NotifStat icon={<ShieldCheck />} value={stats.verificationRequests} label="Verification Requests" />
-        <NotifStat icon={<CheckCircle />} value={stats.resolvedToday} label="Resolved Today" />
+        <AdminStatCard
+          accent="blue"
+          icon={<BellRing />}
+          value={stats.totalAlerts}
+          label="Total Alerts"
+          note="All notifications"
+        />
+        <AdminStatCard
+          accent="red"
+          icon={<AlertTriangle />}
+          value={stats.unreadAlerts}
+          label="Unread Alerts"
+          note="Needs your attention"
+        />
+        <AdminStatCard
+          accent="amber"
+          icon={<ShieldCheck />}
+          value={stats.verificationRequests}
+          label="Verification Requests"
+          note="Pending document review"
+        />
+        <AdminStatCard
+          accent="green"
+          icon={<CheckCircle />}
+          value={stats.resolvedToday}
+          label="Resolved"
+          note="Marked as read"
+        />
+      </section>
+
+      <section className="notification-categories-panel">
+        <div className="notif-category-header">
+          <div>
+            <h3>Notification Categories</h3>
+            <p>Breakdown of alerts by marketplace area.</p>
+          </div>
+
+          <span className="notif-category-count-pill">
+            <BellRing size={14} />
+            {visibleCategories.length} categories
+          </span>
+        </div>
+
+        <div className="notif-category-strip">
+          {visibleCategories.map((cat) => (
+            <CategoryItem
+              key={cat.key}
+              icon={cat.icon}
+              accent={cat.accent}
+              title={cat.title}
+              count={categories[cat.key]}
+              text={cat.text}
+            />
+          ))}
+        </div>
       </section>
 
       <div className="notification-toolbar">
@@ -208,8 +303,9 @@ function AdminNotifications() {
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
           <option>All Types</option>
           <option>Listing Approval</option>
+          <option>Verification Request</option>
           <option>Transaction Alert</option>
-          <option>User Registration</option>
+          {!isStaff && <option>User Registration</option>}
         </select>
 
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -219,133 +315,136 @@ function AdminNotifications() {
         </select>
       </div>
 
-      <section className="notifications-layout">
-        <div className="notifications-list-card">
-          <div className="notifications-card-header">
-            <div>
-              <h3>Admin Notification Inbox</h3>
-              <p>Latest marketplace actions that require admin attention.</p>
-            </div>
-
-            <button type="button" onClick={handleMarkAllRead}>Mark all as read</button>
+      <section className="notifications-list-card">
+        <div className="notifications-card-header">
+          <div>
+            <h3>Admin Notification Inbox</h3>
+            <p>Latest marketplace actions that require admin attention.</p>
           </div>
 
-          <div className="notification-list">
-            {filteredNotifications.length === 0 ? (
-              <p>No notifications found.</p>
-            ) : (
-              filteredNotifications.map((notif) => (
-                <div
-                  className={`notification-row ${
-                    notif.status === "Unread" ? "unread" : ""
-                  }`}
-                  key={notif.id}
-                >
-                  <div className="notification-icon">{getIcon(notif.type)}</div>
-
-                  <div className="notification-content">
-                    <div className="notification-meta">
-                      <span>{notif.type}</span>
-                      <small>{formatTime(notif.time)}</small>
-                    </div>
-
-                    <h4>{notif.title}</h4>
-                    <p>{notif.message}</p>
-
-                    <div className="notification-tags">
-                      <span
-                        className={
-                          notif.status === "Unread" ? "tag-unread" : "tag-read"
-                        }
-                      >
-                        {notif.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="notification-actions">
-                    {notif.status === "Unread" && (
-                      <button
-                        title="Mark as read"
-                        type="button"
-                        onClick={() => handleMarkRead(notif.id)}
-                      >
-                        <Eye size={17} />
-                      </button>
-                    )}
-
-                    <button
-                      className="danger"
-                      title="Delete notification"
-                      type="button"
-                      onClick={() => handleDelete(notif.id)}
-                    >
-                      <Trash2 size={17} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <button className="mark-all-btn" type="button" onClick={handleMarkAllRead}>
+            <CheckCircle size={16} />
+            Mark all as read
+          </button>
         </div>
 
-        <aside className="notification-side-panel">
-          <h3>Notification Categories</h3>
+        <div className="notification-list">
+          {filteredNotifications.length === 0 ? (
+            <p>No notifications found.</p>
+          ) : (
+            filteredNotifications.map((notif) => {
+              const route = getNotificationRoute(notif.type);
+              const accent = getTypeAccent(notif.type);
 
-          <CategoryItem
-            icon={<ClipboardCheck size={20} />}
-            title="Listing Approvals"
-            count={categories.listingApprovals}
-            text="Livestock posts waiting for review"
-          />
+              return (
+              <div
+                className={`notification-row accent-${accent} ${
+                  notif.status === "Unread" ? "unread" : ""
+                } ${route ? "clickable" : ""}`}
+                key={notif.id}
+                onClick={() => handleNotificationClick(notif)}
+              >
+                <div className="notification-icon">{getIcon(notif.type)}</div>
 
-          <CategoryItem
-            icon={<ShieldCheck size={20} />}
-            title="Document Verification"
-            count={categories.documentVerification}
-            text="Certificates and permits pending"
-          />
+                <div className="notification-content">
+                  <div className="notification-meta">
+                    <span className="notification-type-chip">{notif.type}</span>
+                    <small>{formatTime(notif.time)}</small>
+                  </div>
 
-          <CategoryItem
-            icon={<FileCheck2 size={20} />}
-            title="Transaction Alerts"
-            count={categories.transactionAlerts}
-            text="Workflow and transaction updates"
-          />
+                  <h4>{notif.title}</h4>
+                  <p>{notif.message}</p>
 
-          <CategoryItem
-            icon={<Users size={20} />}
-            title="User Reports"
-            count={categories.userReports}
-            text="Farmer and buyer account updates"
-          />
-        </aside>
+                  <div className="notification-tags">
+                    <span
+                      className={
+                        notif.status === "Unread" ? "tag-unread" : "tag-read"
+                      }
+                    >
+                      <span className="tag-dot"></span>
+                      {notif.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="notification-actions">
+                  {notif.status === "Unread" && (
+                    <button
+                      className="neutral"
+                      title="Mark as read"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMarkRead(notif.id);
+                      }}
+                    >
+                      <Eye size={17} />
+                    </button>
+                  )}
+
+                  <button
+                    className="danger"
+                    title="Delete notification"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(notif.id);
+                    }}
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </div>
+              </div>
+              );
+            })
+          )}
+        </div>
       </section>
     </div>
   );
 }
 
-function NotifStat({ icon, value, label }) {
-  return (
-    <div className="notif-stat-card">
-      <div className="notif-stat-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-    </div>
-  );
-}
+const CATEGORY_DEFS = [
+  {
+    key: "listingApprovals",
+    title: "Listing Approvals",
+    text: "Livestock posts waiting for review",
+    icon: <ClipboardCheck size={18} />,
+    accent: "blue",
+  },
+  {
+    key: "documentVerification",
+    title: "Farmer Verification",
+    text: "Farmer ID and barangay certificate submissions",
+    icon: <ShieldCheck size={18} />,
+    accent: "amber",
+  },
+  {
+    key: "transactionAlerts",
+    title: "Transaction Alerts",
+    text: "Workflow and transaction updates",
+    icon: <FileCheck2 size={18} />,
+    accent: "green",
+  },
+  {
+    key: "userReports",
+    title: "New Registrations",
+    text: "New farmer and buyer accounts",
+    icon: <Users size={18} />,
+    accent: "purple",
+  },
+];
 
-function CategoryItem({ icon, title, count, text }) {
+function CategoryItem({ icon, accent, title, count, text }) {
   return (
-    <div className="notif-category">
-      <div className="notif-category-icon">{icon}</div>
-
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
+    <div className={`notif-category accent-${accent}`}>
+      <div className="notif-category-top">
+        <div className="notif-category-icon">{icon}</div>
+        <span className="notif-category-count">{count}</span>
       </div>
 
-      <span>{count}</span>
+      <span className="notif-category-title">{title}</span>
+      <p className="notif-category-text">{text}</p>
     </div>
   );
 }

@@ -1,6 +1,9 @@
+import { useState } from "react";
+
 import {
   LayoutDashboard,
   Users,
+  UserCog,
   ClipboardCheck,
   ShieldCheck,
   FileCheck2,
@@ -8,46 +11,110 @@ import {
   BarChart3,
   BellRing,
   Settings,
+  KeyRound,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
+import NotificationBell from "./NotificationBell";
+import { logout } from "../utils/auth";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 import "../pages/AdminDashboard.css";
 
 function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isSuperAdmin = currentUser.role === "admin";
+  const adminFirstName = currentUser.fullName ? currentUser.fullName.split(" ")[0] : "Admin";
+  const adminFirstLetter = currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : "A";
+
+  const handleLogout = () => logout(navigate);
 
   const isActive = (path) => (location.pathname === path ? "active" : "");
 
   return (
     <div className="pro-admin">
-      <aside className="pro-sidebar">
+      <div className="pro-mobile-bar">
+        <button
+          type="button"
+          className="pro-mobile-menu-btn"
+          onClick={() => setMobileNavOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={mobileNavOpen}
+        >
+          <Menu size={22} />
+        </button>
+
+        <div className="pro-mobile-brand">
+          <img src={logo} alt="VOLT logo" />
+          <span>VOLT Admin</span>
+        </div>
+
+        <div className="pro-mobile-actions">
+          <NotificationBell role="admin" />
+
+          <div className="pro-mobile-profile-chip">
+            <div className="pro-mobile-profile-avatar">{adminFirstLetter}</div>
+            <div>
+              <strong>{adminFirstName}</strong>
+              <span>{isSuperAdmin ? "Administrator" : "MAO Staff"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {mobileNavOpen && (
+        <div
+          className="pro-mobile-overlay"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
+      <aside className={`pro-sidebar ${mobileNavOpen ? "mobile-open" : ""}`}>
+        <button
+          type="button"
+          className="pro-mobile-close"
+          onClick={() => setMobileNavOpen(false)}
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+
         <div className="pro-brand">
-          <div className="pro-logo">MAO</div>
+          <img src={logo} className="pro-brand-logo" alt="VOLT logo" />
 
           <div>
-            <h3>Livestock Admin</h3>
+            <h3>VOLT Admin</h3>
             <p>Veruela MAO</p>
           </div>
         </div>
 
-        <nav>
+        <nav onClick={() => setMobileNavOpen(false)}>
           <p className="nav-group-label">Overview</p>
           <Link className={isActive("/admin-dashboard")} to="/admin-dashboard">
             <LayoutDashboard size={20} /> Dashboard
           </Link>
 
           <p className="nav-group-label">Management</p>
-          <Link className={isActive("/admin-users")} to="/admin-users">
-            <Users size={20} /> Users
-          </Link>
+          {isSuperAdmin && (
+            <Link className={isActive("/admin-users")} to="/admin-users">
+              <Users size={20} /> Users
+            </Link>
+          )}
+
+          {isSuperAdmin && (
+            <Link className={isActive("/admin-staff")} to="/admin-staff">
+              <UserCog size={20} /> Staff
+            </Link>
+          )}
 
           <Link className={isActive("/admin-listings")} to="/admin-listings">
             <ClipboardCheck size={20} /> Listings
@@ -75,12 +142,27 @@ function AdminLayout() {
             <BellRing size={20} /> Notifications
           </Link>
 
-          <Link className={isActive("/admin-settings")} to="/admin-settings">
-            <Settings size={20} /> Settings
-          </Link>
+          {isSuperAdmin && (
+            <Link className={isActive("/admin-settings")} to="/admin-settings">
+              <Settings size={20} /> Settings
+            </Link>
+          )}
+
+          {/* MAO staff passwords are managed by the admin (Staff Management). */}
+          {isSuperAdmin && (
+            <Link className={isActive("/admin-account")} to="/admin-account">
+              <KeyRound size={20} /> My Account
+            </Link>
+          )}
         </nav>
 
-        <button className="pro-logout" onClick={handleLogout}>
+        <button
+          className="pro-logout"
+          onClick={() => {
+            setMobileNavOpen(false);
+            setConfirmLogout(true);
+          }}
+        >
           <LogOut size={20} /> Logout
         </button>
 
@@ -92,6 +174,12 @@ function AdminLayout() {
       <div style={{ flex: 1, minWidth: 0 }}>
         <Outlet />
       </div>
+
+      <LogoutConfirmModal
+        open={confirmLogout}
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

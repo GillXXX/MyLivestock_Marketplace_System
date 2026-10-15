@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Mail, ShieldCheck, Tractor, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Mail, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { API_URL } from "../config";
+import logo from "../assets/logo.png";
 import "./Login.css";
 
 function ForgotPassword() {
@@ -44,16 +45,16 @@ function ForgotPassword() {
         <div className="overlay"></div>
 
         <div className="showcase-content">
-          <div className="brand-badge">
+          <Link to="/" className="brand-badge" aria-label="Back to VOLT home">
             <div className="brand-icon">
-              <Tractor size={28} />
+              <img src={logo} alt="VOLT logo" />
             </div>
 
             <div>
-              <h2>HerdMarket</h2>
-              <span>Livestock Marketplace Platform</span>
+              <h2>VOLT</h2>
+              <span>Veruela Online Livestock Trade</span>
             </div>
-          </div>
+          </Link>
 
           <div className="showcase-text">
             <span className="mini-title">ACCOUNT RECOVERY</span>
@@ -116,6 +117,9 @@ function ForgotPassword() {
                 <span className="login-tag">RESET PASSWORD</span>
                 <h2>Forgot your password?</h2>
                 <p>Enter your email and we'll send you a reset link.</p>
+                <p className="staff-reset-note">
+                  MAO staff: your password is reset by the MAO admin — please ask them.
+                </p>
               </div>
 
               {message && <p className="form-error">{message}</p>}

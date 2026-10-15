@@ -10,18 +10,24 @@ const getFavorites = async (req, res) => {
         f.created_at AS saved_at,
         l.id,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         l.age,
         l.weight,
         l.price,
+        l.quantity,
         l.health_status,
         l.location,
         l.description,
         l.image_url,
         l.documents,
         l.status,
+        l.created_at,
+        u.id AS seller_id,
         u.full_name AS seller_name,
-        u.is_verified AS seller_verified
+        u.is_verified AS seller_verified,
+        u.profile_image AS seller_avatar
       FROM favorites f
       JOIN livestock_listings l ON f.listing_id = l.id
       JOIN users u ON l.farmer_id = u.id

@@ -1,11 +1,10 @@
 const db = require("../config/db");
 
+const LISTING_STATUS_OPTIONS = ["Pending Approval", "Auto Approved", "Draft"];
+const WORKFLOW_OPTIONS = ["Strict Workflow", "Flexible Workflow"];
+
 const getAdminSettings = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [settings] = await db.query("SELECT * FROM system_settings WHERE id = 1");
 
     res.json({ settings: settings[0] });
@@ -17,10 +16,6 @@ const getAdminSettings = async (req, res) => {
 
 const updateAdminSettings = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const {
       system_name,
       municipality,
@@ -28,13 +23,23 @@ const updateAdminSettings = async (req, res) => {
       livestock_types,
       default_listing_status,
       transaction_workflow,
-      secure_login,
-      role_based_access,
       account_deactivation,
       document_verification,
       admin_notifications,
     } = req.body;
 
+    // Anything else would silently fall back to a default where these
+    // settings are read (listingController, buyerTransactionController).
+    if (!LISTING_STATUS_OPTIONS.includes(default_listing_status)) {
+      return res.status(400).json({ message: "Please choose a valid default listing status" });
+    }
+
+    if (!WORKFLOW_OPTIONS.includes(transaction_workflow)) {
+      return res.status(400).json({ message: "Please choose a valid transaction workflow" });
+    }
+
+    // Sign-in and role separation are always enforced, so the old
+    // secure_login / role_based_access columns are no longer written.
     await db.query(
       `UPDATE system_settings SET
         system_name = ?,
@@ -43,8 +48,6 @@ const updateAdminSettings = async (req, res) => {
         livestock_types = ?,
         default_listing_status = ?,
         transaction_workflow = ?,
-        secure_login = ?,
-        role_based_access = ?,
         account_deactivation = ?,
         document_verification = ?,
         admin_notifications = ?
@@ -56,8 +59,6 @@ const updateAdminSettings = async (req, res) => {
         livestock_types,
         default_listing_status,
         transaction_workflow,
-        secure_login ? 1 : 0,
-        role_based_access ? 1 : 0,
         account_deactivation ? 1 : 0,
         document_verification ? 1 : 0,
         admin_notifications ? 1 : 0,

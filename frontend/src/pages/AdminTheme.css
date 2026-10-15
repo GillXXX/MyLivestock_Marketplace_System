@@ -1,0 +1,29 @@
+/* Shared design tokens for the admin section (Dashboard, Users, Listings,
+   Verification, Transactions, Notifications, Map Monitoring, Reports,
+   Settings). Each page's own CSS imports this instead of redeclaring
+   :root, so the palette/shadows/soft-badge colors stay in sync instead of
+   drifting per page. Page-specific tokens (e.g. the dashboard's dark
+   sidebar colors) stay declared locally in that page's CSS. */
+:root {
+  --primary: #0f3d2e;
+  --primary-dark: #071f16;
+  --accent: #d7a24d;
+
+  --background: #f4f1e8;
+  --card: #ffffff;
+
+  --border: #e8e2d4;
+  --text: #111827;
+  --muted: #667085;
+
+  --green-soft: #eaf5ef;
+  --blue-soft: #e8f1ff;
+  --warning-soft: #fff7d6;
+  --danger: #b42318;
+  --danger-soft: #ffe5e5;
+
+  --ring-track: #edf1ec;
+
+  --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
+  --shadow-lg: 0 22px 55px rgba(15, 61, 46, 0.14);
+}

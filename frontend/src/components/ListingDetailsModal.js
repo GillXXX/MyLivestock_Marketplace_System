@@ -1,8 +1,8 @@
-import { X, ShieldCheck, FileText, MessageCircle } from "lucide-react";
+import { X, BadgeCheck, MapPin, FileText, MessageCircle, ShoppingCart } from "lucide-react";
+import { isLivestock, formatPrice, formatQuantity, formatWeight, getListingPlaceholder } from "../utils/productCatalog";
+import { getDocumentLabel } from "../utils/livestockDocRequirements";
+import { useNavigate } from "react-router-dom";
 import "./ListingDetailsModal.css";
-
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1400&auto=format&fit=crop";
 
 function parseDocuments(documents) {
   if (!documents) return [];
@@ -15,80 +15,154 @@ function parseDocuments(documents) {
   }
 }
 
-function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
+function formatPostedTime(time) {
+  if (!time) return "";
+
+  const diffDays = Math.floor((Date.now() - new Date(time).getTime()) / 86400000);
+
+  if (diffDays <= 0) return "Posted today";
+  if (diffDays === 1) return "Posted yesterday";
+  if (diffDays < 30) return `Posted ${diffDays} days ago`;
+
+  return `Posted ${new Date(time).toLocaleDateString()}`;
+}
+
+function ListingDetailsModal({ listing, onClose, onInquire, onBuyNow }) {
+  const navigate = useNavigate();
   const documents = parseDocuments(listing.documents);
+  const isProduct = !isLivestock(listing.livestock_type, listing.category);
+  const title = listing.breed || listing.livestock_type;
+
+  // Live animals always show every stat (N/A when blank); farm products
+  // only show the optional fields the farmer actually filled in.
+  const stats = [
+    { label: "Age", value: listing.age, show: !isProduct || listing.age },
+    {
+      label: isProduct ? "Size" : "Weight",
+      value: formatWeight(listing.weight, listing.livestock_type, listing.category),
+      show: !isProduct || listing.weight,
+    },
+    {
+      label: isProduct ? "Condition" : "Health",
+      value: listing.health_status,
+      show: !isProduct || listing.health_status,
+    },
+  ].filter((stat) => stat.show);
+
+  const goToSellerProfile = () => {
+    if (!listing.seller_id) return;
+    onClose();
+    navigate(`/seller/${listing.seller_id}`);
+  };
 
   return (
     <div className="details-modal-overlay" onClick={onClose}>
       <div className="details-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="details-modal-close" type="button" onClick={onClose}>
-          <X size={20} />
-        </button>
-
-        <img src={listing.image_url || DEFAULT_IMAGE} alt={listing.breed} />
-
-        <div className="details-modal-body">
-          <div className="details-modal-head">
-            <div>
-              <h2>{listing.breed}</h2>
-              <p>
-                {listing.livestock_type}
-                {listing.age ? ` • ${listing.age}` : ""}
-              </p>
-            </div>
-
-            <strong>₱{Number(listing.price).toLocaleString()}</strong>
+        <div className="details-modal-media">
+          <div className="details-modal-media-scroll">
+            <img src={listing.image_url || getListingPlaceholder(listing.livestock_type, listing.category)} alt={title} />
           </div>
 
-          <div className="details-modal-info">
-            <div>
-              <span>Weight</span>
-              <strong>{listing.weight || "N/A"}</strong>
-            </div>
+          <button className="details-modal-close" type="button" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="details-modal-body">
+          <div className="details-modal-top-row">
+            <span className="details-modal-status">{listing.livestock_type}</span>
+
+            <strong className="details-modal-price-inline">
+              {formatPrice(listing.price, listing.unit)}
+            </strong>
+          </div>
+
+          <h2 className="details-modal-title">{title}</h2>
+
+          <div className="details-modal-meta-line">
+            <MapPin size={13} />
+            {listing.location}
+            {listing.created_at && (
+              <>
+                <span className="meta-divider">·</span>
+                {formatPostedTime(listing.created_at)}
+              </>
+            )}
+          </div>
+
+          <div className="details-modal-stats-bar">
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <span>{stat.label}</span>
+                <strong>{stat.value || "N/A"}</strong>
+              </div>
+            ))}
 
             <div>
-              <span>Health Status</span>
-              <strong>{listing.health_status || "N/A"}</strong>
-            </div>
-
-            <div>
-              <span>Location</span>
-              <strong>{listing.location}</strong>
+              <span>Available</span>
+              <strong>
+                {listing.quantity > 0
+                  ? formatQuantity(listing.quantity, listing.unit)
+                  : "Out of stock"}
+              </strong>
             </div>
           </div>
 
           {listing.description && (
-            <div className="details-modal-description">
-              <h4>Description</h4>
-              <p>{listing.description}</p>
-            </div>
+            <p className="details-modal-description">{listing.description}</p>
           )}
 
           {documents.length > 0 && (
             <div className="details-modal-documents">
               <h4>Supporting Documents</h4>
 
-              {documents.map((docUrl, index) => (
-                <a key={index} href={docUrl} target="_blank" rel="noopener noreferrer">
-                  <FileText size={16} />
-                  Document {index + 1}
-                </a>
-              ))}
+              <div className="details-modal-documents-list">
+                {documents.map((docUrl, index) => (
+                  <a key={index} href={docUrl} target="_blank" rel="noopener noreferrer">
+                    <FileText size={16} />
+                    {getDocumentLabel(listing.livestock_type, listing.category, index, documents.length)}
+                  </a>
+                ))}
+              </div>
             </div>
           )}
 
           <div className="details-modal-seller">
-            <div>
-              <ShieldCheck size={18} />
+            <button
+              type="button"
+              className="details-modal-seller-link"
+              onClick={goToSellerProfile}
+              disabled={!listing.seller_id}
+            >
+              <span className="details-modal-seller-avatar">
+                {listing.seller_avatar ? (
+                  <img src={listing.seller_avatar} alt={listing.seller_name} />
+                ) : (
+                  listing.seller_name?.charAt(0) || "?"
+                )}
+              </span>
+
               <div>
-                <strong>{listing.seller_name}</strong>
+                <strong>
+                  {listing.seller_name}
+                  {listing.seller_verified && (
+                    <BadgeCheck size={14} className="details-modal-seller-check" />
+                  )}
+                </strong>
                 <p>
                   {listing.seller_verified
                     ? "MAO-verified seller"
                     : "Verification pending"}
+                  {listing.location && (
+                    <>
+                      <span className="meta-divider">·</span>
+                      <MapPin size={12} className="details-modal-seller-pin" />
+                      {listing.location}
+                    </>
+                  )}
                 </p>
               </div>
-            </div>
+            </button>
 
             <div className="details-modal-seller-actions">
               {onInquire && (
@@ -98,7 +172,17 @@ function ListingDetailsModal({ listing, onClose, onInquire, extraActions }) {
                 </button>
               )}
 
-              {extraActions}
+              {onBuyNow && (
+                <button
+                  type="button"
+                  className="details-modal-buy-now"
+                  onClick={() => onBuyNow(listing)}
+                  disabled={Number(listing.quantity) <= 0}
+                >
+                  <ShoppingCart size={16} />
+                  {Number(listing.quantity) > 0 ? "Buy Now" : "Out of Stock"}
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -58,6 +58,48 @@ function isSameDay(a, b) {
   );
 }
 
+function getRowTarget(role, notif) {
+  const numericId = Number(String(notif.id).split("-")[1]);
+
+  if (role === "buyer") {
+    if (notif.type === "Inquiry Status") {
+      return {
+        path: "/buyer-messages",
+        state: notif.conversationId ? { conversationId: notif.conversationId } : undefined,
+      };
+    }
+    if (notif.type === "Transaction Update") {
+      return {
+        path: "/buyer-transactions",
+        state: notif.transactionId ? { transactionId: notif.transactionId } : undefined,
+      };
+    }
+    return null;
+  }
+
+  if (role === "farmer") {
+    if (notif.type === "Listing Status") return { path: "/listings" };
+    if (notif.type === "Buyer Inquiry") {
+      return {
+        path: "/farmer-messages",
+        state: Number.isFinite(numericId) ? { conversationId: numericId } : undefined,
+      };
+    }
+    if (notif.type === "Transaction Update") return { path: "/farmer-transactions" };
+    return null;
+  }
+
+  if (role === "admin") {
+    if (notif.type === "Listing Approval") return { path: "/admin-listings" };
+    if (notif.type === "Document Verification") return { path: "/admin-verification" };
+    if (notif.type === "Transaction Alert") return { path: "/admin-transactions" };
+    if (notif.type === "User Registration") return { path: "/admin-users" };
+    return null;
+  }
+
+  return null;
+}
+
 function NotificationBell({ role }) {
   const navigate = useNavigate();
   const config = ROLE_CONFIG[role];
@@ -119,6 +161,29 @@ function NotificationBell({ role }) {
     navigate(config.pagePath);
   };
 
+  const handleRowClick = async (notif) => {
+    const target = getRowTarget(role, notif);
+
+    if ((role === "admin" || role === "farmer" || role === "buyer") && notif.status === "Unread") {
+      const token = localStorage.getItem("token");
+      try {
+        await fetch(`${API_URL}${config.endpoint}/${notif.id}/read`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, status: "Read" } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        // Best-effort — navigation should still proceed even if this fails.
+      }
+    }
+
+    setOpen(false);
+    if (target) navigate(target.path, { state: target.state });
+  };
+
   const visible =
     tab === "unread" ? notifications.filter((n) => n.status === "Unread") : notifications;
 
@@ -142,19 +207,38 @@ function NotificationBell({ role }) {
       <div className="bell-group" key={label}>
         <span className="bell-group-label">{label}</span>
 
-        {items.map((notif) => (
-          <div className={`bell-row ${notif.status === "Unread" ? "unread" : ""}`} key={notif.id}>
-            <div className="bell-row-icon">{getIcon(notif.type)}</div>
+        {items.map((notif) => {
+          const clickable = Boolean(getRowTarget(role, notif)) || role === "admin";
 
-            <div className="bell-row-content">
-              <strong>{notif.title}</strong>
-              <p>{notif.message}</p>
-              <small>{formatRelativeTime(notif.time)}</small>
+          return (
+            <div
+              className={`bell-row ${notif.status === "Unread" ? "unread" : ""} ${
+                clickable ? "clickable" : ""
+              }`}
+              key={notif.id}
+              onClick={clickable ? () => handleRowClick(notif) : undefined}
+              role={clickable ? "button" : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              onKeyDown={
+                clickable
+                  ? (e) => {
+                      if (e.key === "Enter") handleRowClick(notif);
+                    }
+                  : undefined
+              }
+            >
+              <div className="bell-row-icon">{getIcon(notif.type)}</div>
+
+              <div className="bell-row-content">
+                <strong>{notif.title}</strong>
+                <p>{notif.message}</p>
+                <small>{formatRelativeTime(notif.time)}</small>
+              </div>
+
+              {notif.status === "Unread" && <span className="bell-dot"></span>}
             </div>
-
-            {notif.status === "Unread" && <span className="bell-dot"></span>}
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };

@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Lock, Eye, EyeOff, ShieldCheck, Tractor, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Lock, Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_URL } from "../config";
+import { isWeakPassword, PASSWORD_HINT } from "../utils/password";
+import logo from "../assets/logo.png";
 import "./Login.css";
 
 function ResetPassword() {
@@ -37,8 +39,8 @@ function ResetPassword() {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setMessage("Password must be at least 8 characters");
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(formData.password)) {
+      setMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number");
       return;
     }
 
@@ -73,16 +75,16 @@ function ResetPassword() {
         <div className="overlay"></div>
 
         <div className="showcase-content">
-          <div className="brand-badge">
+          <Link to="/" className="brand-badge" aria-label="Back to VOLT home">
             <div className="brand-icon">
-              <Tractor size={28} />
+              <img src={logo} alt="VOLT logo" />
             </div>
 
             <div>
-              <h2>HerdMarket</h2>
-              <span>Livestock Marketplace Platform</span>
+              <h2>VOLT</h2>
+              <span>Veruela Online Livestock Trade</span>
             </div>
-          </div>
+          </Link>
 
           <div className="showcase-text">
             <span className="mini-title">ACCOUNT RECOVERY</span>
@@ -157,9 +159,12 @@ function ResetPassword() {
                     <input
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your new password"
+                      placeholder="New password"
                       value={formData.password}
                       onChange={handleChange}
+                      minLength={8}
+                      pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}"
+                      title="At least 8 characters, with an uppercase letter, a lowercase letter, and a number"
                       required
                     />
 
@@ -171,6 +176,9 @@ function ResetPassword() {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                  {isWeakPassword(formData.password) && (
+                    <p className="field-hint">{PASSWORD_HINT}</p>
+                  )}
                 </div>
 
                 <div className="form-group">

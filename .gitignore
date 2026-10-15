@@ -19,3 +19,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
+
+# built site copied in for deployment (npm run build)
+backend/frontend-build/
+
+# verification documents (government IDs) — never commit
+backend/uploads-private/

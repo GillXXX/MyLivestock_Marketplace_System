@@ -4,6 +4,7 @@ import {
   Search,
   CheckCircle,
   AlertTriangle,
+  Flag,
   Trash2,
   ArrowLeft,
   MapPin,
@@ -13,13 +14,21 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
+import AdminStatCard from "../components/AdminStatCard";
+import ProductTypeOptions, { matchesTypeFilter } from "../components/ProductTypeOptions";
 import { API_URL } from "../config";
+import { ALL_KNOWN_TYPES, getCategory, formatPrice } from "../utils/productCatalog";
 import "./AdminListings.css";
 
 function AdminListings() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = useGoBack("/admin-dashboard");
+  // Deleting is permanent and admin-only; MAO staff reject or flag instead.
+  const canDelete = JSON.parse(localStorage.getItem("user") || "{}").role === "admin";
 
   const [listings, setListings] = useState([]);
   const [stats, setStats] = useState({
@@ -30,10 +39,11 @@ function AdminListings() {
   });
 
   const [searchText, setSearchText] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All Livestock Types");
-  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [typeFilter, setTypeFilter] = useState(location.state?.typeFilter || "All Types");
+  const [statusFilter, setStatusFilter] = useState(location.state?.statusFilter || "All Status");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -71,7 +81,7 @@ function AdminListings() {
     fetchListings();
   }, [fetchListings]);
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id, status, reason) => {
     try {
       const token = localStorage.getItem("token");
 
@@ -81,7 +91,7 @@ function AdminListings() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, reason }),
       });
 
       const data = await res.json();
@@ -95,6 +105,24 @@ function AdminListings() {
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+  };
+
+  const handleFlag = (item) => {
+    const reason = window.prompt(
+      `Reason for flagging this ${item.livestock_type} listing? (optional)`,
+      item.review_note || ""
+    );
+    if (reason === null) return;
+    updateStatus(item.id, "Flagged", reason);
+  };
+
+  const handleReject = (item) => {
+    const reason = window.prompt(
+      `Reason for rejecting this ${item.livestock_type} listing? (optional)`,
+      item.review_note || ""
+    );
+    if (reason === null) return;
+    updateStatus(item.id, "Rejected", reason);
   };
 
   const deleteListing = async (id) => {
@@ -124,14 +152,111 @@ function AdminListings() {
     }
   };
 
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const visibleIds = filteredListings.map((item) => item.id);
+    const allSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+    setSelectedIds(allSelected ? [] : visibleIds);
+  };
+
+  const bulkUpdateStatus = async (status, reason) => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`${API_URL}/api/admin/listings/${id}/status`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ status, reason }),
+          })
+        )
+      );
+
+      setSelectedIds([]);
+      fetchListings();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Approve ${selectedIds.length} selected listing(s)?`)) return;
+    bulkUpdateStatus("Available");
+  };
+
+  const handleBulkFlag = () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt(
+      `Reason for flagging ${selectedIds.length} selected listing(s)? (optional)`
+    );
+    if (reason === null) return;
+    bulkUpdateStatus("Flagged", reason);
+  };
+
+  const handleBulkReject = () => {
+    if (selectedIds.length === 0) return;
+    const reason = window.prompt(
+      `Reason for rejecting ${selectedIds.length} selected listing(s)? (optional)`
+    );
+    if (reason === null) return;
+    bulkUpdateStatus("Rejected", reason);
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Delete ${selectedIds.length} selected listing(s)? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`${API_URL}/api/admin/listings/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
+      );
+
+      setSelectedIds([]);
+      fetchListings();
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
+  };
+
+  const getDaysPending = (createdAt) => {
+    return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
+  };
+
   const handleExport = () => {
     exportToCsv("listings.csv", [
       { label: "ID", value: (l) => l.id },
-      { label: "Livestock Type", value: (l) => l.livestock_type },
-      { label: "Breed", value: (l) => l.breed },
+      { label: "Product Type", value: (l) => l.livestock_type },
+      { label: "Category", value: (l) => (getCategory(l.livestock_type, l.category) === "product" ? "Farm Product" : "Livestock") },
+      { label: "Breed / Variety", value: (l) => l.breed },
       { label: "Farmer", value: (l) => l.farmer_name },
       { label: "Location", value: (l) => l.location },
       { label: "Price", value: (l) => l.price },
+      { label: "Unit", value: (l) => l.unit || "head" },
       { label: "Status", value: (l) => (l.status === "Available" ? "Approved" : l.status) },
       { label: "Date Posted", value: (l) => new Date(l.created_at).toLocaleDateString() },
     ], filteredListings);
@@ -148,7 +273,7 @@ function AdminListings() {
       String(item.id).includes(search);
 
     const matchesType =
-      typeFilter === "All Livestock Types" || item.livestock_type === typeFilter;
+      typeFilter === "All Types" || matchesTypeFilter(item.livestock_type, typeFilter);
 
     const displayStatus = item.status === "Available" ? "Approved" : item.status;
 
@@ -170,15 +295,15 @@ function AdminListings() {
     <div className="admin-listings-page">
       <header className="listings-header">
         <div className="header-left">
-          <Link to="/admin-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO Administration</span>
             <h1>Listings Approval</h1>
             <p>
-              Review livestock posts, approve valid listings, flag suspicious
+              Review livestock and farm product posts, approve valid listings, flag suspicious
               records, and remove invalid marketplace entries.
             </p>
           </div>
@@ -191,28 +316,29 @@ function AdminListings() {
       </header>
 
       <section className="listing-kpi-grid">
-        <Kpi tone="blue" icon={<ClipboardCheck />} value={stats.totalListings} label="Total Listings" />
-        <Kpi tone="amber" icon={<Clock />} value={stats.pendingReview} label="Pending Review" />
-        <Kpi tone="green" icon={<BadgeCheck />} value={stats.approved} label="Approved" />
-        <Kpi tone="red" icon={<AlertTriangle />} value={stats.flagged} label="Flagged" />
+        <AdminStatCard accent="blue" icon={<ClipboardCheck />} value={stats.totalListings} label="Total Listings" />
+        <AdminStatCard accent="amber" icon={<Clock />} value={stats.pendingReview} label="Pending Review" />
+        <AdminStatCard accent="green" icon={<BadgeCheck />} value={stats.approved} label="Approved" />
+        <AdminStatCard accent="red" icon={<AlertTriangle />} value={stats.flagged} label="Flagged" />
       </section>
 
       <section className="listing-toolbar">
         <div className="listing-search">
           <Search size={16} />
           <input
-            placeholder="Search by livestock, farmer, ID, or location..."
+            placeholder="Search by product, farmer, ID, or location..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
 
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option>All Livestock Types</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option>All Types</option>
+          <ProductTypeOptions />
+          {/* A custom type clicked from the dashboard's category chart */}
+          {typeFilter !== "All Types" &&
+            typeFilter !== "Other" &&
+            !ALL_KNOWN_TYPES.includes(typeFilter) && <option>{typeFilter}</option>}
         </select>
 
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -221,6 +347,7 @@ function AdminListings() {
           <option>Approved</option>
           <option>Flagged</option>
           <option>Rejected</option>
+          <option>Draft</option>
         </select>
       </section>
 
@@ -228,15 +355,69 @@ function AdminListings() {
         <div className="listings-table-card">
           <div className="card-title">
             <div>
-              <h3>Submitted Livestock Listings</h3>
+              <h3>Submitted Listings</h3>
               <p>Listings submitted by farmers for MAO review.</p>
             </div>
           </div>
+
+          {selectedIds.length > 0 && (
+            <div className="bulk-action-bar">
+              <span>{selectedIds.length} selected</span>
+
+              <div className="bulk-actions">
+                <button type="button" className="bulk-approve" onClick={handleBulkApprove}>
+                  <CheckCircle size={15} /> Approve
+                </button>
+
+                <button type="button" className="bulk-flag" onClick={handleBulkFlag}>
+                  <Flag size={15} /> Flag
+                </button>
+
+                <button type="button" className="bulk-reject" onClick={handleBulkReject}>
+                  <XCircle size={15} /> Reject
+                </button>
+
+                {canDelete && (
+                  <button type="button" className="bulk-delete" onClick={bulkDelete}>
+                    <Trash2 size={15} /> Delete
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="bulk-clear"
+                  onClick={() => setSelectedIds([])}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="table-responsive">
             <table className="professional-table">
               <thead>
                 <tr>
+                  <th className="checkbox-col">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredListings.length > 0 &&
+                        filteredListings.every((item) => selectedIds.includes(item.id))
+                      }
+                      ref={(el) => {
+                        if (el) {
+                          const visibleIds = filteredListings.map((item) => item.id);
+                          const selectedVisible = visibleIds.filter((id) =>
+                            selectedIds.includes(id)
+                          ).length;
+                          el.indeterminate =
+                            selectedVisible > 0 && selectedVisible < visibleIds.length;
+                        }
+                      }}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th>Listing</th>
                   <th>Farmer</th>
                   <th>Location</th>
@@ -250,15 +431,25 @@ function AdminListings() {
               <tbody>
                 {filteredListings.length === 0 ? (
                   <tr>
-                    <td colSpan="7">No listings found.</td>
+                    <td colSpan="8">No listings found.</td>
                   </tr>
                 ) : (
                   filteredListings.map((item) => {
                     const displayStatus =
                       item.status === "Available" ? "Approved" : item.status;
 
+                    const daysPending = getDaysPending(item.created_at);
+
                     return (
-                      <tr key={item.id}>
+                      <tr key={item.id} className={selectedIds.includes(item.id) ? "row-selected" : ""}>
+                        <td className="checkbox-col">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelect(item.id)}
+                          />
+                        </td>
+
                         <td>
                           <div className="listing-cell">
                             {item.image_url ? (
@@ -276,12 +467,12 @@ function AdminListings() {
                               </button>
                             ) : (
                               <div className="animal-icon">
-                                {getAnimalIcon(item.livestock_type)}
+                                {getAnimalIcon(item.livestock_type, item.category)}
                               </div>
                             )}
                             <div>
                               <strong>{item.livestock_type}</strong>
-                              <p>{item.breed} • LST-{item.id}</p>
+                              <p>{item.breed ? `${item.breed} • ` : ""}LST-{item.id}</p>
                             </div>
                           </div>
                         </td>
@@ -298,16 +489,43 @@ function AdminListings() {
                           </div>
                         </td>
 
-                        <td>
-                          <strong>₱{Number(item.price).toLocaleString()}</strong>
+                        <td className="price-cell">
+                          {formatPrice(item.price, item.unit)}
                         </td>
 
-                        <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                        <td className="date-cell">{new Date(item.created_at).toLocaleDateString()}</td>
 
                         <td>
-                          <span className={`status-pill ${displayStatus.toLowerCase()}`}>
-                            {displayStatus}
-                          </span>
+                          <div className="status-cell">
+                            <span
+                              className={`status-pill ${displayStatus.toLowerCase()}`}
+                              title={item.review_note || undefined}
+                            >
+                              {displayStatus}
+                            </span>
+
+                            {(displayStatus === "Flagged" || displayStatus === "Rejected") &&
+                              item.review_note && (
+                                <small className="review-note" title={item.review_note}>
+                                  {item.review_note}
+                                </small>
+                              )}
+
+                            {displayStatus === "Pending" && (
+                              <small className={`pending-age ${daysPending >= 3 ? "stale" : ""}`}>
+                                {daysPending <= 0 ? "Today" : `${daysPending}d pending`}
+                              </small>
+                            )}
+
+                            {item.reviewed_by_name && (
+                              <small
+                                className="reviewed-by"
+                                title={`Last reviewed by ${item.reviewed_by_name} on ${new Date(item.reviewed_at).toLocaleString()}`}
+                              >
+                                by {item.reviewed_by_name} · {new Date(item.reviewed_at).toLocaleDateString()}
+                              </small>
+                            )}
+                          </div>
                         </td>
 
                         <td>
@@ -325,28 +543,30 @@ function AdminListings() {
                               className="flag"
                               title="Flag Listing"
                               type="button"
-                              onClick={() => updateStatus(item.id, "Flagged")}
+                              onClick={() => handleFlag(item)}
                             >
-                              <AlertTriangle size={17} />
+                              <Flag size={17} />
                             </button>
 
                             <button
                               className="reject"
                               title="Reject Listing"
                               type="button"
-                              onClick={() => updateStatus(item.id, "Rejected")}
+                              onClick={() => handleReject(item)}
                             >
                               <XCircle size={17} />
                             </button>
 
-                            <button
-                              className="delete"
-                              title="Delete Listing"
-                              type="button"
-                              onClick={() => deleteListing(item.id)}
-                            >
-                              <Trash2 size={17} />
-                            </button>
+                            {canDelete && (
+                              <button
+                                className="delete"
+                                title="Delete Listing"
+                                type="button"
+                                onClick={() => deleteListing(item.id)}
+                              >
+                                <Trash2 size={17} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -357,67 +577,24 @@ function AdminListings() {
             </table>
           </div>
         </div>
-
-        <aside className="approval-panel">
-          <h3>Review Guidelines</h3>
-          <p>
-            Before approving a listing, ensure that the livestock details are
-            complete and valid.
-          </p>
-
-          <div className="guideline">
-            <CheckCircle size={18} />
-            Complete livestock type, breed, age, and weight
-          </div>
-
-          <div className="guideline">
-            <CheckCircle size={18} />
-            Clear livestock photo uploaded
-          </div>
-
-          <div className="guideline">
-            <CheckCircle size={18} />
-            Reasonable price and valid seller location
-          </div>
-
-          <div className="guideline warning">
-            <AlertTriangle size={18} />
-            Flag listings with suspicious details
-          </div>
-
-          <div className="approval-summary">
-            <div>
-              <strong>Today’s Reviews</strong>
-              <span>{stats.pendingReview} pending listings</span>
-            </div>
-
-            <div>
-              <strong>Average Approval Time</strong>
-              <span>12 minutes</span>
-            </div>
-          </div>
-        </aside>
       </section>
     </div>
   );
 }
 
-function Kpi({ icon, value, label, tone = "green" }) {
-  return (
-    <div className={`listing-kpi-card tone-${tone}`}>
-      <div className="listing-kpi-icon">{icon}</div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-    </div>
-  );
-}
-
-function getAnimalIcon(type) {
+function getAnimalIcon(type, category) {
   if (type === "Swine") return "🐖";
   if (type === "Cattle") return "🐄";
   if (type === "Goat") return "🐐";
   if (type === "Poultry") return "🐔";
-  return "🐾";
+  if (type === "Carabao") return "🐃";
+  if (type === "Duck") return "🦆";
+  if (type === "Eggs") return "🥚";
+  if (type === "Fruits") return "🍎";
+  if (type === "Vegetables") return "🥕";
+  if (type === "Milk / Dairy") return "🥛";
+  if (type === "Honey") return "🍯";
+  return getCategory(type, category) === "product" ? "🌱" : "🐾";
 }
 
 export default AdminListings;

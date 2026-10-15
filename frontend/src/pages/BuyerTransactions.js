@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 import {
   ArrowLeft,
@@ -6,7 +6,7 @@ import {
   FileCheck2,
   Clock,
   CheckCircle,
-  AlertTriangle,
+  CheckCircle2,
   Eye,
   Download,
   MessageCircle,
@@ -14,28 +14,79 @@ import {
   ShieldCheck,
   Calendar,
   Wallet,
-  TrendingUp,
   XCircle,
   X,
-  Beef,
-  Drumstick,
-  PawPrint,
   Inbox,
+  Handshake,
+  ClipboardCheck,
+  ChevronRight,
+  Hourglass,
 } from "lucide-react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
+import {
+  LIVESTOCK_TYPES,
+  FARM_PRODUCT_TYPES,
+  ALL_KNOWN_TYPES,
+  getProductIcon,
+  formatQuantity,
+} from "../utils/productCatalog";
+import DealTermsSummary from "../components/DealTermsSummary";
+import useGoBack from "../utils/useGoBack";
 import "./BuyerTransactions.css";
 
-const LIVESTOCK_ICONS = {
-  Cattle: Beef,
-  Poultry: Drumstick,
-  Goat: PawPrint,
-  Swine: PawPrint,
-};
+const WORKFLOW_STAGES = [
+  {
+    title: "Inquiry",
+    text: "Buyer expresses interest in a listing",
+    icon: <MessageCircle size={18} />,
+    accent: "green",
+    iconColor: "blue",
+  },
+  {
+    title: "Negotiation",
+    text: "Delivery, pickup, and other details are discussed",
+    icon: <Handshake size={18} />,
+    accent: "green",
+    iconColor: "amber",
+  },
+  {
+    title: "Confirmation",
+    text: "Both parties confirm the deal",
+    icon: <ClipboardCheck size={18} />,
+    accent: "green",
+    iconColor: "teal",
+  },
+  {
+    title: "Completed",
+    text: "Trade is finalized and recorded",
+    icon: <CheckCircle2 size={18} />,
+    accent: "green",
+    iconColor: "green",
+  },
+];
 
-const getLivestockIcon = (type) => LIVESTOCK_ICONS[type] || FileCheck2;
+function formatRelativeTime(time) {
+  if (!time) return "";
+
+  const diffMs = Date.now() - new Date(time).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return new Date(time).toLocaleDateString();
+}
 
 function useCountUp(target, durationMs = 700) {
   const [value, setValue] = useState(0);
@@ -68,6 +119,7 @@ function useCountUp(target, durationMs = 700) {
 function BuyerTransactions() {
   const navigate = useNavigate();
   const location = useLocation();
+  const goBack = useGoBack("/buyer-dashboard");
 
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
@@ -75,8 +127,12 @@ function BuyerTransactions() {
     totalTransactions: 0,
     pendingDeals: 0,
     completed: 0,
+    declined: 0,
     purchaseValue: 0,
   });
+  const [workflowMode, setWorkflowMode] = useState("Strict");
+  const [cancelAutoApproveHours, setCancelAutoApproveHours] = useState(48);
+  const [actioningId, setActioningId] = useState(null);
 
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -116,6 +172,8 @@ function BuyerTransactions() {
       setTransactions(data.transactions);
       setFilteredTransactions(data.transactions);
       setStats(data.stats);
+      setWorkflowMode(data.workflowMode || "Strict");
+      if (data.cancelAutoApproveHours) setCancelAutoApproveHours(data.cancelAutoApproveHours);
       setLoading(false);
 
       const requestedId = location.state?.transactionId;
@@ -140,6 +198,8 @@ function BuyerTransactions() {
       return;
     }
 
+    setActioningId(id);
+
     try {
       const token = localStorage.getItem("token");
 
@@ -157,19 +217,44 @@ function BuyerTransactions() {
 
       if (!res.ok) {
         alert(data.message || "Failed to confirm transaction");
+        setActioningId(null);
         return;
       }
 
-      fetchTransactions();
+      await fetchTransactions();
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+
+    setActioningId(null);
   };
 
-  const cancelOffer = async (id) => {
-    if (!window.confirm("Cancel this offer? This cannot be undone.")) {
-      return;
+  // Within the first hour of starting a deal (can_cancel_freely, worked out
+  // by the server) it's cancelled outright. After that it's a request with
+  // a reason, which the seller approves or rejects (approved automatically
+  // if they don't answer in time).
+  const cancelOffer = async (item) => {
+    const { id } = item;
+    let reason;
+
+    if (canCancelFreely(item)) {
+      if (!window.confirm("Cancel this offer? This cannot be undone.")) {
+        return;
+      }
+    } else {
+      reason = window.prompt(
+        `The seller is already working on this order, so they need to approve the cancellation (or it's approved automatically after ${cancelAutoApproveHours} hours).\n\nWhy do you want to cancel?`
+      );
+
+      if (reason === null) return;
+
+      if (!reason.trim()) {
+        alert("Please give a reason for cancelling.");
+        return;
+      }
     }
+
+    setActioningId(id);
 
     try {
       const token = localStorage.getItem("token");
@@ -179,8 +264,10 @@ function BuyerTransactions() {
         {
           method: "PUT",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ reason }),
         }
       );
 
@@ -188,14 +275,25 @@ function BuyerTransactions() {
 
       if (!res.ok) {
         alert(data.message || "Failed to cancel offer");
+        setActioningId(null);
         return;
       }
 
-      fetchTransactions();
+      if (data.requested) alert(data.message);
+
+      await fetchTransactions();
     } catch (error) {
       alert("Cannot connect to backend server");
     }
+
+    setActioningId(null);
   };
+
+  // The server's answer at load time, re-checked against the clock so the
+  // button switches to "Request Cancellation" once the hour is up.
+  const canCancelFreely = (item) =>
+    Boolean(item.can_cancel_freely) &&
+    (item.workflow_step === "Inquiry" || new Date(item.free_cancel_until) > new Date());
 
   const transactionCsvColumns = [
     { label: "Transaction ID", value: (t) => `TRX-${String(t.id).padStart(3, "0")}` },
@@ -244,7 +342,9 @@ function BuyerTransactions() {
       );
     }
 
-    if (typeFilter !== "All Livestock") {
+    if (typeFilter === "Other") {
+      results = results.filter((item) => !ALL_KNOWN_TYPES.includes(item.livestock_type));
+    } else if (typeFilter !== "All Livestock") {
       results = results.filter((item) => item.livestock_type === typeFilter);
     }
 
@@ -285,9 +385,9 @@ function BuyerTransactions() {
     <div className="buyer-transactions-page">
       <header className="transactions-header">
         <div className="header-left">
-          <Link to="/buyer-dashboard" className="back-btn">
+          <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="page-tag">BUYER TRANSACTION CENTER</span>
@@ -301,38 +401,60 @@ function BuyerTransactions() {
       </header>
 
       <section className="transaction-stats">
-        <StatCard
+        <AdminStatCard
           icon={<FileCheck2 />}
           value={Math.round(animatedTotal)}
           label="Total Transactions"
           note="All purchase records"
-          accent="neutral"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<Clock />}
           value={Math.round(animatedPending)}
           label="Pending Deals"
           note="Awaiting seller action"
-          accent="amber"
-          pulse={stats.pendingDeals > 0}
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<CheckCircle />}
           value={Math.round(animatedCompleted)}
           label="Completed"
           note="Recorded purchases"
-          accent="green"
         />
 
-        <StatCard
+        <AdminStatCard
           icon={<Wallet />}
           value={`₱${Math.round(animatedValue).toLocaleString()}`}
           label="Purchase Value"
           note="Total estimated value"
-          accent="neutral"
         />
+      </section>
+
+      <section className="workflow-overview">
+        <div>
+          <h3>Structured Trading Workflow</h3>
+          <p>Every livestock transaction must pass these required stages.</p>
+        </div>
+
+        <div className="workflow-steps">
+          {WORKFLOW_STAGES.map((stage, index) => (
+            <Fragment key={stage.title}>
+              <div className={`workflow-step accent-${stage.accent}`}>
+                <div className="workflow-step-top">
+                  <span className="workflow-step-number">{index + 1}</span>
+                  <div className={`workflow-step-icon icon-${stage.iconColor}`}>{stage.icon}</div>
+                </div>
+
+                <strong>{stage.title}</strong>
+                <p>{stage.text}</p>
+              </div>
+
+              {index < WORKFLOW_STAGES.length - 1 && (
+                <ChevronRight className="workflow-chevron" size={18} />
+              )}
+            </Fragment>
+          ))}
+        </div>
       </section>
 
       <section className="transaction-toolbar">
@@ -350,23 +472,27 @@ function BuyerTransactions() {
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option>All Status</option>
           <option>Pending</option>
-          <option>Verification</option>
           <option>Completed</option>
-          <option>Flagged</option>
         </select>
 
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option>All Livestock</option>
-          <option>Swine</option>
-          <option>Cattle</option>
-          <option>Goat</option>
-          <option>Poultry</option>
+          <option value="All Livestock">All Types</option>
+          <optgroup label="Livestock">
+            {LIVESTOCK_TYPES.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </optgroup>
+          <optgroup label="Farm Products">
+            {FARM_PRODUCT_TYPES.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </optgroup>
+          <option>Other</option>
         </select>
 
       </section>
 
-      <section className="transactions-layout">
-        <div className="transactions-card">
+      <section className="transactions-card">
           <div className="card-header">
             <div>
               <h3>Purchase Transaction Records</h3>
@@ -384,6 +510,23 @@ function BuyerTransactions() {
             </button>
           </div>
 
+          {transactions.length > 0 && (
+            <div className="transaction-breakdown">
+              <span className="tone-pending">{stats.pendingDeals} Pending</span>
+              <span className="tone-available">{stats.completed} Completed</span>
+              {stats.declined > 0 && (
+                <span className="tone-flagged">{stats.declined} Declined</span>
+              )}
+            </div>
+          )}
+
+          {transactions.length > 0 && (
+            <p className="results-count">
+              Showing {filteredTransactions.length} of {transactions.length} transaction
+              {transactions.length === 1 ? "" : "s"}
+            </p>
+          )}
+
           <div className="transaction-list">
             {filteredTransactions.length === 0 ? (
               <div className="transactions-empty-state">
@@ -391,7 +534,7 @@ function BuyerTransactions() {
                 <h4>No transactions found</h4>
                 <p>
                   {transactions.length === 0
-                    ? "Inquire or make an offer on a listing to start your first transaction."
+                    ? "Inquire or buy now on a listing to start your first transaction."
                     : "Try adjusting your search or filters."}
                 </p>
                 {transactions.length === 0 && (
@@ -402,7 +545,12 @@ function BuyerTransactions() {
               </div>
             ) : (
               filteredTransactions.map((item, index) => {
-                const LivestockIcon = getLivestockIcon(item.livestock_type);
+                const LivestockIcon = getProductIcon(item.livestock_type, item.category);
+                const isTerminal = item.status === "Declined" || item.status === "Cancelled";
+                const isActioning = actioningId === item.id;
+                const cancelPending =
+                  item.status === "Pending" && item.cancel_requested_at && !item.cancel_outcome;
+                const cancelRejected = item.status === "Pending" && item.cancel_outcome === "Rejected";
 
                 return (
                 <div
@@ -412,9 +560,13 @@ function BuyerTransactions() {
                 >
                   <div className="transaction-top">
                     <div className="transaction-left">
-                      <div className="transaction-icon-box">
-                        <LivestockIcon size={24} />
-                      </div>
+                      {item.image_url ? (
+                        <img className="transaction-thumb" src={item.image_url} alt={item.breed} />
+                      ) : (
+                        <div className="transaction-icon-box">
+                          <LivestockIcon size={22} />
+                        </div>
+                      )}
 
                       <div>
                         <div className="transaction-heading">
@@ -439,26 +591,32 @@ function BuyerTransactions() {
                             <Calendar size={14} />
                             {new Date(item.created_at).toLocaleDateString()}
                           </span>
+
+                          {item.updated_at && (
+                            <span className="meta-updated">
+                              Updated {formatRelativeTime(item.updated_at)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     <div className="transaction-right">
                       <strong>₱{Number(item.amount).toLocaleString()}</strong>
+                      <span className="transaction-qty">Qty: {formatQuantity(item.quantity || 1, item.unit)}</span>
+                      <DealTermsSummary transaction={item} />
 
                       <span
                         className={
                           item.status === "Completed"
                             ? "premium-status completed"
-                            : item.status === "Declined" || item.status === "Cancelled"
+                            : isTerminal
                             ? "premium-status declined"
-                            : item.workflow_step === "Verification"
-                            ? "premium-status verification"
                             : "premium-status pending"
                         }
                       >
                         {item.status === "Pending" && <span className="status-pulse-dot"></span>}
-                        {item.status === "Completed" || item.status === "Declined" || item.status === "Cancelled"
+                        {item.status === "Completed" || isTerminal
                           ? item.status
                           : item.workflow_step}
                       </span>
@@ -466,14 +624,53 @@ function BuyerTransactions() {
                   </div>
 
                   <div className="transaction-center">
-                    <div className="workflow-wrapper">
-                      <div className="workflow-header">
-                        <h4>Transaction Workflow</h4>
-                        <p>Current Stage: {item.workflow_step}</p>
+                    {isTerminal ? (
+                      <div className="workflow-declined">
+                        <XCircle size={18} />
+                        <p>
+                          This offer was {item.status.toLowerCase()} while at the{" "}
+                          {item.workflow_step} stage
+                          {item.cancel_outcome === "Approved" && " — the seller approved your cancellation"}
+                          {item.cancel_outcome === "Auto-approved" &&
+                            " — approved automatically because the seller didn't respond"}
+                          .
+                        </p>
                       </div>
+                    ) : (
+                      <div className="workflow-wrapper">
+                        {cancelPending && (
+                          <div className="cancel-request-note">
+                            <Hourglass size={18} />
+                            <p>
+                              You asked to cancel: "{item.cancel_reason}". Waiting for the seller —
+                              approved automatically on{" "}
+                              {new Date(
+                                new Date(item.cancel_requested_at).getTime() +
+                                  cancelAutoApproveHours * 60 * 60 * 1000
+                              ).toLocaleString()}{" "}
+                              if they don't respond.
+                            </p>
+                          </div>
+                        )}
 
-                      <Workflow stage={item.workflow_step} />
-                    </div>
+                        {cancelRejected && (
+                          <div className="cancel-request-note">
+                            <XCircle size={18} />
+                            <p>
+                              The seller rejected your cancellation request, so this order continues.
+                              Message the seller if you need to sort it out.
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="workflow-header">
+                          <h4>Transaction Workflow</h4>
+                          <p>Current Stage: {item.workflow_step}</p>
+                        </div>
+
+                        <Workflow stage={item.workflow_step} />
+                      </div>
+                    )}
                   </div>
 
                   <div className="transaction-footer">
@@ -481,10 +678,11 @@ function BuyerTransactions() {
                       <ShieldCheck size={18} />
 
                       <div>
-                        <strong>MAO Verified Transaction</strong>
+                        <strong>MAO Monitored Transaction</strong>
                         <p>
-                          Livestock documents and seller credentials are validated
-                          before final confirmation.
+                          You and the seller handle negotiation and confirmation.
+                          MAO can see this transaction for oversight; listings are
+                          reviewed by MAO before they appear on the marketplace.
                         </p>
                       </div>
                     </div>
@@ -499,7 +697,11 @@ function BuyerTransactions() {
                         View Details
                       </button>
 
-                      <Link className="message-btn-premium" to="/buyer-messages">
+                      <Link
+                        className="message-btn-premium"
+                        to="/buyer-messages"
+                        state={item.conversation_id ? { conversationId: item.conversation_id } : undefined}
+                      >
                         <MessageCircle size={17} />
                         Contact Seller
                       </Link>
@@ -513,25 +715,35 @@ function BuyerTransactions() {
                         <Download size={17} />
                       </button>
 
-                      {item.status === "Pending" && item.workflow_step === "Confirmation" && (
-                        <button
-                          type="button"
-                          className="message-btn-premium"
-                          onClick={() => confirmCompletion(item.id)}
-                        >
-                          <CheckCircle size={17} />
-                          Confirm & Complete
-                        </button>
-                      )}
+                      {item.status === "Pending" &&
+                        !cancelPending &&
+                        (workflowMode === "Flexible"
+                          ? item.workflow_step !== "Inquiry"
+                          : item.workflow_step === "Confirmation") && (
+                          <button
+                            type="button"
+                            className="message-btn-premium"
+                            disabled={isActioning}
+                            onClick={() => confirmCompletion(item.id)}
+                          >
+                            <CheckCircle size={17} />
+                            {isActioning ? "Confirming..." : "Confirm & Complete"}
+                          </button>
+                        )}
 
-                      {item.status === "Pending" && (
+                      {item.status === "Pending" && !cancelPending && !cancelRejected && (
                         <button
                           type="button"
                           className="decline-btn-premium"
-                          onClick={() => cancelOffer(item.id)}
+                          disabled={isActioning}
+                          onClick={() => cancelOffer(item)}
                         >
                           <XCircle size={17} />
-                          Cancel Offer
+                          {isActioning
+                            ? "Cancelling..."
+                            : canCancelFreely(item)
+                            ? "Cancel Offer"
+                            : "Request Cancellation"}
                         </button>
                       )}
                     </div>
@@ -541,47 +753,6 @@ function BuyerTransactions() {
               })
             )}
           </div>
-        </div>
-
-        <aside className="transaction-side-panel">
-          <div className="side-panel-card">
-            <h3>Trading Workflow</h3>
-            <p>
-              Each livestock transaction follows a structured process before it
-              becomes a completed record.
-            </p>
-
-            <div className="workflow-guide">
-              <GuideItem number="1" title="Inquiry" text="Buyer sends interest to seller." />
-              <GuideItem number="2" title="Negotiation" text="Price and terms are discussed." />
-              <GuideItem number="3" title="Verification" text="Documents are reviewed." />
-              <GuideItem number="4" title="Confirmation" text="Both parties confirm deal." />
-              <GuideItem number="5" title="Completed" text="Transaction is recorded." />
-            </div>
-          </div>
-
-          <div className="side-panel-card">
-            <h3>Transaction Health</h3>
-
-            <HealthItem
-              icon={<ShieldCheck />}
-              title="Verified Sellers"
-              text="All listed sellers are monitored by MAO."
-            />
-
-            <HealthItem
-              icon={<TrendingUp />}
-              title="Transparent Pricing"
-              text="Prices are visible before negotiation."
-            />
-
-            <HealthItem
-              icon={<AlertTriangle />}
-              title="Report Issue"
-              text="Flag suspicious or incomplete transactions."
-            />
-          </div>
-        </aside>
       </section>
 
       {selectedTransaction && (
@@ -599,12 +770,23 @@ function BuyerTransactions() {
             </button>
 
             <div className="transaction-modal-head">
-              <div className="transaction-icon-box">
-                {(() => {
-                  const ModalIcon = getLivestockIcon(selectedTransaction.livestock_type);
-                  return <ModalIcon size={26} />;
-                })()}
-              </div>
+              {selectedTransaction.image_url ? (
+                <img
+                  className="transaction-thumb"
+                  src={selectedTransaction.image_url}
+                  alt={selectedTransaction.breed}
+                />
+              ) : (
+                <div className="transaction-icon-box">
+                  {(() => {
+                    const ModalIcon = getProductIcon(
+                      selectedTransaction.livestock_type,
+                      selectedTransaction.category
+                    );
+                    return <ModalIcon size={22} />;
+                  })()}
+                </div>
+              )}
 
               <div>
                 <div className="transaction-heading">
@@ -620,6 +802,7 @@ function BuyerTransactions() {
             <div className="transaction-modal-amount">
               <span>Offer Amount</span>
               <strong>₱{Number(selectedTransaction.amount).toLocaleString()}</strong>
+              <DealTermsSummary transaction={selectedTransaction} />
             </div>
 
             <div className="transaction-modal-info">
@@ -631,20 +814,41 @@ function BuyerTransactions() {
                 <Calendar size={16} />
                 <span>{new Date(selectedTransaction.created_at).toLocaleDateString()}</span>
               </div>
+              {selectedTransaction.updated_at && (
+                <div>
+                  <Clock size={16} />
+                  <span>Updated {formatRelativeTime(selectedTransaction.updated_at)}</span>
+                </div>
+              )}
             </div>
 
-            <div className="workflow-wrapper">
-              <div className="workflow-header">
-                <h4>Transaction Workflow</h4>
-                <p>Current Stage: {selectedTransaction.workflow_step}</p>
+            {selectedTransaction.status === "Declined" || selectedTransaction.status === "Cancelled" ? (
+              <div className="workflow-declined">
+                <XCircle size={18} />
+                <p>
+                  This offer was {selectedTransaction.status.toLowerCase()} while at the{" "}
+                  {selectedTransaction.workflow_step} stage.
+                </p>
               </div>
+            ) : (
+              <div className="workflow-wrapper">
+                <div className="workflow-header">
+                  <h4>Transaction Workflow</h4>
+                  <p>Current Stage: {selectedTransaction.workflow_step}</p>
+                </div>
 
-              <Workflow stage={selectedTransaction.workflow_step} />
-            </div>
+                <Workflow stage={selectedTransaction.workflow_step} />
+              </div>
+            )}
 
             <Link
               className="message-btn-premium transaction-modal-contact"
               to="/buyer-messages"
+              state={
+                selectedTransaction.conversation_id
+                  ? { conversationId: selectedTransaction.conversation_id }
+                  : undefined
+              }
             >
               <MessageCircle size={17} />
               Contact Seller
@@ -656,65 +860,31 @@ function BuyerTransactions() {
   );
 }
 
-function StatCard({ icon, value, label, note, accent = "neutral", pulse }) {
-  return (
-    <div className={`transaction-stat-card accent-${accent}`}>
-      <div className="stat-icon">
-        {icon}
-        {pulse && <span className="stat-pulse-dot"></span>}
-      </div>
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{note}</small>
-    </div>
-  );
-}
-
 function Workflow({ stage }) {
-  const steps = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];
+  const steps = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
   const activeIndex = steps.indexOf(stage);
 
-  return (
-    <div className="workflow-line">
-      {steps.map((step, index) => (
-        <span
-          key={step}
-          className={
-            index < activeIndex
-              ? "done"
-              : index === activeIndex
-              ? "active"
-              : ""
-          }
-        ></span>
-      ))}
-    </div>
-  );
-}
+  const stepClass = (index) =>
+    index < activeIndex ? "done" : index === activeIndex ? "active" : "";
 
-function GuideItem({ number, title, text }) {
   return (
-    <div className="guide-item">
-      <span>{number}</span>
-
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
+    <>
+      <div className="workflow-line">
+        {steps.map((step, index) => (
+          <span key={step} className={stepClass(index)}></span>
+        ))}
       </div>
-    </div>
-  );
-}
 
-function HealthItem({ icon, title, text }) {
-  return (
-    <div className="health-item">
-      <div>{icon}</div>
-
-      <section>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </section>
-    </div>
+      {/* Phone-only: names each bar segment, standing in for the
+          "Transaction Workflow / Current Stage" header hidden there. */}
+      <div className="workflow-labels">
+        {steps.map((step, index) => (
+          <span key={step} className={stepClass(index)}>
+            {step}
+          </span>
+        ))}
+      </div>
+    </>
   );
 }
 

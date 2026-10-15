@@ -1,14 +1,17 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #ffffff;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
   --soft: #eef6f1;
-  --shadow: 0 16px 45px rgba(15, 61, 46, 0.08);
+}
+
+/* Every rule below is scoped under .buyer-map-page — this page's CSS is
+   bundled globally alongside every other page's CSS (no CSS Modules /
+   scoping), so generic class names like .seller-card, .back-btn, or
+   .map-header would otherwise collide with same-named classes elsewhere
+   (e.g. AdminMapMonitoring.css defines its own .map-header/.back-btn). */
+
+.buyer-map-page * {
+  box-sizing: border-box;
 }
 
 .buyer-map-page {
@@ -19,11 +22,17 @@
     var(--background);
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
   color: var(--text);
+  animation: map-fade-in 0.4s ease;
+}
+
+@keyframes map-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* HEADER */
 
-.map-header {
+.buyer-map-page .map-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -31,33 +40,35 @@
   margin-bottom: 28px;
 }
 
-.header-left {
+.buyer-map-page .header-left {
   display: flex;
   align-items: flex-start;
   gap: 18px;
 }
 
-.back-btn {
+.buyer-map-page .back-btn {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: var(--primary);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--primary);
   text-decoration: none;
   flex-shrink: 0;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 10px 22px rgba(15, 61, 46, 0.22);
 }
 
-.back-btn:hover {
+.buyer-map-page .back-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(15, 61, 46, 0.28);
+  box-shadow: 0 10px 20px rgba(15, 61, 46, 0.1);
 }
 
-.page-tag {
+.buyer-map-page .page-tag {
   display: inline-block;
   color: var(--accent);
   font-size: 12px;
@@ -65,21 +76,31 @@
   letter-spacing: 1.2px;
 }
 
-.map-header h1 {
+.buyer-map-page .map-header h1 {
   margin: 6px 0;
   font-size: 40px;
   font-weight: 950;
   letter-spacing: -1.2px;
-  color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.map-header p {
+.buyer-map-page .map-header p {
   margin: 0;
   color: var(--muted);
   max-width: 620px;
 }
 
-.header-stat {
+.buyer-map-page .header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.buyer-map-page .header-stat {
   flex-shrink: 0;
   height: 44px;
   display: flex;
@@ -87,8 +108,10 @@
   gap: 8px;
   padding: 0 18px;
   border-radius: 999px;
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.84);
   border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
   color: var(--primary);
   font-weight: 800;
@@ -96,49 +119,143 @@
   white-space: nowrap;
 }
 
-.header-stat svg {
+.buyer-map-page .header-stat svg {
   color: var(--accent);
+}
+
+/* SELLER LISTINGS DROPDOWN — minimal toggle button, upper right of the page */
+
+.buyer-map-page .listings-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.buyer-map-page .listings-toggle {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--primary-dark);
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.buyer-map-page .listings-toggle:hover {
+  border-color: var(--accent);
+}
+
+.buyer-map-page .listings-toggle.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
+}
+
+.buyer-map-page .listings-toggle svg:first-child {
+  color: var(--accent);
+}
+
+.buyer-map-page .listings-toggle-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.buyer-map-page .listings-toggle-chevron {
+  color: var(--muted);
+  transition: transform 0.18s ease;
+}
+
+.buyer-map-page .listings-toggle.active .listings-toggle-chevron {
+  transform: rotate(180deg);
+}
+
+.buyer-map-page .listings-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(70vh, 560px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: var(--shadow-lg);
+  animation: map-fade-in 0.16s ease both;
+}
+
+.buyer-map-page .listings-panel .seller-search {
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.buyer-map-page .listings-panel .nearest-toggle,
+.buyer-map-page .listings-panel .location-permission-hint {
+  flex-shrink: 0;
 }
 
 /* LAYOUT */
 
-.map-layout {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 24px;
-  align-items: start;
+.buyer-map-page .map-layout {
+  animation: map-fade-in 0.5s ease 0.05s both;
 }
 
-.seller-list-panel,
-.map-main-panel {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 24px;
+.buyer-map-page .map-main-panel {
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 26px;
   padding: 22px;
   box-shadow: var(--shadow);
+  transition: box-shadow 0.25s ease;
+}
+
+.buyer-map-page .map-main-panel:hover {
+  box-shadow: var(--shadow-lg);
 }
 
 /* SELLER LIST */
 
-.seller-search {
+.buyer-map-page .seller-search {
   display: flex;
   align-items: center;
   gap: 10px;
   height: 50px;
-  background: var(--soft);
+  background: white;
   padding: 0 16px;
   border-radius: 14px;
   margin-bottom: 16px;
   color: var(--muted);
-  border: 1px solid transparent;
-  transition: border-color 0.18s ease;
+  border: 1px solid var(--border);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.seller-search:focus-within {
+.buyer-map-page .seller-search:focus-within {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
 }
 
-.seller-search input {
+.buyer-map-page .seller-search input {
   border: none;
   outline: none;
   background: transparent;
@@ -147,7 +264,7 @@
   color: var(--text);
 }
 
-.seller-count {
+.buyer-map-page .seller-count {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -157,7 +274,7 @@
   margin-bottom: 16px;
 }
 
-.seller-list {
+.buyer-map-page .seller-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -166,16 +283,23 @@
   padding-right: 4px;
 }
 
-.seller-list::-webkit-scrollbar {
+.buyer-map-page .listings-panel .seller-list {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.buyer-map-page .seller-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.seller-list::-webkit-scrollbar-thumb {
+.buyer-map-page .seller-list::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 999px;
 }
 
-.seller-list-empty {
+.buyer-map-page .seller-list-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -185,24 +309,25 @@
   text-align: center;
 }
 
-.seller-list-empty svg {
-  color: var(--border);
+.buyer-map-page .seller-list-empty svg {
+  color: var(--accent);
   margin-bottom: 4px;
 }
 
-.seller-list-empty p {
+.buyer-map-page .seller-list-empty p {
   margin: 0;
   font-weight: 800;
   color: var(--primary-dark);
 }
 
-.seller-list-empty span {
+.buyer-map-page .seller-list-empty span {
   font-size: 13px;
 }
 
-.seller-card {
+.buyer-map-page .seller-card {
+  position: relative;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: white;
   border-radius: 18px;
   padding: 12px;
   display: flex;
@@ -214,56 +339,100 @@
     transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.seller-card:hover {
+.buyer-map-page .seller-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(15, 61, 46, 0.1);
+  box-shadow: 0 12px 26px rgba(15, 61, 46, 0.12);
+  border-color: rgba(215, 162, 77, 0.4);
 }
 
-.seller-card.active {
+.buyer-map-page .seller-card.active {
   border-color: var(--accent);
   background: var(--soft);
   box-shadow: 0 10px 24px rgba(15, 61, 46, 0.12);
 }
 
-.seller-card img {
+.buyer-map-page .seller-card-image {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.buyer-map-page .seller-card-image img {
   width: 72px;
   height: 72px;
   object-fit: cover;
-  border-radius: 14px;
-  flex-shrink: 0;
+  display: block;
+  transition: transform 0.4s ease;
 }
 
-.seller-card-body {
+.buyer-map-page .seller-card:hover .seller-card-image img {
+  transform: scale(1.1);
+}
+
+.buyer-map-page .seller-new-badge {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  right: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: rgba(15, 61, 46, 0.85);
+  color: white;
+  padding: 2px 0;
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.buyer-map-page .seller-new-badge svg {
+  color: var(--accent);
+}
+
+.buyer-map-page .seller-card-body {
   flex: 1;
   min-width: 0;
 }
 
-.seller-card-top {
+.buyer-map-page .seller-card-top {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
 
-.seller-card-top strong {
+.buyer-map-page .seller-card-top strong {
   color: var(--primary-dark);
   font-size: 15px;
 }
 
-.seller-price {
+.buyer-map-page .seller-price {
   color: var(--primary);
   font-weight: 900;
   font-size: 13px;
   white-space: nowrap;
+  font-family: Georgia, serif;
 }
 
-.seller-card p {
+.buyer-map-page .seller-card p {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   margin: 2px 0;
   color: var(--muted);
   font-size: 13px;
 }
 
-.seller-location {
+.buyer-map-page .seller-card p svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.buyer-map-page .seller-location {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -271,12 +440,12 @@
   font-size: 12.5px;
 }
 
-.seller-location svg {
+.buyer-map-page .seller-location svg {
   color: var(--accent);
   flex-shrink: 0;
 }
 
-.seller-card-footer {
+.buyer-map-page .seller-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -284,12 +453,12 @@
   margin-top: 5px;
 }
 
-.seller-card-footer small {
+.buyer-map-page .seller-card-footer small {
   color: var(--muted);
   font-size: 12px;
 }
 
-.unpinned-badge {
+.buyer-map-page .unpinned-badge {
   font-size: 10.5px;
   font-weight: 800;
   color: #8a6500;
@@ -299,9 +468,66 @@
   white-space: nowrap;
 }
 
+.buyer-map-page .distance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary);
+  background: var(--soft);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.buyer-map-page .distance-badge.estimate {
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+
+.buyer-map-page .nearest-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 40px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 12px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.15s ease;
+}
+
+.buyer-map-page .nearest-toggle:hover {
+  border-color: var(--accent);
+  color: var(--primary-dark);
+}
+
+.buyer-map-page .nearest-toggle.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+}
+
+.buyer-map-page .location-permission-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 /* MAP PANEL */
 
-.map-card-heading {
+.buyer-map-page .map-card-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -309,26 +535,26 @@
   margin-bottom: 16px;
 }
 
-.map-card-heading h3 {
+.buyer-map-page .map-card-heading h3 {
   margin: 0;
   color: var(--primary-dark);
   font-weight: 950;
 }
 
-.map-card-heading p {
+.buyer-map-page .map-card-heading p {
   margin: 5px 0 0;
   color: var(--muted);
   font-size: 13.5px;
 }
 
-.map-legend {
+.buyer-map-page .map-legend {
   display: flex;
   align-items: center;
   gap: 14px;
   flex-shrink: 0;
 }
 
-.map-legend span {
+.buyer-map-page .map-legend span {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -338,23 +564,63 @@
   white-space: nowrap;
 }
 
-.legend-dot {
+.buyer-map-page .legend-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
   background: #b8842c;
 }
 
-.legend-dot.active {
+.buyer-map-page .legend-dot.active {
   background: #d7a24d;
   box-shadow: 0 0 0 3px rgba(215, 162, 77, 0.25);
 }
 
-.map-preview-box {
+.buyer-map-page .map-preview-box {
   position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 14px 34px rgba(15, 61, 46, 0.1);
 }
 
-.map-empty-hint {
+/* "Follow me" FAB — bottom-right, opposite the basemap toggle (top-right) */
+
+.buyer-map-page .follow-me-fab {
+  position: absolute;
+  z-index: 500;
+  bottom: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.buyer-map-page .follow-me-fab:hover {
+  transform: translateY(-2px);
+}
+
+.buyer-map-page .follow-me-fab.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  animation: follow-me-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes follow-me-pulse {
+  0%, 100% { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), 0 0 0 0 rgba(15, 61, 46, 0.35); }
+  50% { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), 0 0 0 8px rgba(15, 61, 46, 0); }
+}
+
+.buyer-map-page .map-empty-hint {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -367,34 +633,39 @@
   font-weight: 700;
 }
 
-.map-empty-hint svg {
+.buyer-map-page .map-empty-hint svg {
   color: var(--accent);
   flex-shrink: 0;
 }
 
 /* SELECTED SELLER CARD */
 
-.selected-seller-card {
+.buyer-map-page .selected-seller-card {
+  position: relative;
   margin-top: 20px;
   display: grid;
   grid-template-columns: 140px 1fr auto;
   gap: 20px;
   align-items: center;
-  background: var(--soft);
+  background: linear-gradient(160deg, var(--soft) 0%, #fdfcf8 60%);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 18px;
+  animation: map-fade-in 0.35s ease both;
 }
 
-.selected-seller-card img {
+.buyer-map-page .selected-seller-card img {
   width: 140px;
   height: 112px;
   object-fit: cover;
   border-radius: 16px;
+  box-shadow: 0 10px 22px rgba(15, 61, 46, 0.16);
 }
 
-.selected-type-badge {
-  display: inline-block;
+.buyer-map-page .selected-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--primary);
   background: rgba(15, 61, 46, 0.08);
   font-weight: 800;
@@ -404,13 +675,34 @@
   border-radius: 999px;
 }
 
-.selected-info h2 {
-  margin: 8px 0 4px;
-  font-size: 22px;
-  color: var(--primary-dark);
+.buyer-map-page .selected-new-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  background: rgba(15, 61, 46, 0.85);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.selected-info p {
+.buyer-map-page .selected-new-badge svg {
+  color: var(--accent);
+}
+
+.buyer-map-page .selected-info h2 {
+  margin: 8px 0 4px;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--primary-dark);
+  font-family: Georgia, serif;
+}
+
+.buyer-map-page .selected-info p {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -419,38 +711,39 @@
   font-size: 13.5px;
 }
 
-.selected-info p svg {
+.buyer-map-page .selected-info p svg {
   color: var(--accent);
   flex-shrink: 0;
 }
 
-.selected-info strong {
+.buyer-map-page .selected-info strong {
   display: block;
   font-size: 24px;
   font-weight: 950;
-  color: var(--primary-dark);
+  color: var(--primary);
+  font-family: Georgia, serif;
   margin-top: 8px;
 }
 
-.selected-info small {
+.buyer-map-page .selected-info small {
   display: block;
   margin-top: 6px;
   color: var(--muted);
   font-size: 12.5px;
 }
 
-.selected-actions {
+.buyer-map-page .selected-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.selected-actions button {
+.buyer-map-page .selected-actions button {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px 18px;
   cursor: pointer;
-  background: var(--card);
+  background: white;
   color: var(--primary-dark);
   font-weight: 800;
   font-size: 13.5px;
@@ -461,60 +754,763 @@
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.selected-actions button:hover {
+.buyer-map-page .selected-actions button:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(15, 61, 46, 0.12);
 }
 
-.selected-actions .inquire-btn {
-  background: var(--primary);
+.buyer-map-page .selected-actions .inquire-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   border-color: var(--primary);
 }
 
-.selected-actions .inquire-btn:hover {
+.buyer-map-page .selected-actions .inquire-btn:hover {
   box-shadow: 0 10px 20px rgba(15, 61, 46, 0.28);
+}
+
+/* SKELETON LOADING */
+
+.buyer-map-page .map-skeleton {
+  padding: 0;
+}
+
+.buyer-map-page .skel {
+  border-radius: 22px;
+  background: linear-gradient(
+    100deg,
+    var(--border) 30%,
+    rgba(255, 255, 255, 0.7) 50%,
+    var(--border) 70%
+  );
+  background-size: 200% 100%;
+  animation: map-skel-shimmer 1.4s ease-in-out infinite;
+}
+
+.buyer-map-page .skel-map-header {
+  height: 72px;
+  margin-bottom: 28px;
+  max-width: 560px;
+}
+
+.buyer-map-page .skel-map-main {
+  height: 640px;
+}
+
+@keyframes map-skel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* LOCATION BANNER (shown when GPS is unavailable) */
+
+.buyer-map-page .location-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--soft);
+  border: 1px solid var(--border);
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.buyer-map-page .location-banner svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.buyer-map-page .location-banner span {
+  flex: 1 1 200px;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+/* TRIP PANEL — distance left to the selected seller, updates as the buyer
+   walks. Desktop: under the seller details (spans info + actions columns).
+   Phone: full card width, above the buttons. */
+/* Desktop card grid: photo | details | buttons on row 1, trip panel on
+   row 2 under details + buttons (explicit so the buttons stay on the
+   right instead of dropping under the photo). */
+.buyer-map-page .selected-seller-card .selected-actions {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.buyer-map-page .trip-panel {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: white;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(15, 61, 46, 0.06);
+}
+
+.buyer-map-page .trip-live {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.buyer-map-page .trip-live-dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2563eb;
+}
+
+.buyer-map-page .trip-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: #2563eb;
+  opacity: 0.35;
+  animation: live-location-pulse 1.8s ease-out infinite;
+}
+
+.buyer-map-page .trip-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+
+.buyer-map-page .trip-main strong {
+  color: var(--primary-dark);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+
+.buyer-map-page .trip-main span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.buyer-map-page .trip-eta {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.buyer-map-page .trip-panel.arrived {
+  background: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.buyer-map-page .trip-panel.arrived .trip-main strong {
+  color: #05603a;
+}
+
+@media (max-width: 768px) {
+  /* Phone card: photo + details, then trip panel, then buttons */
+  .buyer-map-page .selected-seller-card .selected-actions {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .buyer-map-page .trip-panel {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .buyer-map-page .trip-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .buyer-map-page .trip-main strong {
+    font-size: 20px;
+  }
+
+  .buyer-map-page .trip-main span {
+    font-size: 12px;
+  }
+}
+
+/* Live GPS on: slim green bar with a pulsing dot */
+.buyer-map-page .location-banner.live {
+  background: #ecfdf3;
+  border-color: #abefc6;
+  color: #05603a;
+  font-weight: 600;
+}
+
+.buyer-map-page .location-banner.live strong {
+  font-weight: 850;
+}
+
+/* "Accuracy: High / Medium / Low" pill at the end of the live banner.
+   Scoped through .location-banner to outrank its span flex rule. */
+.buyer-map-page .location-banner .gps-accuracy {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.buyer-map-page .location-banner .gps-accuracy.high {
+  background: #d1fadf;
+  color: #05603a;
+}
+
+.buyer-map-page .location-banner .gps-accuracy.medium {
+  background: #fef0c7;
+  color: #93370d;
+}
+
+.buyer-map-page .location-banner .gps-accuracy.low {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+/* Scoped through .location-banner so it outranks the banner's
+   ".location-banner span { flex: 1 1 200px }" text rule, which otherwise
+   stretched this dot into a long blue bar. */
+.buyer-map-page .location-banner .live-location-dot {
+  position: relative;
+  flex: 0 0 10px;
+  min-width: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.buyer-map-page .location-banner .live-location-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: #2563eb;
+  opacity: 0.35;
+  animation: live-location-pulse 1.8s ease-out infinite;
+}
+
+@keyframes live-location-pulse {
+  0% { transform: scale(0.6); opacity: 0.45; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.buyer-map-page .location-banner.warn {
+  background: #fff7d6;
+  border-color: #efdc8a;
+}
+
+.buyer-map-page .location-banner.picking {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.buyer-map-page .location-banner.picking svg {
+  color: var(--accent);
+}
+
+.buyer-map-page .location-banner button {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+  background: white;
+  color: var(--primary-dark);
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.buyer-map-page .location-banner.warn button {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+}
+
+.buyer-map-page .map-preview-box.picking {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.buyer-map-page .map-preview-box.picking .leaflet-map-container {
+  cursor: crosshair;
 }
 
 /* RESPONSIVE */
 
 @media (max-width: 1100px) {
-  .map-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .seller-list {
+  .buyer-map-page .seller-list {
     max-height: 420px;
   }
 }
 
-@media (max-width: 720px) {
+/* PHONE — app-like layout: compact header, map first, list below */
+
+@media (max-width: 768px) {
   .buyer-map-page {
-    padding: 20px;
+    padding: 12px 12px calc(28px + env(safe-area-inset-bottom));
   }
 
-  .map-header {
+  /* HEADER */
+
+  .buyer-map-page .map-header {
     flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
   }
 
-  .map-card-heading {
-    flex-direction: column;
-  }
-
-  .selected-seller-card {
-    grid-template-columns: 1fr;
-  }
-
-  .selected-seller-card img {
+  .buyer-map-page .header-left {
+    gap: 12px;
+    align-items: center;
     width: 100%;
   }
 
-  .selected-actions {
-    flex-direction: row;
+  .buyer-map-page .back-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
   }
 
-  .selected-actions button {
+  .buyer-map-page .back-btn:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .buyer-map-page .page-tag {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  .buyer-map-page .map-header h1 {
+    margin: 2px 0 0;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+  }
+
+  .buyer-map-page .map-header p {
+    display: none;
+  }
+
+  .buyer-map-page .header-right {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .buyer-map-page .header-stat {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    box-shadow: none;
+  }
+
+  .buyer-map-page .header-stat span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .buyer-map-page .listings-toggle {
+    height: 32px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .buyer-map-page .listings-panel {
+    width: min(320px, calc(100vw - 24px));
+    max-height: min(60vh, 480px);
+  }
+
+  .buyer-map-page .map-main-panel {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .buyer-map-page .map-main-panel:hover {
+    box-shadow: var(--shadow);
+  }
+
+  /* MAP */
+
+  .buyer-map-page .map-card-heading {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .buyer-map-page .map-card-heading h3 {
+    font-size: 16px;
+  }
+
+  .buyer-map-page .map-card-heading p {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  .buyer-map-page .map-legend {
+    gap: 12px;
+  }
+
+  .buyer-map-page .map-legend span {
+    font-size: 11.5px;
+  }
+
+  /* Edge-to-edge map: cancel the page (12px) + panel (12px) side padding */
+  .buyer-map-page .map-preview-box {
+    margin: 0 -24px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+
+  .buyer-map-page .leaflet-map-container {
+    height: clamp(340px, 64vh, 560px) !important;
+    height: clamp(340px, 64svh, 560px) !important;
+  }
+
+  .buyer-map-page .location-banner {
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .buyer-map-page .map-empty-hint {
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  /* SELECTED SELLER: photo + details, actions on their own row */
+
+  .buyer-map-page .selected-seller-card {
+    margin-top: 12px;
+    grid-template-columns: 84px 1fr;
+    gap: 6px 12px;
+    align-items: start;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .buyer-map-page .selected-seller-card img {
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+
+  .buyer-map-page .selected-info {
+    min-width: 0;
+  }
+
+  .buyer-map-page .selected-type-badge {
+    font-size: 11px;
+    padding: 3px 9px;
+  }
+
+  .buyer-map-page .selected-info h2 {
+    margin: 6px 0 2px;
+    font-size: 17px;
+  }
+
+  .buyer-map-page .selected-info p {
+    font-size: 12.5px;
+  }
+
+  .buyer-map-page .selected-info strong {
+    margin-top: 4px;
+    font-size: 18px;
+  }
+
+  .buyer-map-page .selected-info small {
+    margin-top: 3px;
+    font-size: 11.5px;
+  }
+
+  .buyer-map-page .selected-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .buyer-map-page .selected-actions button {
     flex: 1;
     justify-content: center;
+    height: 44px;
+    padding: 0 10px;
+    border-radius: 12px;
+    font-size: 13px;
   }
+
+  .buyer-map-page .selected-actions button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* SELLER LIST: flows with the page instead of scrolling in a box */
+
+  .buyer-map-page .seller-search {
+    height: 44px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+  }
+
+  .buyer-map-page .seller-search input {
+    font-size: 16px;
+  }
+
+  .buyer-map-page .nearest-toggle {
+    height: 40px;
+    margin-bottom: 10px;
+    font-size: 12.5px;
+  }
+
+  .buyer-map-page .location-permission-hint {
+    margin: -2px 0 10px;
+    font-size: 11.5px;
+  }
+
+  .buyer-map-page .seller-count {
+    margin-bottom: 10px;
+    font-size: 12.5px;
+  }
+
+  .buyer-map-page .seller-list {
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .buyer-map-page .seller-card {
+    padding: 10px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .buyer-map-page .seller-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .buyer-map-page .seller-card:hover .seller-card-image img {
+    transform: none;
+  }
+
+  .buyer-map-page .seller-card-image img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .buyer-map-page .seller-card-top strong {
+    font-size: 14px;
+  }
+
+  .buyer-map-page .seller-price {
+    font-size: 12.5px;
+  }
+
+  .buyer-map-page .seller-card p,
+  .buyer-map-page .seller-location {
+    font-size: 12px;
+  }
+
+  .buyer-map-page .seller-list-empty {
+    padding: 24px 10px;
+  }
+
+  /* SKELETON */
+
+  .buyer-map-page .skel-map-header {
+    height: 56px;
+    margin-bottom: 14px;
+  }
+
+  .buyer-map-page .skel-map-main {
+    height: 320px;
+  }
+}
+
+/* PHONE — minimal pass
+   Seller cards and the selected-seller card keep their size; only the
+   chrome around the map is trimmed. */
+
+@media (max-width: 768px) {
+  /* Header: one row — back, title, compact listings button */
+
+  .buyer-map-page .map-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .buyer-map-page .header-left {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+
+  .buyer-map-page .header-left > div {
+    min-width: 0;
+  }
+
+  .buyer-map-page .page-tag {
+    display: none;
+  }
+
+  .buyer-map-page .map-header h1 {
+    margin: 0;
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .buyer-map-page .header-right {
+    width: auto;
+  }
+
+  /* "X of Y sellers pinned" is repeated in the map heading; the
+     listings button's count covers it */
+  .buyer-map-page .header-stat {
+    display: none;
+  }
+
+  .buyer-map-page .listings-toggle {
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+  }
+
+  .buyer-map-page .listings-toggle-label {
+    display: none;
+  }
+
+  /* Seller listings open as a bottom sheet instead of a small dropdown */
+
+  .buyer-map-page .listings-panel {
+    position: fixed;
+    z-index: 1000;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 75vh;
+    max-height: 75dvh;
+    padding: 26px 14px calc(14px + env(safe-area-inset-bottom));
+    border: none;
+    border-radius: 22px 22px 0 0;
+    /* Dims the page behind the sheet; tapping it closes the sheet
+       through the existing outside-click handler */
+    box-shadow: 0 0 0 100vmax rgba(4, 18, 12, 0.45);
+    animation: map-sheet-up 0.25s ease both;
+  }
+
+  .buyer-map-page .listings-panel::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .buyer-map-page .listings-panel .seller-list {
+    overflow-y: auto;
+  }
+
+  /* Map panel: no card around it; the heading, legend and pinned
+     count go since the map itself shows the pins */
+
+  .buyer-map-page .map-main-panel {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .buyer-map-page .map-main-panel:hover {
+    box-shadow: none;
+  }
+
+  .buyer-map-page .map-card-heading {
+    display: none;
+  }
+
+  /* Edge-to-edge now only cancels the page's 12px padding */
+  .buyer-map-page .map-preview-box {
+    margin: 0 -12px;
+  }
+
+  .buyer-map-page .follow-me-fab {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@keyframes map-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .buyer-map-page .follow-me-fab:hover,
+  .buyer-map-page .seller-card:hover,
+  .buyer-map-page .seller-card:hover .seller-card-image img,
+  .buyer-map-page .selected-actions button:hover,
+  .buyer-map-page .back-btn:hover {
+    transform: none;
+  }
+}
+
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.buyer-map-page .back-btn {
+  padding: 0;
+  cursor: pointer;
 }

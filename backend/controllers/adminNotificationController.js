@@ -1,13 +1,15 @@
 const db = require("../config/db");
 
+// Account-provisioning alerts (new farmer/buyer signups) are Super Admin's
+// user-management domain, not MAO staff's day-to-day moderation scope.
+// Staff never see them, so they can't mark them read or delete them either.
+const staffScope = (req) =>
+  req.user.role === "mao_staff" ? " AND type != 'User Registration'" : "";
+
 const getAdminNotifications = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [rows] = await db.query(
-      "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 100"
+      `SELECT * FROM notifications WHERE 1=1${staffScope(req)} ORDER BY created_at DESC LIMIT 100`
     );
 
     const notifications = rows.map((row) => ({
@@ -17,12 +19,13 @@ const getAdminNotifications = async (req, res) => {
       message: row.message,
       time: row.created_at,
       status: row.is_read ? "Read" : "Unread",
+      relatedId: row.related_id,
     }));
 
     const totalAlerts = notifications.length;
     const unreadAlerts = notifications.filter((n) => n.status === "Unread").length;
     const verificationRequests = notifications.filter(
-      (n) => n.type === "Listing Approval" && n.status === "Unread"
+      (n) => n.type === "Verification Request" && n.status === "Unread"
     ).length;
     const resolvedToday = notifications.filter((n) => n.status === "Read").length;
 
@@ -36,7 +39,7 @@ const getAdminNotifications = async (req, res) => {
       },
       categories: {
         listingApprovals: notifications.filter((n) => n.type === "Listing Approval").length,
-        documentVerification: verificationRequests,
+        documentVerification: notifications.filter((n) => n.type === "Verification Request").length,
         transactionAlerts: notifications.filter((n) => n.type === "Transaction Alert").length,
         userReports: notifications.filter((n) => n.type === "User Registration").length,
       },
@@ -49,11 +52,7 @@ const getAdminNotifications = async (req, res) => {
 
 const markNotificationRead = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
-    await db.query("UPDATE notifications SET is_read = 1 WHERE id = ?", [
+    await db.query(`UPDATE notifications SET is_read = 1 WHERE id = ?${staffScope(req)}`, [
       req.params.id,
     ]);
 
@@ -66,11 +65,7 @@ const markNotificationRead = async (req, res) => {
 
 const markAllNotificationsRead = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
-    await db.query("UPDATE notifications SET is_read = 1 WHERE is_read = 0");
+    await db.query(`UPDATE notifications SET is_read = 1 WHERE is_read = 0${staffScope(req)}`);
 
     res.json({ message: "All notifications marked as read" });
   } catch (error) {
@@ -81,11 +76,7 @@ const markAllNotificationsRead = async (req, res) => {
 
 const deleteNotification = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
-    await db.query("DELETE FROM notifications WHERE id = ?", [req.params.id]);
+    await db.query(`DELETE FROM notifications WHERE id = ?${staffScope(req)}`, [req.params.id]);
 
     res.json({ message: "Notification deleted" });
   } catch (error) {

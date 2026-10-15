@@ -1,5 +1,6 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
+const { getPricePerQuantityUnit } = require("../utils/productCatalog");
 
 const getMarketplaceListings = async (req, res) => {
   try {
@@ -7,10 +8,13 @@ const getMarketplaceListings = async (req, res) => {
       `SELECT 
         l.id,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         l.age,
         l.weight,
         l.price,
+        l.quantity,
         l.health_status,
         l.location,
         l.description,
@@ -21,6 +25,7 @@ const getMarketplaceListings = async (req, res) => {
         u.id AS seller_id,
         u.full_name AS seller_name,
         u.is_verified AS seller_verified,
+        u.profile_image AS seller_avatar,
         u.farm_lat,
         u.farm_lng
       FROM livestock_listings l
@@ -33,6 +38,40 @@ const getMarketplaceListings = async (req, res) => {
   } catch (error) {
     console.error("Marketplace listings error:", error);
     res.status(500).json({ message: "Server error loading marketplace" });
+  }
+};
+
+const getSellerProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [sellerRows] = await db.query(
+      `SELECT id, full_name, location, farm_location, about, profile_image, is_verified, created_at, farm_lat, farm_lng
+       FROM users
+       WHERE id = ? AND role = 'farmer'`,
+      [id]
+    );
+
+    if (sellerRows.length === 0) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    const [listings] = await db.query(
+      `SELECT id, livestock_type, category, breed, age, weight, price, quantity, unit, health_status, location,
+        description, image_url, documents, status, created_at
+       FROM livestock_listings
+       WHERE farmer_id = ? AND status = 'Available'
+       ORDER BY created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      seller: sellerRows[0],
+      listings,
+    });
+  } catch (error) {
+    console.error("Seller profile error:", error);
+    res.status(500).json({ message: "Server error loading seller profile" });
   }
 };
 
@@ -80,12 +119,14 @@ const createInquiry = async (req, res) => {
     }
 
     const [listingRows] = await db.query(
-      "SELECT id, farmer_id FROM livestock_listings WHERE id = ?",
+      "SELECT id, farmer_id FROM livestock_listings WHERE id = ? AND status = 'Available'",
       [listingId]
     );
 
+    // Drafts, listings still awaiting review and removed ones aren't on
+    // the marketplace, so they can't be asked about either.
     if (listingRows.length === 0) {
-      return res.status(404).json({ message: "Listing not found" });
+      return res.status(404).json({ message: "This listing is no longer available" });
     }
 
     const farmerId = listingRows[0].farmer_id;
@@ -118,14 +159,16 @@ const createTransaction = async (req, res) => {
   try {
     const buyerId = req.user.id;
     const { id: listingId } = req.params;
-    const { amount } = req.body;
+    const { quantity } = req.body;
 
-    if (!amount || Number(amount) <= 0) {
-      return res.status(400).json({ message: "A valid offer amount is required" });
+    const orderQuantity = Number(quantity);
+
+    if (!Number.isInteger(orderQuantity) || orderQuantity < 1) {
+      return res.status(400).json({ message: "Please select a valid quantity" });
     }
 
     const [listingRows] = await db.query(
-      "SELECT id, farmer_id, livestock_type, price FROM livestock_listings WHERE id = ?",
+      "SELECT id, farmer_id, livestock_type, price, quantity, unit, weight, status FROM livestock_listings WHERE id = ?",
       [listingId]
     );
 
@@ -133,35 +176,95 @@ const createTransaction = async (req, res) => {
       return res.status(404).json({ message: "Listing not found" });
     }
 
-    const farmerId = listingRows[0].farmer_id;
-    const listedPrice = Number(listingRows[0].price);
-    const minOffer = listedPrice * 0.95;
-    const maxOffer = listedPrice * 1.5;
+    const listing = listingRows[0];
 
-    if (farmerId === buyerId) {
-      return res.status(400).json({ message: "You can't make an offer on your own listing" });
+    if (listing.farmer_id === buyerId) {
+      return res.status(400).json({ message: "You can't buy your own listing" });
     }
 
-    if (Number(amount) < minOffer || Number(amount) > maxOffer) {
-      return res.status(400).json({
-        message: `Offer must be between ₱${minOffer.toLocaleString()} and ₱${maxOffer.toLocaleString()} (95%-150% of the listed price)`,
+    if (listing.status !== "Available") {
+      return res.status(400).json({ message: "This listing is no longer available" });
+    }
+
+    // One open deal per buyer per listing — the price and quantity are
+    // worked out inside it, so a second one would only duplicate it.
+    const [[openDeal]] = await db.query(
+      "SELECT id FROM transactions WHERE listing_id = ? AND buyer_id = ? AND status = 'Pending' LIMIT 1",
+      [listingId, buyerId]
+    );
+
+    if (openDeal) {
+      return res.status(409).json({
+        message: "You already have an open deal for this listing. Continue it in Messages.",
       });
     }
 
-    const [result] = await db.query(
-      `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, workflow_step, status)
-       VALUES (?, ?, ?, ?, 'Inquiry', 'Pending')`,
-      [listingId, buyerId, farmerId, amount]
-    );
+    if (listing.unit === "kg_live" && !(parseFloat(listing.weight) > 0)) {
+      return res.status(400).json({ message: "This listing is missing its weight. Ask the seller to update it." });
+    }
 
-    const conversationId = await findOrCreateConversation(listingId, farmerId, buyerId);
+    // Sold by live weight, this is an estimate from the listing's average
+    // weight per head; the real figure comes from weighing at pickup.
+    const amount = Math.round(getPricePerQuantityUnit(listing) * orderQuantity * 100) / 100;
+    const priceNote =
+      listing.unit === "kg_live"
+        ? `est. at ₱${Number(listing.price).toLocaleString()}/kg live weight, ~${parseFloat(listing.weight)} kg per head`
+        : "at the listed price";
+
+    // Reserving the stock and recording the order happen together or not
+    // at all, so a failure partway through can't leave stock taken off the
+    // listing with no order to show for it.
+    const connection = await db.getConnection();
+    let result;
+
+    try {
+      await connection.beginTransaction();
+
+      // Reserve the stock atomically (rather than trusting the quantity we
+      // already fetched) so two buyers racing to order the last few head
+      // can't both succeed past what's actually available.
+      const [reserveResult] = await connection.query(
+        "UPDATE livestock_listings SET quantity = quantity - ? WHERE id = ? AND status = 'Available' AND quantity >= ?",
+        [orderQuantity, listingId, orderQuantity]
+      );
+
+      if (reserveResult.affectedRows === 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: `Only ${listing.quantity} available for this listing`,
+        });
+      }
+
+      await connection.query(
+        "UPDATE livestock_listings SET status = 'Sold' WHERE id = ? AND quantity <= 0",
+        [listingId]
+      );
+
+      // The buyer starts the deal themselves — Buy Now, or "Proceed to
+      // Negotiation" after asking about the product in chat — so it begins
+      // at Negotiation; Inquiry is the chatting before that.
+      [result] = await connection.query(
+        `INSERT INTO transactions (listing_id, buyer_id, farmer_id, amount, listed_amount, quantity, workflow_step, status)
+         VALUES (?, ?, ?, ?, ?, ?, 'Negotiation', 'Pending')`,
+        [listingId, buyerId, listing.farmer_id, amount, amount, orderQuantity]
+      );
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    const conversationId = await findOrCreateConversation(listingId, listing.farmer_id, buyerId);
 
     await db.query(
       "INSERT INTO messages (conversation_id, sender_id, message, listing_id) VALUES (?, ?, ?, ?)",
       [
         conversationId,
         buyerId,
-        `💰 Made an offer of ₱${Number(amount).toLocaleString()} on your ${listingRows[0].livestock_type} listing.`,
+        `🤝 Ready to negotiate: ${orderQuantity} x ${listing.livestock_type} for ₱${amount.toLocaleString()} (${priceNote}). Let's agree on the details!`,
         listingId,
       ]
     );
@@ -173,16 +276,22 @@ const createTransaction = async (req, res) => {
 
     await createNotification(
       "Transaction Alert",
-      "New transaction started",
-      `A buyer made an offer of ₱${Number(amount).toLocaleString()} on a ${listingRows[0].livestock_type} listing.`,
+      "Negotiation started",
+      `A buyer started negotiating for ${orderQuantity} x ${listing.livestock_type} (₱${amount.toLocaleString()}, ${priceNote}).`,
       result.insertId
     );
 
-    res.status(201).json({ message: "Offer sent successfully", transactionId: result.insertId, conversationId });
+    res.status(201).json({ message: "Negotiation started", transactionId: result.insertId, conversationId });
   } catch (error) {
     console.error("Create transaction error:", error);
-    res.status(500).json({ message: "Server error creating transaction" });
+    res.status(500).json({ message: "Server error creating order" });
   }
 };
 
-module.exports = { getMarketplaceListings, createInquiry, recordListingView, createTransaction };
+module.exports = {
+  getMarketplaceListings,
+  getSellerProfile,
+  createInquiry,
+  recordListingView,
+  createTransaction,
+};

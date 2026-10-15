@@ -1,4 +1,16 @@
-export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// Empty ("") means "same origin": requests go to /api/... on the page's own
+// host — the production setup, where the backend serves this built app
+// (Hostinger), and the local HTTPS setup, where the dev server's proxy
+// forwards them. Set REACT_APP_API_URL only when the API lives on a
+// different domain. Unset: same origin in a production build, the local
+// backend in development.
+const envApiUrl = process.env.REACT_APP_API_URL;
+export const API_URL =
+  envApiUrl !== undefined
+    ? envApiUrl
+    : process.env.NODE_ENV === "production"
+    ? ""
+    : "http://localhost:5000";
 
 // Local, dependency-free fallback avatar (a hotlinked Unsplash photo used to
 // serve as this default and started returning 503s — a bundled data URI
@@ -12,3 +24,7 @@ const DEFAULT_AVATAR_SVG = `
 `;
 
 export const DEFAULT_AVATAR = `data:image/svg+xml,${encodeURIComponent(DEFAULT_AVATAR_SVG)}`;
+
+// Bundled with the app so listings without a photo never depend on a
+// third-party host being reachable.
+export { default as DEFAULT_LISTING_IMAGE } from "./assets/livestock/cattle.jpg";

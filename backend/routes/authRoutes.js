@@ -1,17 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const {
-  register,
+  requestRegistrationCode,
+  verifyRegistrationCode,
+  completeRegistration,
+  completeProfile,
   login,
   googleLogin,
+  completeGoogleSignup,
+  logout,
   forgotPassword,
   resetPassword,
 } = require("../controllers/authController");
-const { loginLimiter, registerLimiter, resetLimiter } = require("../middleware/rateLimiter");
+const {
+  loginLimiter,
+  resetLimiter,
+  codeRequestLimiter,
+  codeVerifyLimiter,
+} = require("../middleware/rateLimiter");
+const protect = require("../middleware/authMiddleware");
 
-router.post("/register", registerLimiter, register);
+router.post("/register", codeRequestLimiter, requestRegistrationCode);
+router.post("/register/verify", codeVerifyLimiter, verifyRegistrationCode);
+router.post("/register/complete", codeRequestLimiter, completeRegistration);
+router.post("/complete-profile", protect, completeProfile);
 router.post("/login", loginLimiter, login);
 router.post("/google", loginLimiter, googleLogin);
+router.post("/google/complete", loginLimiter, completeGoogleSignup);
+router.post("/logout", protect, logout);
 router.post("/forgot-password", resetLimiter, forgotPassword);
 router.post("/reset-password", resetLimiter, resetPassword);
 

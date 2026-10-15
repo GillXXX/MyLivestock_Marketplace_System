@@ -11,15 +11,28 @@ import {
   Tractor,
   ShoppingBag,
   Clock,
+  FileText,
+  XCircle,
+  Eye,
+  X,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
+import useGoBack from "../utils/useGoBack";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
+import { VERUELA_BARANGAYS } from "../utils/veruelaGeo";
 import "./AdminUsers.css";
+
+function getAvatarUrl(image) {
+  if (!image) return null;
+  return image.startsWith("http") ? image : `${API_URL}${image}`;
+}
 
 function AdminUsers() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin-dashboard");
 
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({
@@ -30,10 +43,12 @@ function AdminUsers() {
   });
 
   const [verificationQueue, setVerificationQueue] = useState([]);
+  const [viewingDocsFor, setViewingDocsFor] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All Account Status");
   const [verificationFilter, setVerificationFilter] = useState("All Verification");
+  const [barangayFilter, setBarangayFilter] = useState("All Barangays");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -127,9 +142,14 @@ function AdminUsers() {
   };
 
   const handleRejectVerification = async (id) => {
-    const reason = window.prompt("Reason for rejecting this verification (optional):");
+    const reason = window.prompt("Reason for rejecting this verification (the farmer will see this):");
 
     if (reason === null) {
+      return;
+    }
+
+    if (!reason.trim()) {
+      alert("Please give a reason so the farmer knows what to resubmit.");
       return;
     }
 
@@ -160,6 +180,10 @@ function AdminUsers() {
       alert("Cannot connect to backend server");
     }
   };
+
+  // Verification documents come back as signed links on this server
+  // ("/private-files/..."); older ones may still be full public URLs.
+  const docHref = (url) => (url && url.startsWith("/") ? `${API_URL}${url}` : url);
 
   const getVerificationDocs = (user) => {
     if (!user.verification_document) return [];
@@ -209,12 +233,14 @@ function AdminUsers() {
       { label: "Email", value: (u) => u.email },
       { label: "Phone", value: (u) => u.phone },
       { label: "Role", value: (u) => u.role },
+      { label: "Barangay", value: (u) => u.barangay || "" },
+      { label: "Purok", value: (u) => u.purok || "" },
       { label: "Status", value: (u) => (u.is_active ? "Active" : "Inactive") },
       {
         label: "Verification",
         value: (u) => (u.role === "farmer" ? (u.is_verified ? "Verified" : "Unverified") : "N/A"),
       },
-      { label: "Listings", value: (u) => u.listings },
+      { label: "Listings", value: (u) => (u.role === "farmer" ? u.listings : "N/A") },
       { label: "Joined", value: (u) => new Date(u.created_at).toLocaleDateString() },
     ], filteredUsers);
   };
@@ -239,7 +265,14 @@ function AdminUsers() {
       verificationFilter === "All Verification" ||
       (verificationFilter === "Verified" ? Boolean(user.is_verified) : !user.is_verified);
 
-    return matchesSearch && matchesRole && matchesStatus && matchesVerification;
+    // Only farmers record a barangay; "Not specified" finds those who haven't yet.
+    const matchesBarangay =
+      barangayFilter === "All Barangays" ||
+      (barangayFilter === "Not specified"
+        ? user.role === "farmer" && !user.barangay
+        : user.barangay === barangayFilter);
+
+    return matchesSearch && matchesRole && matchesStatus && matchesVerification && matchesBarangay;
   });
 
   if (loading) {
@@ -254,9 +287,9 @@ function AdminUsers() {
     <div className="enterprise-users-page">
       <header className="users-page-header">
         <div className="header-left">
-          <Link to="/admin-dashboard" className="back-button">
+          <button type="button" className="back-button" onClick={goBack} aria-label="Go back">
             <ArrowLeft size={20} />
-          </Link>
+          </button>
 
           <div>
             <span className="eyebrow">MAO ADMINISTRATION</span>
@@ -275,28 +308,32 @@ function AdminUsers() {
       </header>
 
       <section className="user-kpi-grid">
-        <KpiCard
+        <AdminStatCard
+          accent="green"
           icon={<Tractor size={24} />}
           value={stats.farmers}
           label="Registered Farmers"
           note="Total farmer accounts"
         />
 
-        <KpiCard
+        <AdminStatCard
+          accent="blue"
           icon={<ShoppingBag size={24} />}
           value={stats.buyers}
           label="Registered Buyers"
           note="Total buyer accounts"
         />
 
-        <KpiCard
+        <AdminStatCard
+          accent="amber"
           icon={<Clock size={24} />}
           value={stats.pendingVerification}
-          label="Pending Verification"
-          note="Requires MAO review"
+          label="Farmers to Verify"
+          note="Submitted ID and barangay certificate"
         />
 
-        <KpiCard
+        <AdminStatCard
+          accent="purple"
           icon={<ShieldCheck size={24} />}
           value={stats.verifiedRate}
           label="Verified Accounts"
@@ -345,6 +382,14 @@ function AdminUsers() {
             <option>Verified</option>
             <option>Unverified</option>
           </select>
+
+          <select value={barangayFilter} onChange={(e) => setBarangayFilter(e.target.value)}>
+            <option>All Barangays</option>
+            {VERUELA_BARANGAYS.map((barangay) => (
+              <option key={barangay.name}>{barangay.name}</option>
+            ))}
+            <option>Not specified</option>
+          </select>
         </div>
 
         <div className="enterprise-table-wrapper">
@@ -372,11 +417,24 @@ function AdminUsers() {
                   <tr key={user.id}>
                     <td>
                       <div className="user-cell">
-                        <div className="avatar">{user.full_name.charAt(0)}</div>
+                        {user.profile_image ? (
+                          <img
+                            className="avatar"
+                            src={getAvatarUrl(user.profile_image)}
+                            alt={user.full_name}
+                          />
+                        ) : (
+                          <div className="avatar">{user.full_name.charAt(0)}</div>
+                        )}
 
                         <div>
                           <strong>{user.full_name}</strong>
-                          <p>USR-{user.id} • {user.location}</p>
+                          <p>
+                            USR-{user.id} •{" "}
+                            {user.barangay
+                              ? [user.purok, user.barangay].filter(Boolean).join(", ")
+                              : user.location}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -423,16 +481,33 @@ function AdminUsers() {
                       </span>
                     </td>
 
-                    <td>
-                      <strong className="listing-count">{user.listings}</strong>
+                    {/* Only farmers post listings — a count for buyers is meaningless */}
+                    <td className={user.role === "farmer" ? "" : "listings-na"}>
+                      {user.role === "farmer" ? (
+                        <strong className="listing-count">{user.listings}</strong>
+                      ) : (
+                        <span className="listing-count-na">—</span>
+                      )}
                     </td>
 
                     <td>{new Date(user.created_at).toLocaleDateString()}</td>
 
                     <td>
                       <div className="table-actions">
+                        {user.role === "farmer" && (
+                          <button
+                            className="neutral"
+                            title="View Submitted Documents"
+                            type="button"
+                            onClick={() => setViewingDocsFor(user)}
+                          >
+                            <Eye size={17} />
+                          </button>
+                        )}
+
                         {user.role === "farmer" && !user.is_verified && (
                           <button
+                            className="approve"
                             title="Verify Farmer"
                             type="button"
                             onClick={() => handleVerify(user.id)}
@@ -442,6 +517,7 @@ function AdminUsers() {
                         )}
 
                         <button
+                          className="warning"
                           title={user.is_active ? "Deactivate Account" : "Reactivate Account"}
                           type="button"
                           onClick={() => handleToggleActive(user.id, user.is_active)}
@@ -478,7 +554,8 @@ function AdminUsers() {
 
         <div className="queue-list">
           {verificationQueue.length === 0 ? (
-            <div>
+            <div className="queue-empty">
+              <ShieldCheck size={28} />
               <strong>No pending submissions</strong>
               <span>No farmers are currently awaiting verification review.</span>
             </div>
@@ -488,12 +565,29 @@ function AdminUsers() {
 
               return (
                 <div key={user.id} className="queue-item">
-                  <div>
-                    <strong>{user.full_name}</strong>
-                    <span>
-                      {user.verification_submitted_at
-                        ? `Submitted ${new Date(user.verification_submitted_at).toLocaleDateString()}`
-                        : user.farm_location || "Farm location not provided"}
+                  <div className="queue-item-info">
+                    {user.profile_image ? (
+                      <img
+                        className="queue-avatar"
+                        src={getAvatarUrl(user.profile_image)}
+                        alt={user.full_name}
+                      />
+                    ) : (
+                      <div className="queue-avatar">{user.full_name.charAt(0)}</div>
+                    )}
+
+                    <div>
+                      <strong>{user.full_name}</strong>
+                      <span>
+                        {user.verification_submitted_at
+                          ? `Submitted ${new Date(user.verification_submitted_at).toLocaleDateString()}`
+                          : user.farm_location || "Farm location not provided"}
+                      </span>
+                    </div>
+
+                    <span className="queue-pending-badge">
+                      <Clock size={12} />
+                      Pending Review
                     </span>
                   </div>
 
@@ -501,14 +595,16 @@ function AdminUsers() {
                     {docs.map((doc) => (
                       <button
                         key={doc.type}
+                        className="doc-chip"
                         type="button"
-                        onClick={() => window.open(doc.url, "_blank")}
+                        onClick={() => window.open(docHref(doc.url), "_blank")}
                       >
-                        View {doc.type}
+                        <FileText size={14} />
+                        {doc.type}
                       </button>
                     ))}
 
-                    <button type="button" onClick={() => handleVerify(user.id)}>
+                    <button className="approve" type="button" onClick={() => handleVerify(user.id)}>
                       <UserCheck size={15} />
                       Approve
                     </button>
@@ -518,6 +614,7 @@ function AdminUsers() {
                       type="button"
                       onClick={() => handleRejectVerification(user.id)}
                     >
+                      <XCircle size={15} />
                       Reject
                     </button>
                   </div>
@@ -527,18 +624,111 @@ function AdminUsers() {
           )}
         </div>
       </section>
-    </div>
-  );
-}
 
-function KpiCard({ icon, value, label, note }) {
-  return (
-    <div className="user-kpi-card">
-      <div className="kpi-icon">{icon}</div>
+      {viewingDocsFor && (
+        <div className="docs-modal-overlay" onClick={() => setViewingDocsFor(null)}>
+          <div className="docs-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="docs-modal-close"
+              type="button"
+              onClick={() => setViewingDocsFor(null)}
+            >
+              <X size={20} />
+            </button>
 
-      <h2>{value}</h2>
-      <p>{label}</p>
-      <small>{note}</small>
+            <div className="docs-modal-header">
+              {viewingDocsFor.profile_image ? (
+                <img
+                  className="docs-modal-avatar"
+                  src={getAvatarUrl(viewingDocsFor.profile_image)}
+                  alt={viewingDocsFor.full_name}
+                />
+              ) : (
+                <div className="docs-modal-avatar">
+                  {viewingDocsFor.full_name.charAt(0)}
+                </div>
+              )}
+
+              <div>
+                <strong>{viewingDocsFor.full_name}</strong>
+                <span
+                  className={`verification-pill ${
+                    viewingDocsFor.verification_status === "Approved"
+                      ? "verified"
+                      : viewingDocsFor.verification_status === "Pending"
+                      ? "pending"
+                      : viewingDocsFor.verification_status === "Rejected"
+                      ? "rejected"
+                      : "neutral"
+                  }`}
+                >
+                  {viewingDocsFor.verification_status || "Not Submitted"}
+                </span>
+              </div>
+            </div>
+
+            {viewingDocsFor.verification_submitted_at && (
+              <p className="docs-modal-meta">
+                Submitted{" "}
+                {new Date(viewingDocsFor.verification_submitted_at).toLocaleDateString()}
+              </p>
+            )}
+
+            {viewingDocsFor.verification_note && (
+              <div className="docs-modal-note">
+                <strong>Admin note:</strong> {viewingDocsFor.verification_note}
+              </div>
+            )}
+
+            <div className="docs-modal-list">
+              {getVerificationDocs(viewingDocsFor).length === 0 ? (
+                <p className="docs-modal-empty">No documents submitted yet.</p>
+              ) : (
+                getVerificationDocs(viewingDocsFor).map((doc, index) => (
+                  <a
+                    key={index}
+                    className="doc-chip"
+                    href={docHref(doc.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FileText size={14} />
+                    {doc.type}
+                  </a>
+                ))
+              )}
+            </div>
+
+            {viewingDocsFor.verification_status === "Pending" && (
+              <div className="docs-modal-actions">
+                <button
+                  className="approve"
+                  type="button"
+                  onClick={() => {
+                    handleVerify(viewingDocsFor.id);
+                    setViewingDocsFor(null);
+                  }}
+                >
+                  <UserCheck size={15} />
+                  Approve
+                </button>
+
+                <button
+                  className="danger"
+                  type="button"
+                  onClick={() => {
+                    handleRejectVerification(viewingDocsFor.id);
+                    setViewingDocsFor(null);
+                  }}
+                >
+                  <XCircle size={15} />
+                  Reject
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

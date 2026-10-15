@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 
@@ -33,6 +34,7 @@ import FarmerLayout from "./components/FarmerLayout";
 ========================= */
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminStaff from "./pages/AdminStaff";
 import AdminListings from "./pages/AdminListings";
 import AdminVerification from "./pages/AdminVerification";
 import AdminTransactions from "./pages/AdminTransactions";
@@ -41,6 +43,7 @@ import AdminNotifications from "./pages/AdminNotifications";
 import AdminSettings from "./pages/AdminSettings";
 import AdminMapMonitoring from "./pages/AdminMapMonitoring";
 import AdminLayout from "./components/AdminLayout";
+import RequireAdminRole from "./components/RequireAdminRole";
 
 /* =========================
    BUYER PAGES
@@ -54,13 +57,17 @@ import BuyerTransactions from "./pages/BuyerTransactions";
 import BuyerNotifications from "./pages/BuyerNotifications";
 import BuyerMapExplorer from "./pages/BuyerMap";
 import BuyerProfile from "./pages/BuyerProfile";
+import SellerProfile from "./pages/SellerProfile";
 import BuyerLayout from "./components/BuyerLayout";
+import ConnectionStatus from "./components/ConnectionStatus";
 
 function App() {
 
   return (
 
     <BrowserRouter>
+
+      <ConnectionStatus />
 
       <Routes>
 
@@ -91,6 +98,11 @@ function App() {
         <Route
           path="/reset-password"
           element={<ResetPassword />}
+        />
+
+        <Route
+          path="/onboarding"
+          element={<Onboarding />}
         />
 
         {/* =========================
@@ -154,13 +166,35 @@ function App() {
 
         <Route element={<AdminLayout />}>
           <Route
+            path="/admin-account"
+            element={
+              <RequireAdminRole>
+                <AccountSettings role="admin" />
+              </RequireAdminRole>
+            }
+          />
+
+          <Route
             path="/admin-dashboard"
             element={<AdminDashboard />}
           />
 
           <Route
             path="/admin-users"
-            element={<AdminUsers />}
+            element={
+              <RequireAdminRole>
+                <AdminUsers />
+              </RequireAdminRole>
+            }
+          />
+
+          <Route
+            path="/admin-staff"
+            element={
+              <RequireAdminRole>
+                <AdminStaff />
+              </RequireAdminRole>
+            }
           />
 
           <Route
@@ -190,7 +224,11 @@ function App() {
 
           <Route
             path="/admin-settings"
-            element={<AdminSettings />}
+            element={
+              <RequireAdminRole>
+                <AdminSettings />
+              </RequireAdminRole>
+            }
           />
 
           <Route
@@ -249,6 +287,11 @@ function App() {
           <Route
             path="/buyer-settings"
             element={<AccountSettings role="buyer" />}
+          />
+
+          <Route
+            path="/seller/:id"
+            element={<SellerProfile />}
           />
         </Route>
 

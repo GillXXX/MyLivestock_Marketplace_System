@@ -2,8 +2,21 @@ const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const { createNotification } = require("../utils/notify");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
+const {
+  isStrongPassword,
+  PASSWORD_REQUIREMENTS_MESSAGE,
+  pickProfileFields,
+} = require("../utils/validators");
+const {
+  CANCEL_REQUEST_AUTO_APPROVE_HOURS,
+  closeOrderAndReturnStock,
+  autoApproveExpiredCancellations,
+} = require("../utils/orderStock");
+const { buildAddress, cleanAddressParts } = require("../utils/veruelaPlaces");
+const { storedFileRef } = require("../utils/privateFiles");
+const { getSystemSettings } = require("../utils/systemSettings");
 
-const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Verification", "Confirmation", "Completed"];
+const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
 
 exports.getFarmerDashboard = async (req, res) => {
   try {
@@ -11,7 +24,7 @@ exports.getFarmerDashboard = async (req, res) => {
 
     const [userRows] = await db.query(
       `
-      SELECT 
+      SELECT
         id,
         full_name,
         email,
@@ -19,7 +32,10 @@ exports.getFarmerDashboard = async (req, res) => {
         location,
         farm_location,
         role,
-        profile_image
+        profile_image,
+        is_verified,
+        verification_status,
+        verification_note
       FROM users
       WHERE id = ?
       `,
@@ -38,14 +54,17 @@ exports.getFarmerDashboard = async (req, res) => {
 
     const [listings] = await db.query(
       `
-      SELECT 
+      SELECT
         id,
         livestock_type,
+        category,
+        unit,
         breed,
         price,
-        status
+        status,
+        image_url
       FROM livestock_listings
-      WHERE farmer_id = ?
+      WHERE farmer_id = ? AND status != 'Removed'
       ORDER BY id DESC
       LIMIT 5
       `,
@@ -58,6 +77,32 @@ exports.getFarmerDashboard = async (req, res) => {
       FROM livestock_listings
       WHERE farmer_id = ?
       AND LOWER(status) IN ('available', 'active', 'approved')
+      `,
+      [userId]
+    );
+
+    const [listingBreakdownRows] = await db.query(
+      `
+      SELECT
+        COUNT(*) AS totalListings,
+        SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingReview,
+        SUM(CASE WHEN status IN ('Flagged', 'Rejected') THEN 1 ELSE 0 END) AS flaggedCount,
+        SUM(CASE WHEN status = 'Sold' THEN 1 ELSE 0 END) AS soldCount,
+        SUM(CASE WHEN status = 'Draft' THEN 1 ELSE 0 END) AS draftCount,
+        COALESCE(SUM(views), 0) AS marketplaceViews
+      FROM livestock_listings
+      WHERE farmer_id = ? AND status != 'Removed'
+      `,
+      [userId]
+    );
+
+    const [flaggedListings] = await db.query(
+      `
+      SELECT id, livestock_type, breed, status, review_note
+      FROM livestock_listings
+      WHERE farmer_id = ? AND status IN ('Flagged', 'Rejected')
+      ORDER BY created_at DESC
+      LIMIT 3
       `,
       [userId]
     );
@@ -83,6 +128,9 @@ exports.getFarmerDashboard = async (req, res) => {
       SELECT
         t.workflow_step,
         l.livestock_type,
+        l.category,
+        l.unit,
+        l.image_url,
         buyer.full_name AS buyer_name
       FROM transactions t
       JOIN livestock_listings l ON t.listing_id = l.id
@@ -139,10 +187,17 @@ exports.getFarmerDashboard = async (req, res) => {
         buyerInquiries: inquiryRows[0].buyerInquiries || 0,
         completedSales: txStatsRows[0].completedSales || 0,
         tradeValue: txStatsRows[0].tradeValue || 0,
+        totalListings: listingBreakdownRows[0].totalListings || 0,
+        pendingReview: listingBreakdownRows[0].pendingReview || 0,
+        flaggedCount: listingBreakdownRows[0].flaggedCount || 0,
+        soldCount: listingBreakdownRows[0].soldCount || 0,
+        draftCount: listingBreakdownRows[0].draftCount || 0,
+        marketplaceViews: listingBreakdownRows[0].marketplaceViews || 0,
       },
       listings,
       activities,
       workflows,
+      flaggedListings,
     });
   } catch (error) {
     console.log(error);
@@ -165,6 +220,9 @@ exports.getFarmerProfile = async (req, res) => {
         farm_location,
         farm_lat,
         farm_lng,
+        barangay,
+        purok,
+        sitio,
         role,
         about,
         profile_image,
@@ -203,10 +261,15 @@ exports.getFarmerProfile = async (req, res) => {
       [userId]
     );
 
+    const settings = await getSystemSettings();
+
     res.json({
       ...rows[0],
       activeListings: activeRows[0].activeListings || 0,
       totalSales: salesRows[0].totalSales || 0,
+      // System Settings > "Require document verification", so the listing
+      // form asks for the same documents the server will insist on.
+      documentsRequired: settings.document_verification !== 0,
     });
   } catch (error) {
     console.log(error);
@@ -218,43 +281,35 @@ exports.updateFarmerProfile = async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
 
-    const {
-      full_name,
-      phone,
-      location,
-      farm_location,
-      farm_lat,
-      farm_lng,
-      about,
-    } = req.body;
+    const { error, fields } = pickProfileFields(
+      req.body,
+      ["phone", "location", "about"],
+      [
+        ["farm_lat", 90],
+        ["farm_lng", 180],
+      ]
+    );
 
-    const lat = farm_lat === "" || farm_lat === undefined ? null : farm_lat;
-    const lng = farm_lng === "" || farm_lng === undefined ? null : farm_lng;
-
-    let profileImage = null;
-
-    if (req.file) {
-      profileImage = getFileUrl(req.file, req);
+    if (error) {
+      return res.status(400).json({ message: error });
     }
 
-    if (profileImage) {
-      await db.query(
-        `
-        UPDATE users
-        SET full_name = ?, phone = ?, location = ?, farm_location = ?, farm_lat = ?, farm_lng = ?, about = ?, profile_image = ?
-        WHERE id = ?
-        `,
-        [full_name, phone, location, farm_location, lat, lng, about, profileImage, userId]
-      );
-    } else {
-      await db.query(
-        `
-        UPDATE users
-        SET full_name = ?, phone = ?, location = ?, farm_location = ?, farm_lat = ?, farm_lng = ?, about = ?
-        WHERE id = ?
-        `,
-        [full_name, phone, location, farm_location, lat, lng, about, userId]
-      );
+    // Barangay / purok / sitio come from dropdowns; the readable farm
+    // address is built from them so every farmer's is written the same way.
+    if (req.body.barangay !== undefined) {
+      const address = cleanAddressParts(req.body);
+      if (address.error) {
+        return res.status(400).json({ message: address.error });
+      }
+      Object.assign(fields, address, { farm_location: buildAddress(address) });
+    }
+
+    if (req.file) {
+      fields.profile_image = getFileUrl(req.file, req);
+    }
+
+    if (Object.keys(fields).length > 0) {
+      await db.query("UPDATE users SET ? WHERE id = ?", [fields, userId]);
     }
 
     res.json({ message: "Profile updated successfully" });
@@ -268,18 +323,59 @@ exports.getFarmerTransactions = async (req, res) => {
   try {
     const farmerId = req.user.id || req.user.userId;
 
+    await autoApproveExpiredCancellations();
+
     const [transactions] = await db.query(
       `
       SELECT
         t.id,
         t.amount,
+        t.quantity,
         t.workflow_step,
         t.status,
         t.created_at,
+        t.updated_at,
+        t.cancel_requested_at,
+        t.cancel_reason,
+        t.cancel_outcome,
+        t.cancel_responded_at,
+        t.listed_amount,
+        t.offer_unit_price,
+        t.offer_pickup_date,
+        t.offer_pickup_place,
+        t.offer_payment,
+        t.offer_note,
+        t.offer_by,
+        t.terms_agreed_at,
+        t.actual_weight_kg,
+        l.price AS listing_price,
+        l.weight AS listing_weight,
         l.livestock_type,
+        l.category,
+        l.unit,
         l.breed,
         l.location,
-        u.full_name AS buyer_name
+        l.image_url,
+        u.full_name AS buyer_name,
+        u.created_at AS buyer_joined_at,
+        (
+          SELECT c.id FROM conversations c
+          WHERE c.listing_id = t.listing_id
+            AND c.farmer_id = t.farmer_id
+            AND c.buyer_id = t.buyer_id
+          LIMIT 1
+        ) AS conversation_id,
+        (
+          SELECT COUNT(*) FROM transactions t2 WHERE t2.buyer_id = t.buyer_id
+        ) AS buyer_total_deals,
+        (
+          SELECT COUNT(*) FROM transactions t2
+          WHERE t2.buyer_id = t.buyer_id AND t2.status = 'Completed'
+        ) AS buyer_completed_deals,
+        (
+          SELECT COUNT(*) FROM transactions t2
+          WHERE t2.buyer_id = t.buyer_id AND t2.status = 'Cancelled'
+        ) AS buyer_cancelled_deals
       FROM transactions t
       JOIN livestock_listings l ON t.listing_id = l.id
       JOIN users u ON t.buyer_id = u.id
@@ -295,6 +391,7 @@ exports.getFarmerTransactions = async (req, res) => {
         COUNT(*) AS totalTransactions,
         SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingDeals,
         SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN status IN ('Declined', 'Cancelled') THEN 1 ELSE 0 END) AS declined,
         COALESCE(SUM(CASE WHEN status = 'Completed' THEN amount ELSE 0 END), 0) AS tradeValue
       FROM transactions
       WHERE farmer_id = ?
@@ -308,8 +405,10 @@ exports.getFarmerTransactions = async (req, res) => {
         totalTransactions: statsRows[0].totalTransactions || 0,
         pendingDeals: statsRows[0].pendingDeals || 0,
         completed: statsRows[0].completed || 0,
+        declined: statsRows[0].declined || 0,
         tradeValue: statsRows[0].tradeValue || 0,
       },
+      cancelAutoApproveHours: CANCEL_REQUEST_AUTO_APPROVE_HOURS,
     });
   } catch (error) {
     console.error("Farmer transactions error:", error);
@@ -323,7 +422,9 @@ exports.advanceTransactionStep = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await db.query(
-      `SELECT t.id, t.farmer_id, t.listing_id, t.workflow_step, t.status, l.livestock_type, buyer.full_name AS buyer_name
+      `SELECT t.id, t.farmer_id, t.listing_id, t.workflow_step, t.status,
+              t.cancel_requested_at, t.cancel_outcome,
+              l.livestock_type, buyer.full_name AS buyer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users buyer ON t.buyer_id = buyer.id
@@ -341,8 +442,12 @@ exports.advanceTransactionStep = async (req, res) => {
       return res.status(403).json({ message: "Not authorized for this transaction" });
     }
 
-    if (["Flagged", "Declined", "Cancelled"].includes(transaction.status)) {
+    if (["Declined", "Cancelled"].includes(transaction.status)) {
       return res.status(400).json({ message: `This transaction is ${transaction.status.toLowerCase()} and cannot be advanced` });
+    }
+
+    if (transaction.cancel_requested_at && !transaction.cancel_outcome) {
+      return res.status(400).json({ message: "The buyer asked to cancel this order. Approve or reject the request first." });
     }
 
     if (transaction.workflow_step === "Confirmation") {
@@ -356,10 +461,21 @@ exports.advanceTransactionStep = async (req, res) => {
       return res.status(400).json({ message: "This transaction is already completed" });
     }
 
-    await db.query(
-      "UPDATE transactions SET workflow_step = ? WHERE id = ?",
-      [nextStep, id]
+    // Negotiation and confirmation are entirely between the buyer and
+    // seller — MAO can monitor every transaction, but doesn't get to block
+    // it from advancing.
+    // Only moves from the step that was just read, so a double-click can't
+    // skip a stage, and not once the order has been closed meanwhile.
+    const [advanceResult] = await db.query(
+      `UPDATE transactions SET workflow_step = ?
+       WHERE id = ? AND workflow_step = ? AND status = 'Pending'
+         AND (cancel_requested_at IS NULL OR cancel_outcome IS NOT NULL)`,
+      [nextStep, id, transaction.workflow_step]
     );
+
+    if (advanceResult.affectedRows === 0) {
+      return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+    }
 
     await createNotification(
       "Transaction Alert",
@@ -381,7 +497,8 @@ exports.declineTransaction = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await db.query(
-      `SELECT t.id, t.farmer_id, t.status, l.livestock_type, buyer.full_name AS buyer_name
+      `SELECT t.id, t.farmer_id, t.listing_id, t.quantity, t.status, t.cancel_requested_at, t.cancel_outcome,
+              l.livestock_type, buyer.full_name AS buyer_name
        FROM transactions t
        JOIN livestock_listings l ON t.listing_id = l.id
        JOIN users buyer ON t.buyer_id = buyer.id
@@ -399,11 +516,18 @@ exports.declineTransaction = async (req, res) => {
       return res.status(403).json({ message: "Not authorized for this transaction" });
     }
 
-    if (["Completed", "Declined", "Cancelled", "Flagged"].includes(transaction.status)) {
+    if (["Completed", "Declined", "Cancelled"].includes(transaction.status)) {
       return res.status(400).json({ message: `This transaction is already ${transaction.status.toLowerCase()}` });
     }
 
-    await db.query("UPDATE transactions SET status = 'Declined' WHERE id = ?", [id]);
+    if (transaction.cancel_requested_at && !transaction.cancel_outcome) {
+      return res.status(400).json({ message: "The buyer asked to cancel this order. Approve or reject the request instead." });
+    }
+
+    // Return the reserved stock to the listing now that the order fell through.
+    if (!(await closeOrderAndReturnStock(transaction, "Declined"))) {
+      return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+    }
 
     await createNotification(
       "Transaction Alert",
@@ -416,6 +540,79 @@ exports.declineTransaction = async (req, res) => {
   } catch (error) {
     console.error("Decline transaction error:", error);
     res.status(500).json({ message: "Server error declining transaction" });
+  }
+};
+
+// The seller's answer to a buyer's cancellation request. Approving cancels
+// the order (counted as the buyer's cancellation) and returns the stock;
+// rejecting keeps the order going. Either way only an unanswered request
+// on the seller's own pending order.
+exports.respondToCancellation = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+    const { id } = req.params;
+    const { decision } = req.body;
+
+    if (decision !== "approve" && decision !== "reject") {
+      return res.status(400).json({ message: "Decision must be approve or reject" });
+    }
+
+    const [[transaction]] = await db.query(
+      `SELECT t.id, t.farmer_id, t.listing_id, t.quantity, t.status, t.cancel_requested_at, t.cancel_outcome,
+              l.livestock_type, buyer.full_name AS buyer_name
+       FROM transactions t
+       JOIN livestock_listings l ON t.listing_id = l.id
+       JOIN users buyer ON t.buyer_id = buyer.id
+       WHERE t.id = ?`,
+      [id]
+    );
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    if (transaction.farmer_id !== farmerId) {
+      return res.status(403).json({ message: "Not authorized for this transaction" });
+    }
+
+    if (transaction.status !== "Pending" || !transaction.cancel_requested_at || transaction.cancel_outcome) {
+      return res.status(409).json({ message: "There's no open cancellation request on this order. Please refresh." });
+    }
+
+    if (decision === "approve") {
+      const approved = await closeOrderAndReturnStock(transaction, "Cancelled", {
+        set: { cancel_outcome: "Approved", cancel_responded_at: new Date() },
+        onlyIf: "openCancelRequest",
+      });
+
+      if (!approved) {
+        return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+      }
+    } else {
+      const [rejectResult] = await db.query(
+        `UPDATE transactions SET cancel_outcome = 'Rejected', cancel_responded_at = NOW()
+         WHERE id = ? AND status = 'Pending' AND cancel_requested_at IS NOT NULL AND cancel_outcome IS NULL`,
+        [id]
+      );
+
+      if (rejectResult.affectedRows === 0) {
+        return res.status(409).json({ message: "This transaction was already updated. Please refresh." });
+      }
+    }
+
+    await createNotification(
+      "Transaction Alert",
+      decision === "approve" ? "Cancellation approved" : "Cancellation rejected",
+      `The seller ${decision === "approve" ? "approved" : "rejected"} ${transaction.buyer_name}'s request to cancel the ${transaction.livestock_type} order.`,
+      id
+    );
+
+    res.json({
+      message: decision === "approve" ? "Order cancelled and stock returned" : "Cancellation rejected — the order continues",
+    });
+  } catch (error) {
+    console.error("Respond to cancellation error:", error);
+    res.status(500).json({ message: "Server error responding to the cancellation request" });
   }
 };
 
@@ -433,8 +630,8 @@ exports.submitVerification = async (req, res) => {
     }
 
     const documentsJson = JSON.stringify([
-      { type: "Government ID", url: getFileUrl(govId, req) },
-      { type: "Barangay Certificate", url: getFileUrl(barangayCert, req) },
+      { type: "Government ID", ...storedFileRef(govId, getFileUrl, req) },
+      { type: "Barangay Certificate", ...storedFileRef(barangayCert, getFileUrl, req) },
     ]);
 
     await db.query(
@@ -460,14 +657,14 @@ exports.submitVerification = async (req, res) => {
   }
 };
 
-exports.getFarmerNotifications = async (req, res) => {
-  try {
-    const farmerId = req.user.id || req.user.userId;
+// Shared by getFarmerNotifications and markAllFarmerNotificationsRead so the
+// "which notifications exist" logic can't drift between the two.
+async function buildFarmerNotifications(farmerId) {
     const notifications = [];
 
     const [listings] = await db.query(
       `
-      SELECT id, livestock_type, breed, status, created_at
+      SELECT id, livestock_type, breed, status, review_note, created_at
       FROM livestock_listings
       WHERE farmer_id = ?
       ORDER BY created_at DESC
@@ -477,16 +674,25 @@ exports.getFarmerNotifications = async (req, res) => {
     );
 
     listings.forEach((item) => {
+      const title =
+        item.status === "Available"
+          ? "Listing approved"
+          : item.status === "Rejected"
+          ? "Listing rejected"
+          : item.status === "Flagged"
+          ? "Listing flagged for review"
+          : "Listing submitted";
+
+      const base = `Your ${item.livestock_type} (${item.breed || "No breed"}) listing is ${item.status}.`;
+
       notifications.push({
         id: `L-${item.id}`,
         type: "Listing Status",
-        title:
-          item.status === "Available"
-            ? "Listing approved"
-            : item.status === "Rejected"
-            ? "Listing rejected"
-            : "Listing submitted",
-        message: `Your ${item.livestock_type} (${item.breed || "No breed"}) listing is ${item.status}.`,
+        title,
+        message:
+          (item.status === "Rejected" || item.status === "Flagged") && item.review_note
+            ? `${base} Reason: ${item.review_note}`
+            : base,
         time: item.created_at,
         status: item.status === "Pending" ? "Unread" : "Read",
       });
@@ -494,7 +700,9 @@ exports.getFarmerNotifications = async (req, res) => {
 
     const [inquiries] = await db.query(
       `
-      SELECT c.id, c.created_at, l.livestock_type, buyer.full_name AS buyer_name
+      SELECT c.id, c.created_at, c.farmer_last_read_at, l.livestock_type, buyer.full_name AS buyer_name,
+        (SELECT MAX(created_at) FROM messages m WHERE m.conversation_id = c.id) AS last_message_at,
+        (SELECT sender_id FROM messages m WHERE m.conversation_id = c.id ORDER BY created_at DESC LIMIT 1) AS last_sender_id
       FROM conversations c
       JOIN livestock_listings l ON c.listing_id = l.id
       JOIN users buyer ON c.buyer_id = buyer.id
@@ -506,13 +714,23 @@ exports.getFarmerNotifications = async (req, res) => {
     );
 
     inquiries.forEach((item) => {
+      const lastMessageAt = item.last_message_at || item.created_at;
+      // Unread whenever the buyer has the last word and the farmer hasn't
+      // opened this conversation since — so a brand-new reply flips this
+      // back to Unread even if the thread was read long ago.
+      const unread = Boolean(
+        item.last_sender_id &&
+          item.last_sender_id !== farmerId &&
+          (!item.farmer_last_read_at || new Date(lastMessageAt) > new Date(item.farmer_last_read_at))
+      );
+
       notifications.push({
         id: `C-${item.id}`,
         type: "Buyer Inquiry",
-        title: "New buyer inquiry",
+        title: unread ? "New buyer message" : "Buyer inquiry",
         message: `${item.buyer_name} inquired about your ${item.livestock_type} listing.`,
-        time: item.created_at,
-        status: "Unread",
+        time: lastMessageAt,
+        status: unread ? "Unread" : "Read",
       });
     });
 
@@ -540,7 +758,54 @@ exports.getFarmerNotifications = async (req, res) => {
       });
     });
 
+    // Every unanswered cancellation request — not limited to the latest
+    // orders above, since each one has a deadline.
+    const [cancelRequests] = await db.query(
+      `
+      SELECT t.id, t.cancel_requested_at, t.cancel_reason, l.livestock_type, buyer.full_name AS buyer_name
+      FROM transactions t
+      JOIN livestock_listings l ON t.listing_id = l.id
+      JOIN users buyer ON t.buyer_id = buyer.id
+      WHERE t.farmer_id = ? AND t.status = 'Pending'
+        AND t.cancel_requested_at IS NOT NULL AND t.cancel_outcome IS NULL
+      `,
+      [farmerId]
+    );
+
+    cancelRequests.forEach((item) => {
+      notifications.push({
+        id: `CR-${item.id}`,
+        type: "Cancellation Request",
+        title: "Cancellation requested",
+        message: `${item.buyer_name} asked to cancel the ${item.livestock_type} order: "${item.cancel_reason}". Approve or reject it within ${CANCEL_REQUEST_AUTO_APPROVE_HOURS} hours, or it will be approved automatically.`,
+        time: item.cancel_requested_at,
+        status: "Unread",
+        transactionId: item.id,
+      });
+    });
+
     notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    return notifications;
+}
+
+exports.getFarmerNotifications = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+    const notifications = await buildFarmerNotifications(farmerId);
+
+    const [readRows] = await db.query(
+      "SELECT notification_key FROM farmer_notification_reads WHERE farmer_id = ?",
+      [farmerId]
+    );
+    const readKeys = new Set(readRows.map((row) => row.notification_key));
+
+    notifications.forEach((notif) => {
+      // "Buyer Inquiry" derives its read state live from the conversation
+      // itself (see buildFarmerNotifications) so a stale read-mark here
+      // can't hide a genuinely new message.
+      if (notif.type !== "Buyer Inquiry" && readKeys.has(notif.id)) notif.status = "Read";
+    });
 
     const totalAlerts = notifications.length;
     const unreadAlerts = notifications.filter((n) => n.status === "Unread").length;
@@ -560,6 +825,42 @@ exports.getFarmerNotifications = async (req, res) => {
   }
 };
 
+exports.markFarmerNotificationRead = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+
+    await db.query(
+      "INSERT IGNORE INTO farmer_notification_reads (farmer_id, notification_key) VALUES (?, ?)",
+      [farmerId, req.params.id]
+    );
+
+    res.json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Mark farmer notification read error:", error);
+    res.status(500).json({ message: "Server error updating notification" });
+  }
+};
+
+exports.markAllFarmerNotificationsRead = async (req, res) => {
+  try {
+    const farmerId = req.user.id || req.user.userId;
+    const notifications = await buildFarmerNotifications(farmerId);
+
+    if (notifications.length > 0) {
+      const values = notifications.map((notif) => [farmerId, notif.id]);
+      await db.query(
+        "INSERT IGNORE INTO farmer_notification_reads (farmer_id, notification_key) VALUES ?",
+        [values]
+      );
+    }
+
+    res.json({ message: "All notifications marked as read" });
+  } catch (error) {
+    console.error("Mark all farmer notifications read error:", error);
+    res.status(500).json({ message: "Server error updating notifications" });
+  }
+};
+
 exports.changeFarmerPassword = async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -573,8 +874,8 @@ exports.changeFarmerPassword = async (req, res) => {
       return res.status(400).json({ message: "New passwords do not match" });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ message: PASSWORD_REQUIREMENTS_MESSAGE });
     }
 
     const [rows] = await db.query("SELECT password FROM users WHERE id = ?", [userId]);

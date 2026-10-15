@@ -1,19 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-
-  --background: #f4f1e8;
-  --card: #ffffff;
-
-  --border: #e8e2d4;
-  --muted: #667085;
-  --soft: #eaf5ef;
-
-  --shadow:
-    0 10px 30px rgba(15,61,46,0.06),
-    0 30px 60px rgba(15,61,46,0.08);
-}
+@import "./AdminTheme.css";
 
 /* Every rule below is scoped under .admin-settings-page — see the same note
    in AccountSettings.css. This page shares generic class names
@@ -55,16 +40,14 @@
 .admin-settings-page .back-btn {
   width: 58px;
   height: 58px;
-  background: rgba(255,255,255,0.84);
-  border: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 10px 20px rgba(15, 61, 46, 0.22);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -95,19 +78,57 @@
 
 .admin-settings-page .settings-card,
 .admin-settings-page .settings-panel {
-  background: rgba(255,255,255,0.8);
-  border: 1px solid rgba(255,255,255,0.7);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
   border-radius: 24px;
   padding: 24px;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 20px 48px rgba(15, 61, 46, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+
+.admin-settings-page .settings-card {
+  --card-color: #0f3d2e;
+  --card-tint: rgba(15, 61, 46, 0.12);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--card-tint) 0%, transparent 55%), rgba(255, 255, 255, 0.55);
+}
+
+.admin-settings-page .settings-card::before {
+  content: "";
+  position: absolute;
+  top: -35%;
+  right: -20%;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--card-tint) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.admin-settings-page .settings-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--card-color), transparent 140%);
+  box-shadow: 0 0 14px 0 var(--card-color);
+  opacity: 0.75;
+}
+
+.admin-settings-page .settings-card.accent-blue { --card-color: #2563eb; --card-tint: rgba(37, 99, 235, 0.12); }
+.admin-settings-page .settings-card.accent-amber { --card-color: #b3790f; --card-tint: rgba(215, 162, 77, 0.18); }
+.admin-settings-page .settings-card.accent-green { --card-color: #0f3d2e; --card-tint: rgba(15, 61, 46, 0.14); }
+.admin-settings-page .settings-card.accent-purple { --card-color: #7c3aed; --card-tint: rgba(124, 58, 237, 0.12); }
 
 .admin-settings-page .settings-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 22px 45px rgba(15,61,46,0.14);
+  border-color: var(--card-color);
+  box-shadow: 0 22px 45px -20px var(--card-color);
 }
 
 .admin-settings-page .settings-panel {
@@ -119,44 +140,76 @@
 }
 
 .admin-settings-page .settings-icon {
+  position: relative;
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
+  background: linear-gradient(150deg, var(--card-tint), transparent);
+  border: 1px solid var(--card-tint);
+  color: var(--card-color);
   border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 16px rgba(15,61,46,0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.admin-settings-page .settings-icon svg {
+  color: var(--card-color);
 }
 
 .admin-settings-page .settings-card h3 {
+  position: relative;
   margin: 16px 0 6px;
   color: var(--primary-dark);
   font-weight: 950;
 }
 
 .admin-settings-page .settings-card p {
+  position: relative;
   color: var(--muted);
   margin-bottom: 16px;
 }
 
-.admin-settings-page .settings-card span {
+.admin-settings-page .settings-status {
+  position: relative;
   display: inline-block;
-  background: #fff7d6;
-  color: #8a6500;
   padding: 8px 13px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.admin-settings-page .settings-status.success {
+  background: #eaf5ef;
+  color: #0f3d2e;
+}
+
+.admin-settings-page .settings-status.neutral {
+  background: #f1f1f1;
+  color: #6b6b6b;
+}
+
+.admin-settings-page .settings-status.info {
+  background: #fff7d6;
+  color: #8a6500;
 }
 
 .admin-settings-page .settings-panel-title {
-  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(15, 61, 46, 0.09);
 }
 
 .admin-settings-page .settings-panel-title h3 {
   margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.2px;
   color: var(--primary-dark);
   font-weight: 950;
 }
@@ -164,6 +217,21 @@
 .admin-settings-page .settings-panel-title p {
   margin: 5px 0 0;
   color: var(--muted);
+  font-size: 13px;
+}
+
+.admin-settings-page .card-icon-badge {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(150deg, rgba(215, 162, 77, 0.2), transparent);
+  border: 1px solid rgba(215, 162, 77, 0.28);
+  color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .admin-settings-page .settings-form {
@@ -210,31 +278,49 @@
 }
 
 .admin-settings-page .setting-toggle {
-  background: var(--soft);
-  border: 1px solid var(--border);
+  --toggle-color: #0f3d2e;
+  --toggle-tint: rgba(15, 61, 46, 0.12);
+  background: #fbfaf6;
+  border: 1px solid rgba(15, 61, 46, 0.08);
   border-radius: 18px;
   padding: 18px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 16px;
   align-items: center;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
+.admin-settings-page .setting-toggle.accent-blue { --toggle-color: #2563eb; --toggle-tint: rgba(37, 99, 235, 0.12); }
+.admin-settings-page .setting-toggle.accent-amber { --toggle-color: #b3790f; --toggle-tint: rgba(215, 162, 77, 0.18); }
+.admin-settings-page .setting-toggle.accent-green { --toggle-color: #0f3d2e; --toggle-tint: rgba(15, 61, 46, 0.14); }
+.admin-settings-page .setting-toggle.accent-purple { --toggle-color: #7c3aed; --toggle-tint: rgba(124, 58, 237, 0.12); }
+
 .admin-settings-page .setting-toggle:hover {
-  border-color: var(--accent);
+  border-color: var(--toggle-color);
+}
+
+.admin-settings-page .setting-toggle.is-active {
+  background: linear-gradient(160deg, var(--toggle-tint) 0%, transparent 60%), #fdfcf8;
+  border-color: var(--toggle-tint);
 }
 
 .admin-settings-page .setting-toggle-icon {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, var(--accent), #b8842c);
-  color: var(--primary-dark);
+  background: linear-gradient(150deg, var(--toggle-tint), transparent);
+  border: 1px solid var(--toggle-tint);
+  color: var(--toggle-color);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 16px rgba(184,132,44,0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.admin-settings-page .setting-toggle.is-active .setting-toggle-icon {
+  transform: scale(1.05);
 }
 
 .admin-settings-page .setting-toggle strong {
@@ -263,6 +349,7 @@
   background: #d1d5db;
   border-radius: 999px;
   transition: 0.2s;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .admin-settings-page .slider::before {
@@ -274,11 +361,13 @@
   top: 3px;
   background: white;
   border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
   transition: 0.2s;
 }
 
 .admin-settings-page .switch input:checked + .slider {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--toggle-color), var(--primary-dark));
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 10px var(--toggle-tint);
 }
 
 .admin-settings-page .switch input:checked + .slider::before {
@@ -323,5 +412,195 @@
 
   .admin-settings-page .setting-toggle {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-settings-page .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .admin-settings-page {
+    padding: 14px;
+  }
+
+  .admin-settings-page .settings-header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-settings-page .settings-header h1 {
+    font-size: 22px;
+  }
+
+  .admin-settings-page .settings-header p {
+    font-size: 13px;
+  }
+
+  .admin-settings-page .settings-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-settings-page .settings-card,
+  .admin-settings-page .settings-panel {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .admin-settings-page .setting-toggle {
+    padding: 12px;
+  }
+}
+
+.settings-group-hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* PHONE — minimal pass
+   Scoped under .admin-settings-page. The four status cards keep their size
+   (2x2 above); the form and toggle lists get lighter, and Save Settings is
+   pinned to the bottom so it's reachable from anywhere in the long form. */
+
+.admin-settings-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .admin-settings-page {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  /* Header: title only */
+
+  .admin-settings-page .settings-header {
+    align-items: center;
+  }
+
+  .admin-settings-page .settings-header p {
+    display: none;
+  }
+
+  .admin-settings-page .settings-header h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  /* Panels: lighter padding, title only */
+
+  .admin-settings-page .settings-panel {
+    margin-bottom: 14px;
+  }
+
+  .admin-settings-page .settings-panel-title {
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .admin-settings-page .settings-panel-title p {
+    display: none;
+  }
+
+  .admin-settings-page .settings-panel-title h3 {
+    font-size: 15px;
+  }
+
+  .admin-settings-page .card-icon-badge {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Form: stacked fields, 16px inputs */
+
+  .admin-settings-page .settings-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-settings-page .settings-group label {
+    margin-bottom: 6px;
+    font-size: 12.5px;
+  }
+
+  .admin-settings-page .settings-group input,
+  .admin-settings-page .settings-group select {
+    height: 46px;
+    border-radius: 13px;
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  /* Toggles: text + switch on one row (icon dropped), switch hit area
+     grown to 44px+ with an invisible pseudo-element on the label */
+
+  .admin-settings-page .settings-list {
+    gap: 8px;
+  }
+
+  .admin-settings-page .setting-toggle {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .admin-settings-page .setting-toggle-icon {
+    display: none;
+  }
+
+  .admin-settings-page .setting-toggle strong {
+    font-size: 13.5px;
+  }
+
+  .admin-settings-page .setting-toggle p {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .admin-settings-page .switch::after {
+    content: "";
+    position: absolute;
+    inset: -8px -6px;
+  }
+
+  /* Save Settings: fixed bottom bar */
+
+  .admin-settings-page .settings-actions {
+    position: fixed;
+    z-index: 50;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: white;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 20px rgba(15, 61, 46, 0.08);
+  }
+
+  .admin-settings-page .save-settings-btn {
+    width: 100%;
+    height: 48px;
+    justify-content: center;
+    border-radius: 14px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .admin-settings-page .back-btn:hover,
+  .admin-settings-page .settings-card:hover,
+  .admin-settings-page .settings-panel:hover,
+  .admin-settings-page .save-settings-btn:hover {
+    transform: none;
   }
 }

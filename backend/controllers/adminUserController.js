@@ -1,12 +1,10 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
+const { getSystemSettings } = require("../utils/systemSettings");
+const { withSignedUrls } = require("../utils/privateFiles");
 
 const getAdminUsers = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [users] = await db.query(`
       SELECT
         u.id,
@@ -15,6 +13,9 @@ const getAdminUsers = async (req, res) => {
         u.phone,
         u.location,
         u.farm_location,
+        u.barangay,
+        u.purok,
+        u.profile_image,
         u.role,
         u.is_verified,
         u.is_active,
@@ -26,27 +27,36 @@ const getAdminUsers = async (req, res) => {
         COUNT(l.id) AS listings
       FROM users u
       LEFT JOIN livestock_listings l ON u.id = l.farmer_id
-      WHERE u.role != 'admin'
+      WHERE u.role NOT IN ('admin', 'mao_staff')
       GROUP BY u.id
       ORDER BY u.created_at DESC
     `);
 
+    // Verification documents are private files; give the admin short-lived
+    // links to them.
+    for (const user of users) {
+      user.verification_document = withSignedUrls(user.verification_document);
+    }
+
     const farmers = users.filter((u) => u.role === "farmer");
     const buyers = users.filter((u) => u.role === "buyer");
     const verifiedFarmers = farmers.filter((u) => u.is_verified).length;
+    // Only farmers who actually sent documents are waiting on MAO — ones
+    // who never submitted aren't in anyone's review queue.
+    const verificationQueue = farmers.filter((u) => u.verification_status === "Pending");
 
     res.json({
       stats: {
         farmers: farmers.length,
         buyers: buyers.length,
-        pendingVerification: farmers.length - verifiedFarmers,
+        pendingVerification: verificationQueue.length,
         verifiedRate:
           farmers.length > 0
             ? `${Math.round((verifiedFarmers / farmers.length) * 100)}%`
             : "0%",
       },
       users,
-      verificationQueue: farmers.filter((u) => u.verification_status === "Pending"),
+      verificationQueue,
     });
   } catch (error) {
     console.error("Admin users error:", error);
@@ -56,12 +66,8 @@ const getAdminUsers = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const [[user]] = await db.query(
-      "SELECT id FROM users WHERE id = ? AND role != 'admin'",
+      "SELECT id FROM users WHERE id = ? AND role NOT IN ('admin', 'mao_staff')",
       [req.params.id]
     );
 
@@ -88,24 +94,71 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Farmers waiting for account verification, with short-lived links to
+// their ID and barangay certificate. Open to MAO staff as well as the
+// Super Admin — MAO is who checks that a farmer is who they say they are
+// and lives in Veruela — unlike the full user list, which is admin-only.
+const getFarmerVerificationQueue = async (req, res) => {
+  try {
+    const [farmers] = await db.query(`
+      SELECT
+        id,
+        full_name,
+        email,
+        phone,
+        barangay,
+        purok,
+        farm_location,
+        profile_image,
+        verification_document,
+        verification_submitted_at,
+        created_at
+      FROM users
+      WHERE role = 'farmer' AND verification_status = 'Pending'
+      ORDER BY verification_submitted_at ASC
+    `);
+
+    for (const farmer of farmers) {
+      farmer.verification_document = withSignedUrls(farmer.verification_document);
+    }
+
+    res.json({ farmers });
+  } catch (error) {
+    console.error("Farmer verification queue error:", error);
+    res.status(500).json({ message: "Server error loading farmer verifications" });
+  }
+};
+
+const REJECT_REASON_MAX_LENGTH = 500;
+
+// MAO staff review farmers who submitted documents; the Super Admin can
+// also verify a farmer directly, as before.
+const findFarmerToReview = async (req) => {
+  const [[user]] = await db.query(
+    "SELECT id, full_name, verification_status FROM users WHERE id = ? AND role = 'farmer'",
+    [req.params.id]
+  );
+
+  if (!user) return { error: { status: 404, message: "Farmer not found" } };
+
+  if (req.user.role !== "admin" && user.verification_status !== "Pending") {
+    return { error: { status: 409, message: "This farmer has no verification request waiting for review" } };
+  }
+
+  return { user };
+};
+
 const verifyUser = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
-    const [[user]] = await db.query(
-      "SELECT id FROM users WHERE id = ? AND role = 'farmer'",
-      [req.params.id]
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: "Farmer not found" });
-    }
+    const { user, error } = await findFarmerToReview(req);
+    if (error) return res.status(error.status).json({ message: error.message });
 
     await db.query(
-      "UPDATE users SET is_verified = 1, verification_status = 'Approved', verification_note = NULL WHERE id = ?",
-      [user.id]
+      `UPDATE users
+       SET is_verified = 1, verification_status = 'Approved', verification_note = NULL,
+           verification_reviewed_by = ?, verification_reviewed_at = NOW()
+       WHERE id = ?`,
+      [req.user.id, user.id]
     );
 
     res.json({ message: "Farmer verified successfully" });
@@ -117,30 +170,31 @@ const verifyUser = async (req, res) => {
 
 const rejectVerification = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
+    const reason = String(req.body.reason || "").trim();
+
+    // The farmer sees this reason and needs it to know what to resubmit.
+    if (!reason) {
+      return res.status(400).json({ message: "Please give a reason for rejecting this verification" });
+    }
+    if (reason.length > REJECT_REASON_MAX_LENGTH) {
+      return res.status(400).json({ message: `The reason must be ${REJECT_REASON_MAX_LENGTH} characters or fewer` });
     }
 
-    const { reason } = req.body;
-
-    const [[user]] = await db.query(
-      "SELECT id, full_name FROM users WHERE id = ? AND role = 'farmer'",
-      [req.params.id]
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: "Farmer not found" });
-    }
+    const { user, error } = await findFarmerToReview(req);
+    if (error) return res.status(error.status).json({ message: error.message });
 
     await db.query(
-      "UPDATE users SET is_verified = 0, verification_status = 'Rejected', verification_note = ? WHERE id = ?",
-      [reason || null, user.id]
+      `UPDATE users
+       SET is_verified = 0, verification_status = 'Rejected', verification_note = ?,
+           verification_reviewed_by = ?, verification_reviewed_at = NOW()
+       WHERE id = ?`,
+      [reason, req.user.id, user.id]
     );
 
     await createNotification(
       "Verification Request",
       "Farmer verification rejected",
-      `${user.full_name}'s verification submission was rejected${reason ? `: ${reason}` : "."}`,
+      `${user.full_name}'s verification submission was rejected: ${reason}`,
       user.id
     );
 
@@ -153,18 +207,22 @@ const rejectVerification = async (req, res) => {
 
 const setUserActive = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
-
     const { isActive } = req.body;
 
     if (typeof isActive !== "boolean") {
       return res.status(400).json({ message: "isActive must be true or false" });
     }
 
+    // System Settings > "Allow account deactivation". Reactivating stays
+    // allowed so no one is left locked out after the switch is turned off.
+    if (!isActive && (await getSystemSettings()).account_deactivation === 0) {
+      return res.status(403).json({
+        message: "Account deactivation is turned off in System Settings.",
+      });
+    }
+
     const [[user]] = await db.query(
-      "SELECT id FROM users WHERE id = ? AND role != 'admin'",
+      "SELECT id FROM users WHERE id = ? AND role NOT IN ('admin', 'mao_staff')",
       [req.params.id]
     );
 
@@ -183,4 +241,11 @@ const setUserActive = async (req, res) => {
   }
 };
 
-module.exports = { getAdminUsers, deleteUser, verifyUser, rejectVerification, setUserActive };
+module.exports = {
+  getAdminUsers,
+  getFarmerVerificationQueue,
+  deleteUser,
+  verifyUser,
+  rejectVerification,
+  setUserActive,
+};

@@ -1,25 +1,11 @@
+@import "./AdminTheme.css";
+
 :root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-
-  --background: #f4f1e8;
-  --card: #f8f6ef;
-
-  --border: #e8e2d4;
-
-  --muted: #667085;
-
-  --shadow:
-    0 10px 30px rgba(15,61,46,0.06),
-    0 30px 60px rgba(15,61,46,0.08);
-
   /* Messenger-style chat palette, mapped to the site's green brand */
   --msg-blue: var(--primary);
   --msg-blue-dark: var(--primary-dark);
   --msg-gray: #f0f0f0;
   --msg-gray-text: #050505;
-  --msg-online: #31a24c;
 }
 
 * {
@@ -220,15 +206,13 @@ backdrop-filter: blur(10px);
   font-weight: 750;
 
   cursor: pointer;
+
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .chat-filters button.active {
   background: var(--primary);
   color: white;
-}
-
-.chat-filters button {
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .chat-filters button:not(.active):hover {
@@ -323,7 +307,7 @@ backdrop-filter: blur(10px);
   position: relative;
 }
 
-.avatar {
+.chat-avatar {
   width: 58px;
   height: 58px;
 
@@ -347,7 +331,7 @@ backdrop-filter: blur(10px);
   flex-shrink: 0;
 }
 
-.avatar.tiny {
+.chat-avatar.tiny {
   width: 28px;
   height: 28px;
 
@@ -355,20 +339,30 @@ backdrop-filter: blur(10px);
   font-weight: 800;
 }
 
-.online-dot {
+.chat-avatar.small {
+  width: 40px;
+  height: 40px;
+
+  font-size: 14px;
+}
+
+.unread-dot {
   position: absolute;
+  top: 2px;
+  right: 2px;
 
-  bottom: 0;
-  right: 0;
-
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 
   border-radius: 50%;
 
-  background: var(--msg-online);
-
+  background: var(--accent);
   border: 2px solid white;
+}
+
+.unread-text {
+  color: var(--primary-dark) !important;
+  font-weight: 750;
 }
 
 .chat-person-info {
@@ -476,24 +470,6 @@ backdrop-filter: blur(10px);
   opacity: 0.5;
 }
 
-.unread-badge {
-  width: 24px;
-  height: 24px;
-
-  border-radius: 50%;
-
-  background: var(--primary);
-
-  color: white;
-
-  font-size: 12px;
-  font-weight: 850;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* CHAT AREA */
 
 .chat-area {
@@ -534,7 +510,7 @@ backdrop-filter: blur(10px);
   gap: 14px;
 }
 
-.avatar.large {
+.chat-avatar.large {
   width: 64px;
   height: 64px;
 
@@ -557,14 +533,14 @@ backdrop-filter: blur(10px);
   color: var(--primary-dark);
 }
 
-.verified-badge {
+.chat-verified-badge {
   display: flex;
   align-items: center;
   gap: 5px;
 
-  background: #edf7f1;
+  background: var(--green-soft);
 
-  color: #15803d;
+  color: var(--primary);
 
   padding: 6px 10px;
 
@@ -574,8 +550,8 @@ backdrop-filter: blur(10px);
   font-weight: 850;
 }
 
-.verified-badge.unverified {
-  background: #fff7d6;
+.chat-verified-badge.unverified {
+  background: var(--warning-soft);
   color: #8a6500;
 }
 
@@ -583,33 +559,6 @@ backdrop-filter: blur(10px);
   margin-top: 6px;
 
   color: var(--muted);
-}
-
-.chat-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.chat-actions button {
-  width: 48px;
-  height: 48px;
-
-  border-radius: 16px;
-
-  border: none;
-
-  background: white;
-
-  color: var(--primary);
-
-  cursor: pointer;
-
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.chat-actions button:hover {
-  transform: translateY(-2px);
-  background: var(--soft, #eef6f1);
 }
 
 /* MESSAGES */
@@ -680,10 +629,69 @@ backdrop-filter: blur(10px);
 }
 
 .message-col {
+  position: relative;
+
   display: flex;
   flex-direction: column;
   gap: 6px;
   max-width: 70%;
+}
+
+.message-hover-actions {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: flex;
+  gap: 4px;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.15s ease;
+}
+
+.message:hover .message-hover-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.message.sent .message-hover-actions {
+  right: 100%;
+  margin-right: 8px;
+}
+
+.message.received .message-hover-actions {
+  left: 100%;
+  margin-left: 8px;
+}
+
+.message-hover-actions button {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+
+  border: 1px solid var(--border);
+  border-radius: 50%;
+
+  background: white;
+  color: var(--muted);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.message-hover-actions button:hover:not(:disabled) {
+  background: var(--soft, #eef6f1);
+  color: var(--msg-blue);
+}
+
+.message-hover-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .message.sent .message-col {
@@ -721,6 +729,23 @@ backdrop-filter: blur(10px);
 .message.sent.pos-middle .message-bubble { border-radius: 18px 6px 6px 18px; }
 .message.sent.pos-last .message-bubble { border-radius: 18px 6px 18px 18px; }
 
+.message-bubble.deleted,
+.message.sent .message-bubble.deleted,
+.message.received .message-bubble.deleted {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+}
+
+.message-bubble.deleted p {
+  margin: 0;
+  font-style: italic;
+}
+
 .message-bubble p {
   margin: 0;
 
@@ -735,6 +760,24 @@ backdrop-filter: blur(10px);
   font-size: 11px;
 
   color: var(--muted);
+}
+
+/* MEDIA ATTACHMENT (photo/video sent in chat) */
+
+.message-media {
+  max-width: 280px;
+
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.message-media img,
+.message-media video {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+
+  object-fit: cover;
 }
 
 /* LISTING ATTACHMENT CARD */
@@ -771,14 +814,65 @@ backdrop-filter: blur(10px);
   box-shadow: 0 10px 22px rgba(15,61,46,0.12);
 }
 
-.listing-attachment img {
+.listing-attachment img,
+.listing-attachment-fallback {
   width: 56px;
   height: 56px;
   flex-shrink: 0;
 
-  object-fit: cover;
-
   border-radius: 14px;
+}
+
+.listing-attachment img {
+  object-fit: cover;
+}
+
+.listing-attachment-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(150deg, var(--soft, #eef6f1), transparent);
+  color: var(--primary);
+}
+
+/* "Proceed to Negotiation" under the buyer's inquiry, or the open deal's
+   status once it has started. */
+.deal-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.deal-prompt-btn {
+  border: none;
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 6px 16px rgba(15, 61, 46, 0.18);
+}
+
+.deal-prompt-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(15, 61, 46, 0.22);
+}
+
+.deal-prompt-btn:focus-visible,
+.deal-prompt-status:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.deal-prompt-status {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--primary);
 }
 
 .listing-attachment-info {
@@ -807,7 +901,7 @@ backdrop-filter: blur(10px);
 .listing-attachment-status {
   align-self: flex-start;
 
-  background: #fff7d6;
+  background: var(--warning-soft);
   color: #8a6500;
 
   font-size: 10px;
@@ -875,33 +969,6 @@ backdrop-filter: blur(10px);
   gap: 14px;
 }
 
-.message-tools {
-  display: flex;
-  gap: 10px;
-}
-
-.message-tools button {
-  width: 48px;
-  height: 48px;
-
-  border-radius: 16px;
-
-  border: none;
-
-  background: white;
-
-  color: var(--primary);
-
-  cursor: pointer;
-
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.message-tools button:hover {
-  transform: translateY(-2px);
-  background: var(--soft, #eef6f1);
-}
-
 .message-input-area textarea {
   flex: 1;
 
@@ -930,6 +997,100 @@ backdrop-filter: blur(10px);
 .message-input-area textarea:focus {
   border-color: var(--msg-blue);
   box-shadow: 0 0 0 3px rgba(15,61,46,0.1);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.attachment-btn {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 6px;
+
+  border: 1px solid var(--border);
+  border-radius: 50%;
+
+  background: white;
+  color: var(--msg-blue);
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.attachment-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  background: var(--soft, #eef6f1);
+  box-shadow: 0 8px 16px rgba(15,61,46,0.14);
+}
+
+.attachment-btn:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.attachment-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 28px 0;
+}
+
+.attachment-preview-thumb {
+  position: relative;
+
+  width: 72px;
+  height: 72px;
+
+  border-radius: 14px;
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+}
+
+.attachment-preview-thumb img,
+.attachment-preview-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.attachment-remove-btn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: var(--msg-gray);
+  color: var(--msg-gray-text);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.attachment-remove-btn:hover {
+  background: var(--border);
 }
 
 .send-btn {
@@ -968,6 +1129,15 @@ backdrop-filter: blur(10px);
   box-shadow: none;
 }
 
+.thumbs-up-btn {
+  background: linear-gradient(135deg, var(--accent), #b8842c);
+}
+
+.thumbs-up-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent), #b8842c);
+  box-shadow: 0 10px 20px rgba(215, 162, 77, 0.35);
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 1100px) {
@@ -985,12 +1155,696 @@ backdrop-filter: blur(10px);
     padding: 20px;
   }
 
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
   .messages-page-header h1 {
-    font-size: 40px;
+    font-size: 28px;
   }
 
   .message-bubble {
     max-width: 90%;
   }
 
+}
+
+/* FORWARD MODAL */
+
+.forward-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+
+  background: rgba(7, 33, 23, 0.6);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+}
+
+.forward-modal {
+  position: relative;
+
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: 0 16px 45px rgba(15, 61, 46, 0.18);
+  padding: 28px;
+}
+
+.forward-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #f1f5f9;
+  color: var(--primary-dark);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.forward-modal h3 {
+  margin: 0 0 16px;
+  padding-right: 40px;
+
+  color: var(--primary-dark);
+}
+
+.forward-modal-preview {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+
+  border-radius: 14px;
+  background: var(--msg-gray);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.forward-modal-preview img,
+.forward-modal-preview video {
+  width: 100%;
+  max-height: 160px;
+
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.forward-modal-preview p {
+  margin: 0;
+  color: var(--msg-gray-text);
+  font-size: 14px;
+}
+
+.forward-modal-list {
+  flex: 1;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  margin-bottom: 18px;
+}
+
+.forward-modal-empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.forward-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 10px;
+  border-radius: 14px;
+
+  cursor: pointer;
+}
+
+.forward-modal-item:hover {
+  background: var(--msg-gray);
+}
+
+.forward-modal-item div:last-of-type {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.forward-modal-item strong {
+  font-size: 14px;
+  color: var(--primary-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forward-modal-item span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.forward-modal-submit {
+  width: 100%;
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: var(--msg-blue);
+  color: white;
+
+  font-weight: 800;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  cursor: pointer;
+}
+
+.forward-modal-submit:hover:not(:disabled) {
+  background: var(--msg-blue-dark);
+}
+
+.forward-modal-submit:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.chat-camera-btn-wrap {
+  position: relative;
+}
+
+.camera-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+  width: 190px;
+}
+
+.camera-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.camera-menu button:hover {
+  background: var(--soft, #eef6f1);
+}
+
+.camera-menu svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Messenger-style mobile back-to-list button, hidden on desktop where
+   the list and the open chat sit side by side. */
+.chat-back-to-list-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Full-bleed, flat white app screen instead of a padded page with
+     floating glass cards — closer to how Messenger actually looks.
+
+     This is `position: fixed` rather than a flex/calc height for a
+     specific reason: .buyer-shell (its ancestor, shared by every buyer
+     page) sets `min-height: 100vh` — a floor, not a ceiling — so even
+     once this element's own height was capped, .buyer-shell itself
+     could still be forced taller than the real visible area (100vh
+     assumes the address bar is hidden; while it's showing, 100vh is
+     bigger than what's actually on screen), leaving room for the
+     *outer* page to scroll and drag the sticky VOLT bar down over this
+     header — same symptom, one level up. `position: fixed` takes this
+     element out of that flow entirely and sizes it directly against
+     the real visual viewport via top/left/right/bottom, so .buyer-
+     shell's height no longer matters here. */
+  .premium-messages-page {
+    position: fixed;
+    top: 59px;
+    left: 0;
+    right: 0;
+    /* The base (desktop) rule sets `min-height: 100vh` — a floor that
+       silently clamped this smaller calculated height right back up
+       to ~100vh, which is exactly why the composer was still landing
+       off-screen even though the calc() itself was correct. */
+    min-height: 0;
+    /* `bottom: 0` would sit behind the on-screen keyboard on mobile
+       (see the visualViewport effect in Messages.js) — an explicit
+       height computed from the real visible viewport keeps the
+       composer above the keyboard instead. `100dvh` is the fallback
+       for the instant before the JS effect runs, and for browsers
+       without visualViewport. */
+    height: calc(100dvh - 59px);
+    height: calc(var(--chat-vvh, 100dvh) - 59px);
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    z-index: 1;
+  }
+
+  .messages-page-header {
+    margin-bottom: 0;
+    flex-shrink: 0;
+    padding: 10px 12px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Once a chat is open, its own header (name + back arrow) already
+     covers this — showing both stacks two headers and wastes height.
+     `.page-tag` is scoped to `.premium-messages-page` (not bare)
+     because plenty of *other* pages also declare an unscoped
+     `.page-tag` — the exact same class-collision bug the camera
+     button hit — and a bare selector here would lose that fight. */
+  .premium-messages-page:has(.mobile-chat-open) .messages-page-header {
+    display: none;
+  }
+
+  .premium-messages-page .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: var(--soft, #eef6f1);
+    border: none;
+  }
+
+  .premium-messages-page .page-tag {
+    display: none;
+  }
+
+  .messages-page-header h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .messages-page-header p {
+    display: none;
+  }
+
+  /* Messenger-style navigation: the list and the open chat are both
+     full-width/full-height, and only one shows at a time based on
+     whether a conversation is selected. */
+  .messages-layout {
+    display: block;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    gap: 0;
+  }
+
+  .chat-sidebar,
+  .chat-area {
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: white;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .chat-sidebar {
+    display: flex;
+  }
+
+  .chat-area {
+    display: none;
+  }
+
+  .messages-layout.mobile-chat-open .chat-sidebar {
+    display: none;
+  }
+
+  .messages-layout.mobile-chat-open .chat-area {
+    display: flex;
+  }
+
+  .chat-sidebar {
+    padding: 10px 12px;
+  }
+
+  .chat-search-box {
+    height: 40px;
+    border-radius: 999px;
+    border: none;
+    background: #f0f2f5;
+    margin-bottom: 10px;
+  }
+
+  .chat-search-box input {
+    font-size: 16px;
+  }
+
+  .chat-filters {
+    margin-bottom: 14px;
+  }
+
+  .chat-filters button {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .chat-person {
+    padding: 12px;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .chat-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .chat-person-top h5 {
+    font-size: 14px;
+  }
+
+  .chat-person-info p,
+  .chat-person-info small {
+    font-size: 12.5px;
+  }
+
+  /* Chat header gets the Messenger-style back arrow. No sticky
+     positioning needed — .chat-area doesn't scroll as a whole (only
+     .chat-messages does), so this already stays put at the top. */
+  .chat-topbar {
+    padding: 10px 12px;
+    background: white;
+    flex-shrink: 0;
+  }
+
+  .chat-back-to-list-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+  }
+
+  .chat-avatar.large {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .user-title h4 {
+    font-size: 15px;
+  }
+
+  .chat-verified-badge {
+    font-size: 10.5px;
+    padding: 4px 8px;
+  }
+
+  .chat-user-info p {
+    font-size: 12px;
+  }
+
+  .chat-messages {
+    padding: 12px 8px;
+    min-height: 0;
+  }
+
+  .message-col {
+    max-width: 88%;
+  }
+
+  .message-bubble {
+    padding: 10px 14px;
+    font-size: 14.5px;
+  }
+
+  .message-input-area {
+    /* No overflow: hidden here — the camera menu pops up *above* this
+       row via position: absolute, and clipping would cut it off. The
+       width/shrink rules below already keep the row itself from
+       overflowing horizontally. */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    gap: 6px;
+    background: white;
+    flex-shrink: 0;
+  }
+
+  .chat-camera-btn-wrap,
+  .attachment-btn,
+  .send-btn {
+    flex-shrink: 0;
+  }
+
+  .message-input-area textarea {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: 999px;
+    background: #f0f2f5;
+    font-size: 16px;
+  }
+
+  .message-input-area textarea:focus {
+    box-shadow: none;
+  }
+
+  .chat-camera-btn,
+  .send-btn {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0;
+    border: none;
+  }
+
+  .chat-camera-btn {
+    background: transparent;
+    color: var(--primary);
+  }
+
+  .send-btn {
+    background: var(--msg-blue);
+    color: white;
+  }
+
+  .forward-modal {
+    width: calc(100vw - 32px);
+    max-width: 360px;
+  }
+}
+
+/* Header delete button is phone-only; desktop keeps the list's hover
+   trash button. */
+.premium-messages-page .chat-topbar-delete {
+  display: none;
+}
+
+/* PHONE — touch-friendly polish
+   Scoped under .premium-messages-page because .back-btn and friends are
+   shared class names across many pages. */
+
+@media (max-width: 768px) {
+  /* Chat list: the trash button only appears on hover, which touch
+     doesn't have; deleting moves to the open chat's header instead. */
+  .premium-messages-page .chat-delete-btn {
+    display: none;
+  }
+
+  .premium-messages-page .chat-person {
+    border-radius: 14px;
+  }
+
+  .premium-messages-page .chat-person:active {
+    background: #f0f2f5;
+  }
+
+  /* Chat header: name truncates instead of pushing the badge off screen */
+
+  .premium-messages-page .chat-user-info {
+    flex: 1;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .premium-messages-page .chat-user-info > div:last-child {
+    min-width: 0;
+  }
+
+  .premium-messages-page .user-title {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .premium-messages-page .user-title h4 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .premium-messages-page .chat-verified-badge {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .premium-messages-page .chat-user-info p {
+    margin: 2px 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .premium-messages-page .chat-topbar-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-left: 8px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .premium-messages-page .chat-topbar-delete:active {
+    background: #ffe5e5;
+    color: #b42318;
+  }
+
+  .premium-messages-page .chat-topbar-delete:disabled {
+    opacity: 0.5;
+  }
+
+  /* Message actions: tap a message to show Forward/Delete under it,
+     instead of the desktop hover pop-out beside the bubble. */
+
+  .premium-messages-page .message .message-hover-actions {
+    display: none;
+  }
+
+  .premium-messages-page .message.actions-open .message-hover-actions {
+    position: static;
+    transform: none;
+    display: flex;
+    gap: 6px;
+    margin: 2px 4px 0;
+    opacity: 1;
+    pointer-events: auto;
+    order: 1;
+  }
+
+  .premium-messages-page .message-time {
+    order: 2;
+  }
+
+  .premium-messages-page .message.actions-open .message-hover-actions button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .premium-messages-page .message.actions-open .message-bubble {
+    filter: brightness(0.94);
+  }
+
+  .premium-messages-page .message-media {
+    max-width: 220px;
+  }
+
+  /* Forward modal becomes a bottom sheet */
+
+  .premium-messages-page .forward-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .premium-messages-page .forward-modal {
+    width: 100%;
+    max-width: none;
+    max-height: 85vh;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 16px calc(16px + env(safe-area-inset-bottom));
+    animation: forward-sheet-up 0.25s ease both;
+  }
+
+  .premium-messages-page .forward-modal::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .premium-messages-page .forward-modal-item {
+    min-height: 56px;
+  }
+
+  .premium-messages-page .forward-modal-submit {
+    height: 48px;
+  }
+}
+
+@keyframes forward-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .premium-messages-page .back-btn:hover,
+  .premium-messages-page .send-btn:hover,
+  .premium-messages-page .attachment-btn:hover:not(:disabled),
+  .premium-messages-page .listing-attachment:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.premium-messages-page .back-btn {
+  padding: 0;
+  cursor: pointer;
 }

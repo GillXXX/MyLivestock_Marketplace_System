@@ -6,13 +6,14 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  Tractor,
   ArrowRight,
 } from "lucide-react";
 
 import { useNavigate, Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { API_URL } from "../config";
+import { completeAuth, describeGoogleError } from "../utils/auth";
+import logo from "../assets/logo.png";
 import "./Login.css";
 
 function Login() {
@@ -35,16 +36,7 @@ function Login() {
   };
 
   const handleAuthSuccess = (data) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    if (data.user.role === "admin") {
-      navigate("/admin-dashboard");
-    } else if (data.user.role === "farmer") {
-      navigate("/farmer-dashboard");
-    } else if (data.user.role === "buyer") {
-      navigate("/buyer-dashboard");
-    } else {
+    if (!completeAuth(data, navigate)) {
       setMessage("Unknown user role");
     }
   };
@@ -89,7 +81,7 @@ function Login() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ accessToken: tokenResponse.access_token }),
+          body: JSON.stringify({ accessToken: tokenResponse.access_token, intent: "login" }),
         });
 
         const data = await res.json();
@@ -99,30 +91,45 @@ function Login() {
           return;
         }
 
+        // No account for this Google email yet: nothing was created. Sign-up
+        // continues on the register page, straight at the farmer/buyer
+        // choice (Google already confirmed the email, so no code).
+        if (data.needsRole) {
+          navigate("/register", {
+            state: {
+              googleSignup: {
+                email: data.email,
+                fullName: data.fullName,
+                signupToken: data.signupToken,
+              },
+            },
+          });
+          return;
+        }
+
         handleAuthSuccess(data);
       } catch (error) {
         setMessage("Cannot connect to backend server");
       }
     },
-    onError: () => setMessage("Google sign-in failed"),
+    onError: (error) => setMessage(describeGoogleError(error)),
+    onNonOAuthError: (error) => setMessage(describeGoogleError(error)),
   });
 
   return (
     <div className="modern-login">
       <section className="login-showcase">
-        <div className="overlay"></div>
-
         <div className="showcase-content">
-          <div className="brand-badge">
+          <Link to="/" className="brand-badge" aria-label="Back to VOLT home">
             <div className="brand-icon">
-              <Tractor size={28} />
+              <img src={logo} alt="VOLT logo" />
             </div>
 
             <div>
-              <h2>HerdMarket</h2>
-              <span>Livestock Marketplace Platform</span>
+              <h2>VOLT</h2>
+              <span>Veruela Online Livestock Trade</span>
             </div>
-          </div>
+          </Link>
 
           <div className="showcase-text">
             <span className="mini-title">WEB-BASED LIVESTOCK MARKETPLACE</span>
@@ -164,6 +171,15 @@ function Login() {
 
       <section className="login-panel">
         <div className="login-card">
+          <Link to="/" className="login-mobile-brand" aria-label="Back to VOLT home">
+            <img src={logo} alt="VOLT logo" />
+
+            <div>
+              <h3>VOLT</h3>
+              <span>Veruela Online Livestock Trade</span>
+            </div>
+          </Link>
+
           <div className="login-header">
             <span className="login-tag">WELCOME BACK</span>
 
@@ -221,13 +237,6 @@ function Login() {
               </div>
             </div>
 
-            <div className="login-options">
-              <label className="remember-box">
-                <input type="checkbox" />
-                <span>Remember me</span>
-              </label>
-            </div>
-
             <button className="login-btn" type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
               <ArrowRight size={18} />
@@ -236,7 +245,7 @@ function Login() {
 
           <div className="divider">
             <span></span>
-            <p>OR CONTINUE WITH</p>
+            <p>OR</p>
             <span></span>
           </div>
 

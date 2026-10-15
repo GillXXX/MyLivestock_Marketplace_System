@@ -1,16 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #fbfaf5;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
-  --soft: #eef6f1;
-  --danger: #b42318;
-  --shadow: 0 16px 45px rgba(15, 61, 46, 0.08);
-}
+@import "./AdminTheme.css";
 
 .map-admin-page {
   min-height: 100vh;
@@ -39,13 +27,20 @@
 .map-back-btn {
   width: 52px;
   height: 52px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 10px 20px rgba(15, 61, 46, 0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.map-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(15, 61, 46, 0.3);
 }
 
 .eyebrow {
@@ -85,8 +80,10 @@
 
 .refresh-pill {
   height: 44px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
   color: var(--primary-dark);
   border-radius: 999px;
   padding: 0 18px;
@@ -99,7 +96,7 @@
 }
 
 .refresh-pill:hover {
-  background: var(--soft);
+  background: var(--green-soft);
 }
 
 .refresh-pill.spinning svg {
@@ -111,19 +108,6 @@
   to { transform: rotate(360deg); }
 }
 
-.primary-action {
-  height: 52px;
-  border: none;
-  border-radius: 16px;
-  background: var(--primary);
-  color: white;
-  padding: 0 18px;
-  font-weight: 850;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .map-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -131,51 +115,22 @@
   margin-bottom: 22px;
 }
 
-.map-stat-card,
-.map-card,
-.map-filter-panel {
-  background: var(--card);
-  border: 1px solid var(--border);
+.map-card {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 22px;
   box-shadow: var(--shadow);
 }
 
-.map-stat-card {
-  padding: 24px;
-}
-
-.map-stat-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--soft);
-  color: var(--primary);
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.map-stat-card h2 {
-  margin: 15px 0 0;
-  font-size: 38px;
-  font-weight: 950;
-  color: var(--primary-dark);
-}
-
-.map-stat-card p {
-  margin: 0;
-  color: var(--muted);
-  font-weight: 750;
-}
-
-.map-stat-card small {
-  display: block;
-  margin-top: 9px;
-  color: var(--accent);
-  font-weight: 850;
-}
-
 .map-filter-panel {
+  background: rgba(251, 250, 245, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
   padding: 18px;
   display: grid;
   grid-template-columns: 1fr 180px 180px 150px;
@@ -192,6 +147,12 @@
   align-items: center;
   gap: 10px;
   padding: 0 15px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.map-search-box:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
 }
 
 .map-search-box input,
@@ -208,31 +169,73 @@
   border-radius: 16px;
   height: 52px;
   padding: 0 14px;
+  color: var(--primary-dark);
+  font-weight: 700;
+  transition: border-color 0.18s ease;
 }
 
-.map-filter-panel button {
-  border: none;
-  border-radius: 16px;
-  background: var(--primary);
-  color: white;
-  font-weight: 850;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+.map-filter-panel select:focus {
+  border-color: var(--primary);
+  outline: none;
 }
 
 /* MAIN MAP */
 
 .map-main-grid {
   display: grid;
-  grid-template-columns: 1.55fr 0.95fr;
+  grid-template-columns: 1.75fr 0.85fr;
+  /* Matches the map card's natural height (heading + 540px map + legend +
+     padding) so the row doesn't grow to fit every seller record — without
+     this, the records list on the right stretches the row taller than the
+     map, leaving a large empty gap under the map card. */
+  grid-template-rows: 710px;
   gap: 24px;
   margin-bottom: 24px;
 }
 
+.map-main-grid > aside {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .map-card {
+  position: relative;
+  overflow: hidden;
   padding: 24px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.map-card:not(.map-card-large)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, var(--map-tint, transparent) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.map-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--map-color, var(--primary)), transparent 140%);
+  box-shadow: 0 0 16px 0 var(--map-color, var(--primary));
+  opacity: 0.75;
+}
+
+.map-card.accent-teal { --map-color: #00b39c; --map-tint: rgba(0, 245, 212, 0.14); }
+.map-card.accent-blue { --map-color: #2563eb; --map-tint: rgba(37, 99, 235, 0.1); }
+.map-card.accent-green { --map-color: #0f3d2e; --map-tint: rgba(15, 61, 46, 0.1); }
+.map-card.accent-amber { --map-color: #b3790f; --map-tint: rgba(215, 162, 77, 0.16); }
+
+.card-heading,
+.location-records,
+.distribution-item,
+.alert-row {
+  position: relative;
 }
 
 .card-heading {
@@ -256,7 +259,7 @@
 }
 
 .live-badge {
-  background: var(--soft);
+  background: var(--green-soft);
   color: var(--primary);
   padding: 9px 13px;
   border-radius: 999px;
@@ -264,7 +267,24 @@
   font-weight: 900;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  position: relative;
+  z-index: 1;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00c9b0;
+  box-shadow: 0 0 0 rgba(0, 201, 176, 0.6);
+  animation: map-pulse-ring 2s infinite;
+}
+
+@keyframes map-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(0, 201, 176, 0.5); }
+  70% { box-shadow: 0 0 0 7px rgba(0, 201, 176, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 201, 176, 0); }
 }
 
 .leaflet-map-container {
@@ -298,11 +318,13 @@
 }
 
 .active-dot {
-  background: var(--primary);
+  background: #00F5D4;
+  box-shadow: 0 0 6px rgba(0, 245, 212, 0.6);
 }
 
 .pending-dot {
-  background: var(--accent);
+  background: #d7a24d;
+  box-shadow: 0 0 6px rgba(215, 162, 77, 0.6);
 }
 
 .legend-hint {
@@ -322,6 +344,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .location-record {
@@ -341,9 +367,9 @@
 }
 
 .location-record.clickable:hover {
-  box-shadow: var(--shadow);
-  transform: translateX(3px);
-  border-color: #d7ecdf;
+  box-shadow: 0 14px 30px -10px rgba(0, 179, 156, 0.35);
+  transform: translateX(3px) translateY(-2px);
+  border-color: #7fe7d8;
 }
 
 .tag-unpinned {
@@ -354,12 +380,27 @@
 .record-icon {
   width: 44px;
   height: 44px;
-  background: var(--soft);
-  color: var(--primary);
+  flex-shrink: 0;
+  background: linear-gradient(150deg, rgba(0, 245, 212, 0.16), transparent);
+  border: 1px solid rgba(0, 179, 156, 0.25);
+  color: #00806f;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 6px 14px -8px #00b39c;
+  transition: transform 0.2s ease;
+}
+
+.location-record.clickable:hover .record-icon {
+  transform: scale(1.07) rotate(-3deg);
+}
+
+.record-icon.pending {
+  background: linear-gradient(150deg, rgba(255, 214, 10, 0.22), transparent);
+  border: 1px solid rgba(215, 162, 77, 0.3);
+  color: #8a6500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 6px 14px -8px #d7a24d;
 }
 
 .record-info strong {
@@ -395,15 +436,31 @@
 
 .status-active,
 .status-pending {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 11px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
 }
 
+.status-active::before,
+.status-pending::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
 .status-active {
-  background: var(--soft);
-  color: var(--primary);
+  background: rgba(0, 245, 212, 0.14);
+  color: #00806f;
+}
+
+.status-active::before {
+  background: #00c9b0;
+  box-shadow: 0 0 5px rgba(0, 201, 176, 0.7);
 }
 
 .status-pending {
@@ -411,13 +468,9 @@
   color: #8a6500;
 }
 
-.record-action button {
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 12px;
-  background: var(--soft);
-  color: var(--primary);
+.status-pending::before {
+  background: #d7a24d;
+  box-shadow: 0 0 5px rgba(215, 162, 77, 0.7);
 }
 
 /* INSIGHTS */
@@ -429,59 +482,187 @@
 }
 
 .distribution-item {
-  margin-top: 18px;
+  margin-top: 20px;
+}
+
+.distribution-item:first-of-type {
+  margin-top: 4px;
 }
 
 .distribution-item > div:first-child {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: center;
+  margin-bottom: 10px;
 }
+
+.distribution-label {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.distribution-icon {
+  --species-color: #0f3d2e;
+  --species-tint: rgba(15, 61, 46, 0.12);
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(150deg, var(--species-tint), transparent);
+  border: 1px solid var(--species-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  color: var(--species-color);
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.distribution-icon.swine { --species-color: #b3790f; --species-tint: rgba(215, 162, 77, 0.22); }
+.distribution-icon.cattle { --species-color: #0f3d2e; --species-tint: rgba(15, 61, 46, 0.14); }
+.distribution-icon.goat { --species-color: #0f766e; --species-tint: rgba(13, 148, 136, 0.16); }
+.distribution-icon.poultry { --species-color: #7c3aed; --species-tint: rgba(124, 58, 237, 0.14); }
 
 .distribution-item strong {
   color: var(--primary-dark);
+  font-weight: 850;
 }
 
-.distribution-item span {
-  color: var(--accent);
-  font-weight: 950;
+.distribution-figures {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.distribution-percent {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.distribution-value {
+  font-family: "JetBrains Mono", "Segoe UI", monospace;
+  color: var(--primary);
+  background: var(--green-soft);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-weight: 800;
+  font-size: 12.5px;
 }
 
 .distribution-track {
-  height: 10px;
-  background: #e8e2d4;
+  height: 12px;
+  background: rgba(15, 61, 46, 0.08);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .distribution-track div {
   height: 100%;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), #1a6349);
   border-radius: 999px;
+  box-shadow: 0 0 8px rgba(15, 61, 46, 0.35);
+  transition: width 0.6s ease;
+}
+
+.distribution-track div.swine {
+  background: linear-gradient(90deg, #b3790f, #d7a24d);
+  box-shadow: 0 0 8px rgba(215, 162, 77, 0.45);
+}
+
+.distribution-track div.cattle {
+  background: linear-gradient(90deg, #0f3d2e, #1a6349);
+  box-shadow: 0 0 8px rgba(15, 61, 46, 0.35);
+}
+
+.distribution-track div.goat {
+  background: linear-gradient(90deg, #0f766e, #14b8a6);
+  box-shadow: 0 0 8px rgba(13, 148, 136, 0.4);
+}
+
+.distribution-track div.poultry {
+  background: linear-gradient(90deg, #6d28d9, #a78bfa);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
 }
 
 .alert-row {
   display: flex;
+  align-items: center;
   gap: 14px;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 16px;
+  border: 1px solid rgba(15, 61, 46, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.alert-row:last-child {
-  border-bottom: none;
+.alert-row + .alert-row {
+  margin-top: 12px;
 }
 
-.alert-row svg {
+.alert-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -16px rgba(15, 61, 46, 0.3);
+}
+
+.alert-row.warning {
+  background: rgba(215, 162, 77, 0.08);
+  border-color: rgba(215, 162, 77, 0.3);
+}
+
+.alert-row.normal {
+  background: rgba(22, 163, 74, 0.06);
+  border-color: rgba(22, 163, 74, 0.22);
+}
+
+.alert-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-soft);
+  color: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.alert-icon.warning {
+  background: rgba(215, 162, 77, 0.22);
   color: #8a6500;
 }
 
-.alert-row.normal svg {
-  color: var(--primary);
+.alert-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .alert-row p {
   margin: 4px 0 0;
   color: var(--muted);
+}
+
+.alert-status {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.alert-status.warning {
+  background: rgba(215, 162, 77, 0.22);
+  color: #8a6500;
+}
+
+.alert-status.normal {
+  background: rgba(22, 163, 74, 0.16);
+  color: #0f3d2e;
 }
 
 /* RESPONSIVE */
@@ -498,15 +679,65 @@
   .map-insights-grid {
     grid-template-columns: 1fr;
   }
+
+  .map-main-grid {
+    grid-template-rows: auto;
+  }
+
+  .map-main-grid > aside {
+    max-height: 480px;
+  }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .map-admin-page {
-    padding: 22px;
+    padding: 16px;
+  }
+
+  .map-back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
   }
 
   .map-topbar h1 {
-    font-size: 34px;
+    font-size: 30px;
+  }
+
+  .map-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .map-search-box input,
+  .map-filter-panel select {
+    font-size: 16px;
+  }
+
+  .map-card {
+    padding: 16px;
+  }
+
+  .leaflet-map-container {
+    height: 360px !important;
+  }
+
+  .map-main-grid > aside {
+    max-height: 360px;
+  }
+
+  .location-record {
+    grid-template-columns: auto 1fr;
+  }
+
+  .record-action {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .map-insights-grid {
+    grid-template-columns: 1fr;
   }
 
   .map-legend-bar {
@@ -516,5 +747,283 @@
 
   .legend-hint {
     margin-left: 0;
+  }
+}
+/* PHONE — minimal pass
+   Everything below is scoped under .map-admin-page (admin CSS is global).
+   Stat cards keep their size (2x2 above); the map goes edge to edge and
+   the chrome that repeats the stat cards is dropped. */
+
+.map-admin-page .map-back-btn {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  /* Header: one row — back, title, icon-only refresh */
+
+  .map-admin-page .map-topbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .map-admin-page .map-title-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .map-admin-page .map-title-group > div {
+    min-width: 0;
+  }
+
+  .map-admin-page .map-topbar .eyebrow,
+  .map-admin-page .map-topbar p,
+  .map-admin-page .last-updated {
+    display: none;
+  }
+
+  .map-admin-page .map-topbar h1 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The label is a bare text node, so font-size: 0 hides it and the
+     icon keeps its own size */
+  .map-admin-page .refresh-pill {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .map-admin-page .map-kpi-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  /* Filters: no panel; full-width search, two selects side by side */
+
+  .map-admin-page .map-filter-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+    margin-bottom: 12px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .map-admin-page .map-search-box {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .map-admin-page .map-filter-panel select {
+    height: 40px;
+    min-width: 0;
+    border-radius: 12px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
+  .map-admin-page .map-search-box input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  /* Map: edge to edge (cancels the page's 16px side padding); the heading
+     and live badge go, and the "not pinned" hint repeats the Pinned stat */
+
+  .map-admin-page .map-main-grid {
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .map-admin-page .map-card-large {
+    margin: 0 -16px;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .map-admin-page .map-card-large::after,
+  .map-admin-page .map-card-large .card-heading,
+  .map-admin-page .map-card-large .legend-hint {
+    display: none;
+  }
+
+  .map-admin-page .map-card-large .leaflet-map-container {
+    height: clamp(320px, 55vh, 480px) !important;
+    height: clamp(320px, 55svh, 480px) !important;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .map-admin-page .map-card-large .map-legend-bar {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 16px 0;
+  }
+
+  .map-admin-page .map-legend-bar span {
+    font-size: 12px;
+  }
+
+  /* Card headings: title (+ count) only */
+
+  .map-admin-page .card-heading {
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .map-admin-page .card-heading p {
+    display: none;
+  }
+
+  .map-admin-page .card-heading h3 {
+    font-size: 15px;
+  }
+
+  /* Seller records: a divided list that flows with the page */
+
+  .map-admin-page .map-main-grid > aside {
+    max-height: none;
+  }
+
+  .map-admin-page .location-records {
+    gap: 0;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .map-admin-page .location-record {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+  }
+
+  .map-admin-page .location-record:last-child {
+    border-bottom: none;
+  }
+
+  .map-admin-page .record-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .map-admin-page .record-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .map-admin-page .record-info strong {
+    display: block;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .map-admin-page .record-info p {
+    margin: 2px 0 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .map-admin-page .record-tags {
+    gap: 4px 6px;
+  }
+
+  .map-admin-page .record-tags span {
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  .map-admin-page .record-action {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .map-admin-page .status-active,
+  .map-admin-page .status-pending {
+    padding: 4px 9px;
+    font-size: 10.5px;
+  }
+
+  /* Insights: tighter rows */
+
+  .map-admin-page .map-insights-grid {
+    gap: 14px;
+  }
+
+  .map-admin-page .distribution-item {
+    margin-top: 12px;
+  }
+
+  .map-admin-page .distribution-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .map-admin-page .distribution-track {
+    height: 8px;
+  }
+
+  .map-admin-page .alert-row {
+    gap: 10px;
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .map-admin-page .alert-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .map-admin-page .alert-row p {
+    font-size: 12.5px;
+  }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .map-admin-page .map-back-btn:hover,
+  .map-admin-page .location-record.clickable:hover,
+  .map-admin-page .location-record.clickable:hover .record-icon,
+  .map-admin-page .alert-row:hover {
+    transform: none;
   }
 }

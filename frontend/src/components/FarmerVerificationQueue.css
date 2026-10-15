@@ -1,0 +1,169 @@
+.farmer-queue {
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid #e8e2d4;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 14px 40px rgba(15, 61, 46, 0.07);
+}
+
+.farmer-queue-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.farmer-queue-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  color: #0f3d2e;
+}
+
+.farmer-queue-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 13.5px;
+}
+
+.farmer-queue-count {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #fdf3e1;
+  color: #9a6b12;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.farmer-queue-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.farmer-queue-empty.error {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.farmer-queue-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.farmer-queue-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(15, 61, 46, 0.08);
+}
+
+.farmer-queue-info strong {
+  color: #111827;
+}
+
+.farmer-queue-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12.5px;
+}
+
+.farmer-queue-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.farmer-queue-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.farmer-queue-doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid #e8e2d4;
+  border-radius: 999px;
+  background: #f8f5ec;
+  color: #0f3d2e;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.farmer-queue-doc:hover {
+  border-color: #0f3d2e;
+}
+
+.farmer-queue-nodocs {
+  color: #b42318;
+  font-size: 12.5px;
+}
+
+.farmer-queue-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.farmer-queue-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border: none;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.farmer-queue-actions .approve {
+  background: #0f3d2e;
+  color: white;
+}
+
+.farmer-queue-actions .reject {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.farmer-queue-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .farmer-queue-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .farmer-queue {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .farmer-queue-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}

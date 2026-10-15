@@ -6,35 +6,52 @@ import {
   ShoppingBag,
   FileCheck2,
   AlertTriangle,
+  CheckCircle,
   Search,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AdminStatCard from "../components/AdminStatCard";
 import { API_URL } from "../config";
+import useGoBack from "../utils/useGoBack";
 import "./BuyerNotifications.css";
 
-const getReadStorageKey = () => {
-  try {
-    const userRaw = localStorage.getItem("user");
-    const userId = userRaw ? JSON.parse(userRaw).id : "anon";
-    return `readNotifications_${userId}`;
-  } catch (error) {
-    return "readNotifications_anon";
-  }
-};
+const CATEGORY_DEFS = [
+  {
+    key: "inquiryUpdates",
+    title: "Inquiry Updates",
+    text: "Replies and updates from sellers",
+    icon: <ShoppingBag size={18} />,
+    accent: "blue",
+  },
+  {
+    key: "transactionUpdates",
+    title: "Transaction Updates",
+    text: "Workflow progress on your purchases",
+    icon: <FileCheck2 size={18} />,
+    accent: "green",
+  },
+];
 
-const loadReadIds = () => {
-  try {
-    const stored = localStorage.getItem(getReadStorageKey());
-    return stored ? new Set(JSON.parse(stored)) : new Set();
-  } catch (error) {
-    return new Set();
-  }
-};
+function CategoryItem({ icon, accent, title, count, text }) {
+  return (
+    <div className={`notif-category accent-${accent}`}>
+      <div className="notif-category-top">
+        <div className="notif-category-icon">{icon}</div>
+        <span className="notif-category-count">{count}</span>
+      </div>
+
+      <span className="notif-category-title">{title}</span>
+      <p className="notif-category-text">{text}</p>
+    </div>
+  );
+}
 
 function BuyerNotifications() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/buyer-dashboard");
 
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState({
@@ -49,7 +66,6 @@ function BuyerNotifications() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [readIds, setReadIds] = useState(loadReadIds);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -87,7 +103,7 @@ function BuyerNotifications() {
     fetchNotifications();
   }, [navigate]);
 
-  const isUnread = (notif) => notif.status === "Unread" && !readIds.has(notif.id);
+  const isUnread = (notif) => notif.status === "Unread";
 
   const filteredNotifications = notifications.filter((notif) => {
     const search = searchText.toLowerCase();
@@ -107,7 +123,7 @@ function BuyerNotifications() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const liveUnreadCount = notifications.filter((notif) => isUnread(notif)).length;
+  const liveUnreadCount = stats.unreadAlerts;
 
   const getIcon = (type) => {
     if (type === "Inquiry Status") return <ShoppingBag size={22} />;
@@ -115,10 +131,10 @@ function BuyerNotifications() {
     return <BellRing size={22} />;
   };
 
-  const getTypeClass = (type) => {
-    if (type === "Inquiry Status") return "type-inquiry";
-    if (type === "Transaction Update") return "type-transaction";
-    return "type-general";
+  const getTypeAccent = (type) => {
+    if (type === "Inquiry Status") return "blue";
+    if (type === "Transaction Update") return "green";
+    return "gold";
   };
 
   const getNotificationLink = (notif) => {
@@ -137,29 +153,44 @@ function BuyerNotifications() {
     return null;
   };
 
-  const markAsRead = (id) => {
-    setReadIds((prev) => {
-      if (prev.has(id)) return prev;
+  const markAsRead = async (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, status: "Read" } : n))
+    );
+    setStats((prev) => ({ ...prev, unreadAlerts: Math.max(0, prev.unreadAlerts - 1) }));
 
-      const next = new Set(prev);
-      next.add(id);
-
-      try {
-        localStorage.setItem(getReadStorageKey(), JSON.stringify([...next]));
-      } catch (error) {
-        // localStorage may be unavailable; read state just won't persist across reloads
-      }
-
-      return next;
-    });
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_URL}/api/buyer/notifications/${id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      // Best-effort — the badge will just re-settle next visit if this fails.
+    }
   };
 
   const handleNotificationClick = (notif) => {
-    markAsRead(notif.id);
+    if (notif.status === "Unread") markAsRead(notif.id);
 
     const link = getNotificationLink(notif);
     if (!link) return;
     navigate(link.path, { state: link.state });
+  };
+
+  const handleMarkAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, status: "Read" })));
+    setStats((prev) => ({ ...prev, unreadAlerts: 0 }));
+
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_URL}/api/buyer/notifications/read-all`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      alert("Cannot connect to backend server");
+    }
   };
 
   const formatTime = (time) => {
@@ -213,9 +244,9 @@ function BuyerNotifications() {
   return (
     <div className="buyer-notifications-page">
       <div className="notifications-header">
-        <Link to="/buyer-dashboard" className="back-btn">
+        <button type="button" className="back-btn" onClick={goBack} aria-label="Go back">
           <ArrowLeft size={20} />
-        </Link>
+        </button>
 
         <div>
           <span className="notif-eyebrow">BUYER PORTAL</span>
@@ -227,31 +258,61 @@ function BuyerNotifications() {
       </div>
 
       <section className="notification-stats">
-        <NotifStat
+        <AdminStatCard
+          accent="blue"
           icon={<BellRing />}
           value={stats.totalAlerts}
           label="Total Alerts"
-          accent="green"
+          note="All notifications"
         />
-        <NotifStat
+        <AdminStatCard
+          accent="red"
           icon={<AlertTriangle />}
           value={liveUnreadCount}
           label="Unread Alerts"
-          accent="amber"
-          pulse={liveUnreadCount > 0}
+          note="Needs your attention"
         />
-        <NotifStat
+        <AdminStatCard
+          accent="amber"
           icon={<ShoppingBag />}
           value={stats.inquiryUpdates}
           label="Inquiry Updates"
-          accent="soft-green"
+          note="Replies from sellers"
         />
-        <NotifStat
+        <AdminStatCard
+          accent="green"
           icon={<FileCheck2 />}
           value={stats.transactionUpdates}
           label="Transaction Updates"
-          accent="gold"
+          note="Workflow progress on your deals"
         />
+      </section>
+
+      <section className="notification-categories-panel">
+        <div className="notif-category-header">
+          <div>
+            <h3>Notification Categories</h3>
+            <p>Breakdown of alerts by marketplace area.</p>
+          </div>
+
+          <span className="notif-category-count-pill">
+            <BellRing size={14} />
+            {CATEGORY_DEFS.length} categories
+          </span>
+        </div>
+
+        <div className="notif-category-strip">
+          {CATEGORY_DEFS.map((cat) => (
+            <CategoryItem
+              key={cat.key}
+              icon={cat.icon}
+              accent={cat.accent}
+              title={cat.title}
+              count={stats[cat.key]}
+              text={cat.text}
+            />
+          ))}
+        </div>
       </section>
 
       <div className="notification-toolbar">
@@ -278,93 +339,103 @@ function BuyerNotifications() {
         </select>
       </div>
 
-      <section className="notifications-layout">
-        <div className="notifications-list-card">
-          <div className="notifications-card-header">
-            <div>
-              <h3>Notification Inbox</h3>
-              <p>Latest updates related to your inquiries and purchases.</p>
-            </div>
+      <section className="notifications-list-card">
+        <div className="notifications-card-header">
+          <div>
+            <h3>Notification Inbox</h3>
+            <p>Latest updates related to your inquiries and purchases.</p>
           </div>
 
-          <div className="notification-list">
-            {filteredNotifications.length === 0 ? (
-              <div className="notification-empty-state">
-                <BellRing size={36} />
-                <h4>No notifications found</h4>
-                <p>
-                  {notifications.length === 0
-                    ? "You're all caught up. Updates on your inquiries and transactions will appear here."
-                    : "Try adjusting your search or filters."}
-                </p>
-              </div>
-            ) : (
-              filteredNotifications.map((notif, index) => {
-                const isClickable = Boolean(getNotificationLink(notif));
-                const unread = isUnread(notif);
+          <button className="mark-all-btn" type="button" onClick={handleMarkAllRead}>
+            <CheckCircle size={16} />
+            Mark all as read
+          </button>
+        </div>
 
-                return (
-                  <div
-                    className={`notification-row ${getTypeClass(notif.type)} ${
-                      unread ? "unread" : ""
-                    } ${isClickable ? "clickable" : ""}`}
-                    key={notif.id}
-                    style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
-                    onClick={isClickable ? () => handleNotificationClick(notif) : undefined}
-                    role={isClickable ? "button" : undefined}
-                    tabIndex={isClickable ? 0 : undefined}
-                    onKeyDown={
-                      isClickable
-                        ? (e) => {
-                            if (e.key === "Enter") handleNotificationClick(notif);
-                          }
-                        : undefined
-                    }
-                  >
-                    <div className="notification-icon">
-                      {getIcon(notif.type)}
-                      {unread && <span className="notif-pulse-dot"></span>}
+        <div className="notification-list">
+          {filteredNotifications.length === 0 ? (
+            <div className="notification-empty-state">
+              <BellRing size={36} />
+              <h4>No notifications found</h4>
+              <p>
+                {notifications.length === 0
+                  ? "You're all caught up. Updates on your inquiries and transactions will appear here."
+                  : "Try adjusting your search or filters."}
+              </p>
+            </div>
+          ) : (
+            filteredNotifications.map((notif, index) => {
+              const isClickable = Boolean(getNotificationLink(notif));
+              const unread = isUnread(notif);
+              const accent = getTypeAccent(notif.type);
+
+              return (
+                <div
+                  className={`notification-row accent-${accent} ${
+                    unread ? "unread" : ""
+                  } ${isClickable ? "clickable" : ""}`}
+                  key={notif.id}
+                  style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
+                  onClick={isClickable ? () => handleNotificationClick(notif) : undefined}
+                  role={isClickable ? "button" : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
+                  onKeyDown={
+                    isClickable
+                      ? (e) => {
+                          if (e.key === "Enter") handleNotificationClick(notif);
+                        }
+                      : undefined
+                  }
+                >
+                  <div className="notification-icon">
+                    {getIcon(notif.type)}
+                    {unread && <span className="notif-pulse-dot"></span>}
+                  </div>
+
+                  <div className="notification-content">
+                    <div className="notification-meta">
+                      <span className="notification-type-chip">{notif.type}</span>
+                      <small>{formatTime(notif.time)}</small>
                     </div>
 
-                    <div className="notification-content">
-                      <div className="notification-meta">
-                        <span>{notif.type}</span>
-                        <small>{formatTime(notif.time)}</small>
-                      </div>
+                    <h4>{notif.title}</h4>
+                    <p>{notif.message}</p>
 
-                      <h4>{notif.title}</h4>
-                      <p>{notif.message}</p>
-
-                      <div className="notification-tags">
-                        <span className={unread ? "tag-unread" : "tag-read"}>
-                          {unread ? "Unread" : "Read"}
-                        </span>
-                      </div>
+                    <div className="notification-tags">
+                      <span className={unread ? "tag-unread" : "tag-read"}>
+                        <span className="tag-dot"></span>
+                        {unread ? "Unread" : "Read"}
+                      </span>
                     </div>
+                  </div>
+
+                  <div className="notification-side">
+                    {unread && (
+                      <div className="notification-actions">
+                        <button
+                          className="neutral"
+                          title="Mark as read"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notif.id);
+                          }}
+                        >
+                          <Eye size={17} />
+                        </button>
+                      </div>
+                    )}
 
                     {isClickable && (
                       <ChevronRight size={20} className="notification-chevron" />
                     )}
                   </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
-    </div>
-  );
-}
-
-function NotifStat({ icon, value, label, accent = "green", pulse }) {
-  return (
-    <div className={`notif-stat-card accent-${accent}`}>
-      <div className="notif-stat-icon">
-        {icon}
-        {pulse && <span className="notif-pulse-dot"></span>}
-      </div>
-      <h2>{value}</h2>
-      <p>{label}</p>
     </div>
   );
 }

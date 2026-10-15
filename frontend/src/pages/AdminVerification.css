@@ -1,14 +1,4 @@
-:root {
-  --primary: #0f3d2e;
-  --primary-dark: #071f16;
-  --accent: #d7a24d;
-  --background: #f4f1e8;
-  --card: #fbfaf5;
-  --border: #e8e2d4;
-  --text: #111827;
-  --muted: #667085;
-  --shadow: 0 14px 40px rgba(15, 61, 46, 0.08);
-}
+@import "./AdminTheme.css";
 
 .verification-page {
   min-height: 100vh;
@@ -44,6 +34,12 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 61, 46, 0.18);
 }
 
 .verification-topbar span {
@@ -68,7 +64,7 @@
   max-width: 720px;
 }
 
-.export-btn {
+.verification-page .export-btn {
   height: 50px;
   border: none;
   border-radius: 15px;
@@ -88,84 +84,29 @@
   margin-bottom: 24px;
 }
 
-.verify-kpi {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 22px;
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.kpi-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.verify-kpi.warning .kpi-icon {
-  background: #fff7d6;
-  color: #8a6500;
-}
-
-.verify-kpi.success .kpi-icon {
-  background: #eaf5ef;
-  color: #0f3d2e;
-}
-
-.verify-kpi.danger .kpi-icon {
-  background: #ffe5e5;
-  color: #b42318;
-}
-
-.verify-kpi.primary .kpi-icon {
-  background: #e6f0ff;
-  color: #2257a5;
-}
-
-.verify-kpi h2 {
-  margin: 0;
-  font-size: 34px;
-  font-weight: 950;
-  color: var(--primary-dark);
-}
-
-.verify-kpi p {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.verification-panel,
-.verification-guide {
-  background: var(--card);
-  border: 1px solid var(--border);
+.verification-panel {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 22px;
   padding: 24px;
   box-shadow: var(--shadow);
 }
 
-.panel-header,
-.verification-guide {
+.panel-header {
   display: flex;
   justify-content: space-between;
   gap: 24px;
 }
 
-.panel-header h3,
-.verification-guide h3 {
+.panel-header h3 {
   margin: 0;
   font-weight: 950;
   color: var(--primary-dark);
 }
 
-.panel-header p,
-.verification-guide p {
+.panel-header p {
   margin: 5px 0 0;
   color: var(--muted);
 }
@@ -250,10 +191,33 @@
   vertical-align: middle;
 }
 
+.verification-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.verification-table tbody tr:hover {
+  background: #faf8f2;
+}
+
 .farmer-cell {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.farmer-cell-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.farmer-cell-link:hover strong {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
 }
 
 .avatar {
@@ -266,6 +230,8 @@
   align-items: center;
   justify-content: center;
   font-weight: 900;
+  flex-shrink: 0;
+  object-fit: cover;
 }
 
 .farmer-cell strong {
@@ -293,6 +259,25 @@
   gap: 8px;
   color: var(--primary);
   font-weight: 750;
+}
+
+.doc-completeness {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.doc-completeness.complete {
+  background: #eaf5ef;
+  color: var(--primary);
+}
+
+.doc-completeness.incomplete {
+  background: #ffe5e5;
+  color: #b42318;
 }
 
 .doc-status {
@@ -323,45 +308,213 @@
 }
 
 .verification-actions button {
+  --action-color: #16a34a;
+  --action-tint: rgba(22, 163, 74, 0.12);
+  --action-shadow: rgba(22, 163, 74, 0.5);
   width: 38px;
   height: 38px;
-  border: none;
-  border-radius: 12px;
-  background: #eaf5ef;
-  color: var(--primary);
+  border: 1.5px solid var(--action-tint);
+  border-radius: 11px;
+  background: var(--action-tint);
+  color: var(--action-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.verification-actions button svg {
+  stroke-width: 2.25;
+}
+
+.verification-actions button:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: var(--action-color);
+  color: #fff;
+  box-shadow: 0 10px 20px -8px var(--action-shadow);
+}
+
+.verification-actions button:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.verification-actions .approve {
+  --action-color: #16a34a;
+  --action-tint: rgba(22, 163, 74, 0.12);
+  --action-shadow: rgba(22, 163, 74, 0.5);
+}
+
+.verification-actions .neutral {
+  --action-color: #64748b;
+  --action-tint: rgba(100, 116, 139, 0.14);
+  --action-shadow: rgba(100, 116, 139, 0.45);
 }
 
 .verification-actions .danger {
-  background: #ffe5e5;
-  color: #b42318;
+  --action-color: #dc2626;
+  --action-tint: rgba(220, 38, 38, 0.12);
+  --action-shadow: rgba(220, 38, 38, 0.5);
 }
 
 .verification-guide {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: var(--shadow);
   margin-top: 24px;
+}
+
+.verification-guide-header {
+  display: flex;
+  justify-content: space-between;
   align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.verification-guide-header h3 {
+  margin: 0;
+  font-weight: 950;
+  color: var(--primary-dark);
+}
+
+.verification-guide-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  max-width: 520px;
+}
+
+.guide-count-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #eaf5ef;
+  color: var(--primary);
+  border: 1px solid rgba(15, 61, 46, 0.12);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
 }
 
 .guide-grid {
-  flex: 1;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
 
 .guide-card {
+  position: relative;
+  overflow: hidden;
   background: #f8f5ec;
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.guide-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, var(--guide-tint) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.guide-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--guide-color), transparent 140%);
+  box-shadow: 0 0 14px 0 var(--guide-color);
+  opacity: 0.7;
+}
+
+.guide-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--guide-color);
+  box-shadow: 0 16px 32px -14px var(--guide-color);
+}
+
+.guide-card.accent-amber { --guide-color: #d7a24d; --guide-tint: rgba(215, 162, 77, 0.16); }
+.guide-card.accent-green { --guide-color: #0f3d2e; --guide-tint: rgba(15, 61, 46, 0.1); }
+
+.guide-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.guide-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(150deg, var(--guide-tint), transparent);
+  border: 1px solid var(--guide-tint);
+  color: var(--guide-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 12px -6px var(--guide-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.guide-card:hover .guide-card-icon {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.guide-logic-pill {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--guide-color);
+  background: var(--guide-tint);
+  padding: 4px 8px;
+  border-radius: 999px;
 }
 
 .guide-card strong {
+  display: block;
   color: var(--primary-dark);
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 10px;
+  position: relative;
 }
 
-.guide-card p {
-  margin: 6px 0 0;
-  color: var(--muted);
+.guide-doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  position: relative;
+}
+
+.guide-doc-list li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #374151;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.guide-doc-list li svg {
+  color: var(--guide-color);
+  flex-shrink: 0;
 }
 
 @media (max-width: 1200px) {
@@ -373,10 +526,6 @@
   .verification-toolbar {
     grid-template-columns: 1fr 1fr;
   }
-
-  .verification-guide {
-    flex-direction: column;
-  }
 }
 
 @media (max-width: 800px) {
@@ -384,7 +533,8 @@
     padding: 22px;
   }
 
-  .verification-topbar {
+  .verification-topbar,
+  .verification-guide-header {
     flex-direction: column;
   }
 
@@ -396,5 +546,1001 @@
 
   .verification-topbar h1 {
     font-size: 34px;
+  }
+}
+
+/* ---------- Farmer profile modal ---------- */
+
+@keyframes doc-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.doc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 31, 22, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: doc-modal-fade-in 0.2s ease;
+}
+
+.doc-modal {
+  position: relative;
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+}
+
+.doc-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: var(--ring-track);
+  border: none;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.doc-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.doc-modal-head h3 {
+  margin: 0 0 6px;
+}
+
+.doc-modal-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-modal-avatar-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.doc-modal-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.doc-modal-pill.verified {
+  background: #eaf5ef;
+  color: var(--primary);
+}
+
+.doc-modal-pill.pending {
+  background: #fff7d6;
+  color: #8a6500;
+}
+
+.doc-modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.doc-modal-info div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.doc-modal-info svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.doc-modal-listing {
+  padding: 16px 0;
+}
+
+.doc-modal-listing h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.doc-modal-listing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.doc-modal-tag {
+  background: var(--green-soft, #eaf5ef);
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.doc-modal-badge {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.doc-modal-badge.pending {
+  background: #fff7d6;
+  color: #8a6500;
+}
+
+.doc-modal-badge.approved {
+  background: #eaf5ef;
+  color: var(--primary);
+}
+
+.doc-modal-badge.flagged {
+  background: #ffe5e5;
+  color: #b42318;
+}
+
+.doc-modal-badge-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.doc-modal-listing p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.doc-modal-view-all {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.doc-modal-view-all:hover {
+  background: var(--primary-dark);
+}
+
+@media (max-width: 768px) {
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .verification-page {
+    padding: 14px;
+  }
+
+  .verification-topbar {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .verification-topbar span {
+    font-size: 10.5px;
+  }
+
+  .verification-topbar h1 {
+    font-size: 22px;
+    margin: 4px 0;
+  }
+
+  .verification-topbar p {
+    font-size: 13px;
+  }
+
+  .verification-page .export-btn {
+    height: 42px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .verification-kpis {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .admin-stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .admin-stat-card h2 {
+    font-size: 17.5px;
+    margin: 8px 0 0;
+  }
+
+  .admin-stat-card p {
+    font-size: 9.5px;
+  }
+
+  .verification-panel {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .verification-toolbar {
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+
+  .verification-toolbar select,
+  .verification-search {
+    height: 42px;
+  }
+
+  .verification-table th,
+  .verification-table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .guide-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .guide-card {
+    padding: 14px;
+  }
+}
+/* The back button is a <button> (it goes back in history rather than
+   linking to the dashboard) - reset the browser's button padding. */
+.verification-page .back-btn {
+  padding: 0;
+  cursor: pointer;
+}
+
+/* PHONE — minimal pass
+   Scoped under .verification-page (admin CSS is global and class names
+   like .back-btn/.export-btn/.farmer-cell/.avatar repeat across pages).
+   Stat cards keep their design; the queue table becomes a divided list. */
+
+@media (max-width: 768px) {
+  /* Header: back + title + compact Export button on one row */
+
+  .verification-page .verification-topbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .verification-page .top-left {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .verification-page .top-left > div {
+    min-width: 0;
+  }
+
+  .verification-page .verification-topbar span,
+  .verification-page .verification-topbar p {
+    display: none;
+  }
+
+  .verification-page .verification-topbar h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .verification-page .export-btn {
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 12px;
+    font-size: 12.5px;
+  }
+
+  /* Stat cards: same design, 2x2 instead of one tall column */
+
+  .verification-page .verification-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Queue panel: no box, slim title */
+
+  .verification-page .verification-panel {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .verification-page .panel-header h3 {
+    font-size: 15px;
+  }
+
+  .verification-page .panel-header p {
+    display: none;
+  }
+
+  /* Toolbar: full-width search, two filters side by side */
+
+  .verification-page .verification-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 10px 0 8px;
+    padding: 0;
+  }
+
+  .verification-page .verification-search {
+    grid-column: 1 / -1;
+    height: 44px;
+    border-radius: 14px;
+    background: white;
+  }
+
+  .verification-page .verification-search input {
+    font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  }
+
+  .verification-page .verification-toolbar select {
+    height: 40px;
+    min-width: 0;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: white;
+    font-size: 13px;
+  }
+
+  /* Table → divided list. Each row:
+       [J] Juan Dela Cruz                    [Pending]
+       [Swine]                                  DOC-12
+       Barangay health certificate            5/2/2026
+       📄 cert.pdf  1/1 required
+       [👁] [⬇] [✓] [✕]                                  */
+
+  .verification-page .table-responsive {
+    overflow: visible;
+  }
+
+  .verification-page .verification-table thead {
+    display: none;
+  }
+
+  .verification-page .verification-table,
+  .verification-page .verification-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .verification-page .verification-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .verification-page .verification-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .verification-page .verification-table tbody tr:hover {
+    background: none;
+  }
+
+  .verification-page .verification-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    font-size: 13px;
+  }
+
+  .verification-page .verification-table td:only-child {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    padding: 20px 0;
+  }
+
+  /* farmer */
+  .verification-page .verification-table td:nth-child(2) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  /* status */
+  .verification-page .verification-table td:nth-child(7) {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  /* product pill */
+  .verification-page .verification-table td:nth-child(3) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* DOC id */
+  .verification-page .verification-table td:nth-child(1) {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: right;
+    font-size: 12px;
+  }
+
+  /* document type */
+  .verification-page .verification-table td:nth-child(4) {
+    grid-column: 1;
+    grid-row: 3;
+    color: var(--muted);
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* date */
+  .verification-page .verification-table td:nth-child(6) {
+    grid-column: 2;
+    grid-row: 3;
+    text-align: right;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* file + completeness */
+  .verification-page .verification-table td:nth-child(5) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* actions */
+  .verification-page .verification-table td:nth-child(8) {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    padding-top: 4px;
+  }
+
+  .verification-page .farmer-cell {
+    min-width: 0;
+  }
+
+  .verification-page .farmer-cell > div {
+    min-width: 0;
+  }
+
+  .verification-page .farmer-cell strong {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .verification-page .farmer-cell p {
+    display: none;
+  }
+
+  .verification-page .file-cell {
+    flex: 1;
+    min-width: 0;
+    font-size: 12.5px;
+  }
+
+  .verification-page .file-cell svg {
+    flex-shrink: 0;
+  }
+
+  .verification-page .file-cell span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .verification-page .doc-completeness {
+    flex-shrink: 0;
+    margin-top: 0;
+  }
+
+  .verification-page .doc-status {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .verification-page .verification-actions button {
+    width: 44px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  /* Requirements guide: one compact row per type, no document list */
+
+  .verification-page .verification-guide {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .verification-page .verification-guide-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .verification-page .verification-guide-header h3 {
+    font-size: 15px;
+  }
+
+  .verification-page .verification-guide-header p {
+    display: none;
+  }
+
+  .verification-page .guide-count-pill {
+    flex-shrink: 0;
+  }
+
+  .verification-page .guide-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .verification-page .guide-card {
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .verification-page .guide-card::after,
+  .verification-page .guide-doc-list,
+  .verification-page .guide-logic-pill {
+    display: none;
+  }
+
+  .verification-page .guide-card-top {
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .verification-page .guide-card-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .verification-page .guide-card strong {
+    margin: 0;
+    font-size: 12.5px;
+  }
+
+  /* Farmer details pop-up becomes a bottom sheet */
+
+  .verification-page .doc-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .verification-page .doc-modal {
+    max-width: none;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 16px calc(16px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.97);
+    animation: verification-sheet-up 0.25s ease both;
+  }
+
+  .verification-page .doc-modal::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .verification-page .doc-modal-close {
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .verification-page .doc-modal-head {
+    padding-right: 44px;
+  }
+
+  .verification-page .doc-modal-view-all {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+
+/* PHONE-ONLY ADDITIONS: missing-document badge + filter chip, and a
+   one-line requirements note in place of the guide grid. Hidden on
+   desktop, which keeps its table column and full guide cards. */
+
+.verification-page .missing-doc-chip,
+.verification-page .missing-doc-badge,
+.verification-page .guide-phone-note {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Long farmer names end in "…" instead of running under the status */
+  .verification-page .farmer-cell-link {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Status line under the farmer's name — quiet text + dot, not a pill */
+  .verification-page .missing-doc-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    color: #b42318;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .verification-page .missing-doc-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #d92d20;
+    box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.15);
+  }
+
+  /* The same warning lower in the row would now repeat it */
+  .verification-page .doc-completeness.incomplete {
+    display: none;
+  }
+
+  /* Filter chip — neutral outline like the other filters; brand green
+     when applied, with the count as a small red badge */
+  .verification-page .missing-doc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    margin: 0 0 12px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    color: var(--primary-dark);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .verification-page .missing-doc-chip svg {
+    flex-shrink: 0;
+    color: #b42318;
+  }
+
+  .verification-page .missing-doc-chip.active {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: white;
+  }
+
+  .verification-page .missing-doc-chip.active svg {
+    color: #fda29b;
+  }
+
+  .verification-page .missing-doc-chip-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: #d92d20;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .verification-page .missing-doc-chip .missing-doc-chip-clear {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Requirements guide → compact reference panel (every animal type has
+     the same rule, so one row replaces the six cards) */
+  .verification-page .verification-guide-header,
+  .verification-page .guide-grid {
+    display: none;
+  }
+
+  .verification-page .verification-guide {
+    padding: 14px;
+  }
+
+  .verification-page .guide-phone-note {
+    display: block;
+  }
+
+  .verification-page .guide-phone-note-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .verification-page .guide-phone-note-title svg {
+    color: var(--primary);
+  }
+
+  .verification-page .guide-phone-note dl {
+    margin: 0;
+  }
+
+  .verification-page .guide-phone-note dl > div {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .verification-page .guide-phone-note dt {
+    color: var(--primary-dark);
+    font-size: 12.5px;
+    font-weight: 800;
+  }
+
+  .verification-page .guide-phone-note dd {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--text);
+    font-size: 12.5px;
+  }
+
+  .verification-page .req-tag {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+
+  .verification-page .req-tag.required {
+    background: rgba(15, 61, 46, 0.08);
+    color: var(--primary);
+  }
+
+  .verification-page .req-tag.optional {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+}
+
+@keyframes verification-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Touch screens: no hover lift, since it sticks after a tap */
+
+@media (hover: none) {
+  .verification-page .back-btn:hover,
+  .verification-page .export-btn:hover,
+  .verification-page .verification-actions button:hover,
+  .verification-page .guide-card:hover,
+  .verification-page .guide-card:hover .guide-card-icon {
+    transform: none;
+  }
+}
+
+/* Rejection reason, under the status and in the reject dialog */
+
+.doc-review-note {
+  display: block;
+  max-width: 220px;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reject-modal {
+  max-width: 460px;
+  width: 100%;
+}
+
+.reject-modal h3 {
+  margin: 0 0 6px;
+  color: #0f3d2e;
+}
+
+.reject-modal-subtitle {
+  margin: 0 0 14px;
+  color: #667085;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.reject-reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.reject-reason-chips button {
+  padding: 7px 11px;
+  border: 1px solid #e8e2d4;
+  border-radius: 999px;
+  background: white;
+  color: #344054;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.reject-reason-chips button.active {
+  border-color: #b42318;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.reject-reason-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.reject-modal textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e8e2d4;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.reject-modal textarea:focus {
+  outline: none;
+  border-color: #0f3d2e;
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
+}
+
+.reject-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.reject-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reject-cancel {
+  border: 1px solid #e8e2d4;
+  background: white;
+  color: #0f3d2e;
+}
+
+.reject-confirm {
+  border: none;
+  background: #b42318;
+  color: white;
+}
+
+.reject-confirm:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 768px) {
+  .reject-modal textarea {
+    font-size: 16px;
+  }
+
+  .reject-modal-actions button {
+    flex: 1;
+    justify-content: center;
   }
 }
