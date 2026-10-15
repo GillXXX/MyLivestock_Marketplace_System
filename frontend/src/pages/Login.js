@@ -13,6 +13,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { API_URL } from "../config";
 import { completeAuth, describeGoogleError } from "../utils/auth";
+import { SESSION_MESSAGES } from "../utils/sessionGuard";
 import logo from "../assets/logo.png";
 import "./Login.css";
 
@@ -21,7 +22,10 @@ function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  // Arriving here because a session ended (utils/sessionGuard.js).
+  const [message, setMessage] = useState(
+    () => SESSION_MESSAGES[new URLSearchParams(window.location.search).get("session")] || ""
+  );
 
   const [formData, setFormData] = useState({
     email: "",
