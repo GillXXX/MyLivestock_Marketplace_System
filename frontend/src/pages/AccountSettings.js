@@ -17,6 +17,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
 import { logout } from "../utils/auth";
+import LogoutConfirmModal from "../components/LogoutConfirmModal";
 import { isWeakPassword, PASSWORD_HINT } from "../utils/password";
 import useGoBack from "../utils/useGoBack";
 import "./AccountSettings.css";
@@ -194,6 +195,7 @@ function AccountSettings({ role }) {
   };
 
   const handleLogout = () => logout(navigate);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   return (
     <div className={`account-settings-page role-${role}`}>
@@ -393,13 +395,19 @@ function AccountSettings({ role }) {
             <h3>Session</h3>
             <p>Sign out of your account on this device.</p>
 
-            <button className="settings-logout-btn" onClick={handleLogout} type="button">
+            <button className="settings-logout-btn" onClick={() => setConfirmLogout(true)} type="button">
               <LogOut size={18} />
               Log Out
             </button>
           </div>
         </div>
       </div>
+
+      <LogoutConfirmModal
+        open={confirmLogout}
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

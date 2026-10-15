@@ -20,6 +20,7 @@ import logo from "../assets/logo.png";
 import NotificationBell from "./NotificationBell";
 import { API_URL } from "../config";
 import { logout } from "../utils/auth";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 import "../pages/FarmerDashboard.css";
 
 function FarmerLayout() {
@@ -28,6 +29,7 @@ function FarmerLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -199,7 +201,7 @@ function FarmerLayout() {
           className="farmer-logout"
           onClick={() => {
             setMobileNavOpen(false);
-            handleLogout();
+            setConfirmLogout(true);
           }}
         >
           <LogOut size={20} />
@@ -210,6 +212,12 @@ function FarmerLayout() {
       <div style={{ flex: 1, minWidth: 0 }}>
         <Outlet />
       </div>
+
+      <LogoutConfirmModal
+        open={confirmLogout}
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

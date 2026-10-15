@@ -21,6 +21,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import NotificationBell from "./NotificationBell";
 import { logout } from "../utils/auth";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 import "../pages/AdminDashboard.css";
 
 function AdminLayout() {
@@ -28,6 +29,7 @@ function AdminLayout() {
   const location = useLocation();
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isSuperAdmin = currentUser.role === "admin";
@@ -158,7 +160,7 @@ function AdminLayout() {
           className="pro-logout"
           onClick={() => {
             setMobileNavOpen(false);
-            handleLogout();
+            setConfirmLogout(true);
           }}
         >
           <LogOut size={20} /> Logout
@@ -172,6 +174,12 @@ function AdminLayout() {
       <div style={{ flex: 1, minWidth: 0 }}>
         <Outlet />
       </div>
+
+      <LogoutConfirmModal
+        open={confirmLogout}
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }
