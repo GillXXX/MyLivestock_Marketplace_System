@@ -208,15 +208,15 @@ function LandingPage() {
 
           <Feature
             icon={<MessageCircle />}
-            title="Buyer-Seller Messaging"
-            text="Farmers and buyers can communicate, inquire, and negotiate inside the platform."
+            title="Messaging & Deal Terms"
+            text="Buyers and farmers chat, then trade offers and counter-offers on price, pickup, and payment until both agree."
             tone="green"
           />
 
           <Feature
             icon={<ShieldCheck />}
             title="MAO Verification"
-            text="Administrators can approve listings, verify documents, and monitor transactions."
+            text="MAO personnel verify farmer accounts and each listing's barangay health certificate, and monitor every deal."
             tone="green"
           />
 
@@ -230,7 +230,7 @@ function LandingPage() {
           <Feature
             icon={<BarChart3 />}
             title="Reports & Analytics"
-            text="MAO personnel can generate trading summaries and livestock activity reports."
+            text="MAO personnel generate trading summaries, livestock activity reports, and farmer records per barangay."
             tone="green"
           />
 
@@ -249,8 +249,8 @@ function LandingPage() {
           <h2>A clear process from listing to transaction confirmation.</h2>
           <p>
             Unlike generic marketplace platforms, VOLT follows a
-            livestock-specific workflow that supports inquiry, negotiation,
-            verification, and transaction recording.
+            livestock-specific workflow: MAO-verified listings, structured
+            negotiation, weighing at pickup, and recorded transactions.
           </p>
 
           <a href="/register">
@@ -264,31 +264,31 @@ function LandingPage() {
             number="01"
             icon={<Store size={18} />}
             title="Farmer posts livestock"
-            text="Listing details, photos, and pricing go live for buyers to browse."
+            text="A verified farmer lists the animal with photos, pricing, and a barangay health certificate."
           />
           <WorkflowStep
             number="02"
-            icon={<MessageCircle size={18} />}
-            title="Buyer sends inquiry"
-            text="Interested buyers reach out directly through in-platform messaging."
+            icon={<ShieldCheck size={18} />}
+            title="MAO verifies the listing"
+            text="MAO checks the health certificate before the listing goes live."
           />
           <WorkflowStep
             number="03"
-            icon={<Handshake size={18} />}
-            title="Buyer and seller negotiate"
-            text="Both parties discuss price, condition, and pickup arrangements."
+            icon={<MessageCircle size={18} />}
+            title="Buyer inquires and starts a deal"
+            text="Buyers ask questions in the chat, then start a deal."
           />
           <WorkflowStep
             number="04"
-            icon={<ShieldCheck size={18} />}
-            title="MAO verifies documents"
-            text="Administrators confirm listing and transaction documentation."
+            icon={<Handshake size={18} />}
+            title="Both sides agree on the terms"
+            text="Offers and counter-offers settle the price, pickup date and place, and payment."
           />
           <WorkflowStep
             number="05"
             icon={<ClipboardCheck size={18} />}
-            title="Transaction is recorded"
-            text="The completed trade is logged for monitoring and reporting."
+            title="Weighed, confirmed, and recorded"
+            text="Weighed at pickup if sold by the kilo, confirmed by the buyer, and recorded."
           />
         </div>
       </section>
@@ -299,8 +299,9 @@ function LandingPage() {
           <h2>Designed for common livestock in Veruela.</h2>
           <p>
             The system supports structured workflows for livestock commonly
-            traded by backyard farmers, plus backyard farm products like eggs,
-            fruits, and vegetables.
+            traded by backyard farmers (swine, cattle, carabao, goats, poultry,
+            and ducks), plus backyard farm products like eggs, fruits, and
+            vegetables.
           </p>
         </div>
 
@@ -325,8 +326,8 @@ function LandingPage() {
 
         <div className="benefit-list reveal">
           <Benefit icon={<Users size={20} />} title="Wider buyer access" text="Farmers can present livestock to more potential buyers online." />
-          <Benefit icon={<MessageCircle size={20} />} title="Transparent negotiation" text="Buyers and sellers can communicate through structured messaging." />
-          <Benefit icon={<ShieldCheck size={20} />} title="Verified transactions" text="MAO verification strengthens trust and documentation completeness." />
+          <Benefit icon={<MessageCircle size={20} />} title="Transparent negotiation" text="Every offer, counter-offer, and agreed price is recorded in the chat." />
+          <Benefit icon={<ShieldCheck size={20} />} title="Verified farmers and listings" text="MAO checks farmer IDs and health certificates before anything is sold." />
           <Benefit icon={<ClipboardCheck size={20} />} title="Centralized records" text="Listings, inquiries, and completed trades are stored in one system." />
         </div>
       </section>
