@@ -34,3 +34,13 @@ export function formatRequirementMessage(type, category) {
     req.minDocuments > 1 ? "s" : ""
   } minimum).`;
 }
+
+// What to call a listing's attached document: a listing takes one, and
+// for a live animal that one is the barangay health certificate. Older
+// listings may still have several, so they get numbered.
+export function getDocumentLabel(type, category, index = 0, total = 1) {
+  const label = getDocumentRequirement(type, category)
+    ? LIVESTOCK_DOCUMENT_REQUIREMENT.documents[0]
+    : "Supporting document";
+  return total > 1 ? `${label} ${index + 1}` : label;
+}

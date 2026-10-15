@@ -1,5 +1,6 @@
 import { X, BadgeCheck, MapPin, FileText, MessageCircle, ShoppingCart } from "lucide-react";
 import { isLivestock, formatPrice, formatQuantity, formatWeight, getListingPlaceholder } from "../utils/productCatalog";
+import { getDocumentLabel } from "../utils/livestockDocRequirements";
 import { useNavigate } from "react-router-dom";
 import "./ListingDetailsModal.css";
 
@@ -119,7 +120,7 @@ function ListingDetailsModal({ listing, onClose, onInquire, onBuyNow }) {
                 {documents.map((docUrl, index) => (
                   <a key={index} href={docUrl} target="_blank" rel="noopener noreferrer">
                     <FileText size={16} />
-                    Document {index + 1}
+                    {getDocumentLabel(listing.livestock_type, listing.category, index, documents.length)}
                   </a>
                 ))}
               </div>

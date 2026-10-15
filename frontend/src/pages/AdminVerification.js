@@ -26,6 +26,7 @@ import FarmerVerificationQueue from "../components/FarmerVerificationQueue";
 import {
   getDocumentRequirement,
   LIVESTOCK_DOCUMENT_REQUIREMENT,
+  getDocumentLabel,
 } from "../utils/livestockDocRequirements";
 import { LIVESTOCK_TYPES, getProductIcon } from "../utils/productCatalog";
 import { API_URL } from "../config";
@@ -409,7 +410,7 @@ function AdminVerification() {
                           <FileText size={18} />
                           <span>
                             {docUrls.length > 0
-                              ? docUrls[0].split("/").pop()
+                              ? getDocumentLabel(doc.livestock_type, doc.category)
                               : "No file uploaded"}
                             {docUrls.length > 1 ? ` (+${docUrls.length - 1} more)` : ""}
                           </span>

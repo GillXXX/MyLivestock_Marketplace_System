@@ -29,6 +29,7 @@ import {
   formatQuantity,
   formatWeight,
 } from "../utils/productCatalog";
+import { getDocumentLabel } from "../utils/livestockDocRequirements";
 import useGoBack from "../utils/useGoBack";
 import "./Listings.css";
 
@@ -529,7 +530,12 @@ function Listings() {
                         rel="noopener noreferrer"
                       >
                         <FileText size={16} />
-                        Document {index + 1}
+                        {getDocumentLabel(
+                          selectedListing.livestock_type,
+                          selectedListing.category,
+                          index,
+                          parseDocuments(selectedListing.documents).length
+                        )}
                       </a>
                     ))}
                   </div>
