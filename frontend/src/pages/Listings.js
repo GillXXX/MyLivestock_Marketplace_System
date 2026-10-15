@@ -460,6 +460,15 @@ function Listings() {
                 )}
               </div>
 
+              {(selectedListing.status === "Rejected" || selectedListing.status === "Flagged") &&
+                selectedListing.review_note && (
+                  <div className="listing-review-note">
+                    <strong>MAO {selectedListing.status === "Rejected" ? "rejected" : "flagged"} this listing:</strong>{" "}
+                    {selectedListing.review_note}
+                    <span>Edit the listing to fix it — saving sends it back for review.</span>
+                  </div>
+                )}
+
               {/* Farm products leave age/size/variety/condition optional,
                   so hide the empty ones instead of showing "N/A". */}
               <div className="listing-modal-stats-bar">

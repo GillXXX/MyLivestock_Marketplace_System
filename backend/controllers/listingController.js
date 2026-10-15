@@ -365,10 +365,17 @@ const updateListing = async (req, res) => {
     // otherwise approval could be used once and then the product, price or
     // documents swapped for anything. Skipped when the admin has set new
     // listings to be auto-approved, since nothing is reviewed then anyway.
-    const needsReReview =
-      existingRows[0].status === "Available" &&
-      (await getDefaultListingStatus()) !== "Available";
-    const newStatus = needsReReview ? "Pending" : existingRows[0].status;
+    // A rejected or flagged listing the farmer has fixed goes back to MAO
+    // too — otherwise it would stay rejected however it was corrected.
+    const defaultStatus = await getDefaultListingStatus();
+    const previousStatus = existingRows[0].status;
+    const isResubmission = previousStatus === "Rejected" || previousStatus === "Flagged";
+    const needsReReview = (previousStatus === "Available" || isResubmission) && defaultStatus !== "Available";
+    const newStatus = needsReReview
+      ? "Pending"
+      : isResubmission
+      ? "Available"
+      : previousStatus;
 
     await db.query(
       `UPDATE livestock_listings
@@ -403,8 +410,10 @@ const updateListing = async (req, res) => {
 
       await createNotification(
         "Listing Approval",
-        "Listing edited",
-        `${farmer.full_name} edited an approved ${livestockType} listing — it needs review again.`,
+        isResubmission ? "Listing resubmitted" : "Listing edited",
+        isResubmission
+          ? `${farmer.full_name} fixed and resubmitted a ${previousStatus.toLowerCase()} ${livestockType} listing for review.`
+          : `${farmer.full_name} edited an approved ${livestockType} listing — it needs review again.`,
         id
       );
 

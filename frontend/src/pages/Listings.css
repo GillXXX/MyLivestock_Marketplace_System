@@ -1159,3 +1159,20 @@ body {
     transform: none;
   }
 }
+.listing-review-note {
+  margin: 12px 0;
+  padding: 11px 14px;
+  border: 1px solid #fecdca;
+  border-radius: 14px;
+  background: #fef3f2;
+  color: #912018;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.listing-review-note span {
+  display: block;
+  margin-top: 4px;
+  color: #b42318;
+  font-size: 12.5px;
+}

@@ -1416,3 +1416,131 @@
     transform: none;
   }
 }
+
+/* Rejection reason, under the status and in the reject dialog */
+
+.doc-review-note {
+  display: block;
+  max-width: 220px;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reject-modal {
+  max-width: 460px;
+  width: 100%;
+}
+
+.reject-modal h3 {
+  margin: 0 0 6px;
+  color: #0f3d2e;
+}
+
+.reject-modal-subtitle {
+  margin: 0 0 14px;
+  color: #667085;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.reject-reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.reject-reason-chips button {
+  padding: 7px 11px;
+  border: 1px solid #e8e2d4;
+  border-radius: 999px;
+  background: white;
+  color: #344054;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.reject-reason-chips button.active {
+  border-color: #b42318;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.reject-reason-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.reject-modal textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e8e2d4;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.reject-modal textarea:focus {
+  outline: none;
+  border-color: #0f3d2e;
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
+}
+
+.reject-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.reject-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reject-cancel {
+  border: 1px solid #e8e2d4;
+  background: white;
+  color: #0f3d2e;
+}
+
+.reject-confirm {
+  border: none;
+  background: #b42318;
+  color: white;
+}
+
+.reject-confirm:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 768px) {
+  .reject-modal textarea {
+    font-size: 16px;
+  }
+
+  .reject-modal-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}

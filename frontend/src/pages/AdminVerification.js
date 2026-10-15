@@ -30,6 +30,15 @@ import { LIVESTOCK_TYPES, getProductIcon } from "../utils/productCatalog";
 import { API_URL } from "../config";
 import "./AdminVerification.css";
 
+// Quick picks for the most common problems; the reviewer can edit or
+// write their own.
+const REJECT_REASONS = [
+  "Certificate is blurry or unreadable",
+  "Wrong document uploaded",
+  "Certificate is expired",
+  "Details don't match the listing",
+];
+
 function AdminVerification() {
   const navigate = useNavigate();
   const goBack = useGoBack("/admin-dashboard");
@@ -52,6 +61,10 @@ function AdminVerification() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedFarmer, setSelectedFarmer] = useState(null);
+  // The listing being rejected, and the reason the farmer will see.
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
 
   const fetchVerification = useCallback(async () => {
     try {
@@ -89,7 +102,7 @@ function AdminVerification() {
     fetchVerification();
   }, [fetchVerification]);
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id, status, reason) => {
     try {
       const token = localStorage.getItem("token");
 
@@ -101,7 +114,7 @@ function AdminVerification() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({ status, reason }),
         }
       );
 
@@ -109,13 +122,30 @@ function AdminVerification() {
 
       if (!res.ok) {
         alert(data.message || "Failed to update verification status");
-        return;
+        return false;
       }
 
       fetchVerification();
+      return true;
     } catch (error) {
       alert("Cannot connect to backend server");
+      return false;
     }
+  };
+
+  const openReject = (doc) => {
+    setRejectTarget(doc);
+    setRejectReason("");
+  };
+
+  const submitReject = async (e) => {
+    e.preventDefault();
+    if (!rejectReason.trim()) return;
+
+    setRejecting(true);
+    const ok = await updateStatus(rejectTarget.id, "Rejected", rejectReason.trim());
+    setRejecting(false);
+    if (ok) setRejectTarget(null);
   };
 
   const getDocumentUrls = (doc) => {
@@ -399,6 +429,11 @@ function AdminVerification() {
                         <span className={`doc-status ${displayStatus.toLowerCase()}`}>
                           {displayStatus}
                         </span>
+                        {displayStatus === "Rejected" && doc.review_note && (
+                          <small className="doc-review-note" title={doc.review_note}>
+                            {doc.review_note}
+                          </small>
+                        )}
                       </td>
 
                       <td>
@@ -438,7 +473,7 @@ function AdminVerification() {
                             className="danger"
                             title="Reject Document"
                             type="button"
-                            onClick={() => updateStatus(doc.id, "Rejected")}
+                            onClick={() => openReject(doc)}
                           >
                             <XCircle size={17} />
                           </button>
@@ -502,6 +537,65 @@ function AdminVerification() {
           </dl>
         </div>
       </section>
+
+      {rejectTarget && (
+        <div className="doc-modal-overlay" onClick={() => !rejecting && setRejectTarget(null)}>
+          <form className="doc-modal reject-modal" onClick={(e) => e.stopPropagation()} onSubmit={submitReject}>
+            <button
+              className="doc-modal-close"
+              type="button"
+              aria-label="Close"
+              onClick={() => setRejectTarget(null)}
+              disabled={rejecting}
+            >
+              <X size={18} />
+            </button>
+
+            <h3>Reject document</h3>
+            <p className="reject-modal-subtitle">
+              {rejectTarget.livestock_type} listing by {rejectTarget.farmer_name}. The farmer sees this reason
+              and can fix the listing and resubmit it.
+            </p>
+
+            <div className="reject-reason-chips">
+              {REJECT_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  type="button"
+                  className={rejectReason === reason ? "active" : ""}
+                  onClick={() => setRejectReason(reason)}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            <label className="reject-reason-label" htmlFor="reject-reason">
+              Reason
+            </label>
+            <textarea
+              id="reject-reason"
+              rows={3}
+              maxLength={500}
+              placeholder="Explain what's wrong and what the farmer should do"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              required
+              autoFocus
+            />
+
+            <div className="reject-modal-actions">
+              <button type="button" className="reject-cancel" onClick={() => setRejectTarget(null)} disabled={rejecting}>
+                Cancel
+              </button>
+              <button type="submit" className="reject-confirm" disabled={rejecting || !rejectReason.trim()}>
+                <XCircle size={16} />
+                {rejecting ? "Rejecting..." : "Reject document"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {selectedFarmer && (
         <div className="doc-modal-overlay" onClick={() => setSelectedFarmer(null)}>

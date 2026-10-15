@@ -1,6 +1,8 @@
 const db = require("../config/db");
 const { setListingReviewStatus } = require("./adminListingController");
 
+const REASON_MAX_LENGTH = 500;
+
 const getAdminVerification = async (req, res) => {
   try {
     const [documents] = await db.query(`
@@ -11,6 +13,7 @@ const getAdminVerification = async (req, res) => {
         l.category,
         l.unit,
         l.health_status,
+        l.review_note,
         l.status,
         l.documents,
         l.created_at,
@@ -58,8 +61,23 @@ const getAdminVerification = async (req, res) => {
 const updateVerificationStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    const reason = String(req.body.reason || "").trim();
 
-    const error = await setListingReviewStatus(req.params.id, status, undefined, req.user.id);
+    // A rejected document needs a reason, so the farmer knows what to fix
+    // before resubmitting. Approving clears any reason left from before.
+    if (status === "Rejected" && !reason) {
+      return res.status(400).json({ message: "Please give a reason for rejecting this document" });
+    }
+    if (reason.length > REASON_MAX_LENGTH) {
+      return res.status(400).json({ message: `The reason must be ${REASON_MAX_LENGTH} characters or fewer` });
+    }
+
+    const error = await setListingReviewStatus(
+      req.params.id,
+      status,
+      status === "Rejected" ? reason : null,
+      req.user.id
+    );
 
     if (error) {
       return res.status(error.status).json({ message: error.message });
