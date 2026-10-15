@@ -1216,6 +1216,7 @@ function Messages() {
                 </div>
 
                 <textarea
+                maxLength={2000}
                   ref={textareaRef}
                   rows={1}
                   placeholder="Type your message..."

@@ -578,6 +578,7 @@ function Post() {
 
                 <input
                   name="breed"
+                  maxLength={100}
                   type="text"
                   placeholder={isProduct ? "Example: Native, Lakatan, Carabao mango" : "Enter livestock breed"}
                   value={formData.breed}
@@ -596,6 +597,7 @@ function Post() {
 
                 <input
                   name="age"
+                  maxLength={50}
                   type="text"
                   placeholder="Example: 8 months"
                   value={formData.age}
@@ -620,6 +622,7 @@ function Post() {
                     name="weight"
                     type="text"
                     placeholder="Example: Large, 60g per egg"
+                    maxLength={50}
                     value={formData.weight}
                     onChange={handleChange}
                   />
@@ -712,6 +715,7 @@ function Post() {
 
                 <input
                   name="healthStatus"
+                  maxLength={100}
                   type="text"
                   placeholder={isProduct ? "Fresh / Organic / Newly harvested" : "Healthy / Vaccinated"}
                   value={formData.healthStatus}
@@ -730,6 +734,7 @@ function Post() {
 
               <input
                 name="location"
+                maxLength={150}
                 type="text"
                 placeholder="Veruela, Agusan del Sur"
                 value={formData.location}
@@ -749,6 +754,7 @@ function Post() {
 
               <textarea
                 name="description"
+                maxLength={2000}
                 rows="6"
                 placeholder={
                   isProduct

@@ -4,7 +4,14 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { createNotification } = require("../utils/notify");
 const { sendPasswordResetEmail, sendRegistrationCodeEmail } = require("../utils/mailer");
-const { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } = require("../utils/validators");
+const {
+  isStrongPassword,
+  PASSWORD_REQUIREMENTS_MESSAGE,
+  TEXT_LIMITS,
+  tooLong,
+  isValidPhone,
+  PHONE_MESSAGE,
+} = require("../utils/validators");
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const GOOGLE_SIGNUP_PURPOSE = "google-signup";
@@ -93,7 +100,7 @@ const requestRegistrationCode = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email || !EMAIL_RE.test(email)) {
+    if (!email || !EMAIL_RE.test(email) || email.length > TEXT_LIMITS.email) {
       return res.status(400).json({ message: "Please enter a valid email address" });
     }
 
@@ -176,6 +183,11 @@ const completeRegistration = async (req, res) => {
 
     if (!email || !fullName?.trim() || !phone?.trim() || !password || !confirmPassword) {
       return res.status(400).json({ message: "Please fill in all required fields" });
+    }
+
+    const detailsError = tooLong(fullName.trim(), TEXT_LIMITS.fullName, "Full name") || (!isValidPhone(phone) ? PHONE_MESSAGE : null);
+    if (detailsError) {
+      return res.status(400).json({ message: detailsError });
     }
 
     if (password !== confirmPassword) {
@@ -425,6 +437,11 @@ const completeGoogleSignup = async (req, res) => {
 
     if (!fullName?.trim() || !phone?.trim() || !password || !confirmPassword) {
       return res.status(400).json({ message: "Please fill in all required fields" });
+    }
+
+    const detailsError = tooLong(fullName.trim(), TEXT_LIMITS.fullName, "Full name") || (!isValidPhone(phone) ? PHONE_MESSAGE : null);
+    if (detailsError) {
+      return res.status(400).json({ message: detailsError });
     }
 
     if (password !== confirmPassword) {

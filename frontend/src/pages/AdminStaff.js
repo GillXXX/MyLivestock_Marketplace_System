@@ -578,6 +578,7 @@ function AdminStaff() {
                 <input
                   type="text"
                   name="fullName"
+                  maxLength={100}
                   value={formData.fullName}
                   onChange={handleFormChange}
                   required
@@ -589,6 +590,7 @@ function AdminStaff() {
                 <input
                   type="email"
                   name="email"
+                  maxLength={100}
                   value={formData.email}
                   onChange={handleFormChange}
                   required
@@ -600,6 +602,7 @@ function AdminStaff() {
                 <input
                   type="text"
                   name="phone"
+                  maxLength={30}
                   value={formData.phone}
                   onChange={handleFormChange}
                   required

@@ -1,5 +1,6 @@
 const db = require("../config/db");
 const { getFileUrl } = require("../middleware/uploadMiddleware");
+const { TEXT_LIMITS, tooLong } = require("../utils/validators");
 
 const TYPING_TIMEOUT_MS = 3000;
 const typingState = new Map();
@@ -237,6 +238,11 @@ const sendMessage = async (req, res) => {
 
     if (!message && !file) {
       return res.status(400).json({ message: "Message or attachment is required" });
+    }
+
+    const lengthError = tooLong(message, TEXT_LIMITS.message, "Message");
+    if (lengthError) {
+      return res.status(400).json({ message: lengthError });
     }
 
     const access = await verifyConversationAccess(conversationId, senderId);

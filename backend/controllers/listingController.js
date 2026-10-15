@@ -7,6 +7,7 @@ const {
   formatRequirementMessage,
 } = require("../utils/livestockDocRequirements");
 const { getCategory, isValidUnit } = require("../utils/productCatalog");
+const { TEXT_LIMITS, tooLong } = require("../utils/validators");
 
 // Shared create/update validation. Live animals need breed, age, weight
 // and health status; backyard farm products (eggs, fruits, ...) only need
@@ -24,6 +25,17 @@ const validateListingInput = (body) => {
 
   if (livestockType.length > 50) {
     return { error: "Product type must be 50 characters or fewer" };
+  }
+
+  const lengthError =
+    tooLong(breed, TEXT_LIMITS.breed, category === "product" ? "Variety" : "Breed") ||
+    tooLong(age, TEXT_LIMITS.age, "Age") ||
+    tooLong(weight, TEXT_LIMITS.weight, "Size / weight") ||
+    tooLong(healthStatus, TEXT_LIMITS.healthStatus, category === "product" ? "Condition" : "Health status") ||
+    tooLong(location, TEXT_LIMITS.location, "Location") ||
+    tooLong(body.description, TEXT_LIMITS.description, "Description");
+  if (lengthError) {
+    return { error: lengthError };
   }
 
   if (category === "livestock" && (!breed || !age || !weight || !healthStatus)) {
