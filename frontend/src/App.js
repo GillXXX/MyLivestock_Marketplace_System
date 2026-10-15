@@ -45,6 +45,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminMapMonitoring from "./pages/AdminMapMonitoring";
 import AdminLayout from "./components/AdminLayout";
 import RequireAdminRole from "./components/RequireAdminRole";
+import RequireRole from "./components/RequireRole";
 
 /* =========================
    BUYER PAGES
@@ -117,7 +118,13 @@ function App() {
             across navigation instead of remounting per page)
         ========================= */}
 
-        <Route element={<FarmerLayout />}>
+        <Route
+          element={
+            <RequireRole roles={["farmer"]}>
+              <FarmerLayout />
+            </RequireRole>
+          }
+        >
           <Route
             path="/farmer-dashboard"
             element={<FarmerDashboard />}
@@ -170,7 +177,13 @@ function App() {
             across navigation instead of remounting per page)
         ========================= */}
 
-        <Route element={<AdminLayout />}>
+        <Route
+          element={
+            <RequireRole roles={["admin", "mao_staff"]}>
+              <AdminLayout />
+            </RequireRole>
+          }
+        >
           <Route
             path="/admin-account"
             element={
@@ -249,7 +262,13 @@ function App() {
             across navigation instead of remounting per page)
         ========================= */}
 
-        <Route element={<BuyerLayout />}>
+        <Route
+          element={
+            <RequireRole roles={["buyer"]}>
+              <BuyerLayout />
+            </RequireRole>
+          }
+        >
           <Route
             path="/buyer-dashboard"
             element={<BuyerDashboard />}
