@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "../utils/exportCsv";
 import useGoBack from "../utils/useGoBack";
 import AdminStatCard from "../components/AdminStatCard";
+import FarmerVerificationQueue from "../components/FarmerVerificationQueue";
 import {
   getDocumentRequirement,
   LIVESTOCK_DOCUMENT_REQUIREMENT,
@@ -270,6 +271,8 @@ function AdminVerification() {
           accent="blue"
         />
       </section>
+
+      <FarmerVerificationQueue />
 
       <section className="verification-panel">
         <div className="panel-header">

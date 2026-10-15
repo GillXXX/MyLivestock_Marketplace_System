@@ -142,9 +142,14 @@ function AdminUsers() {
   };
 
   const handleRejectVerification = async (id) => {
-    const reason = window.prompt("Reason for rejecting this verification (optional):");
+    const reason = window.prompt("Reason for rejecting this verification (the farmer will see this):");
 
     if (reason === null) {
+      return;
+    }
+
+    if (!reason.trim()) {
+      alert("Please give a reason so the farmer knows what to resubmit.");
       return;
     }
 

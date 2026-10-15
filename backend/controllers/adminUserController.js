@@ -94,20 +94,71 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const verifyUser = async (req, res) => {
+// Farmers waiting for account verification, with short-lived links to
+// their ID and barangay certificate. Open to MAO staff as well as the
+// Super Admin — MAO is who checks that a farmer is who they say they are
+// and lives in Veruela — unlike the full user list, which is admin-only.
+const getFarmerVerificationQueue = async (req, res) => {
   try {
-    const [[user]] = await db.query(
-      "SELECT id FROM users WHERE id = ? AND role = 'farmer'",
-      [req.params.id]
-    );
+    const [farmers] = await db.query(`
+      SELECT
+        id,
+        full_name,
+        email,
+        phone,
+        barangay,
+        purok,
+        farm_location,
+        profile_image,
+        verification_document,
+        verification_submitted_at,
+        created_at
+      FROM users
+      WHERE role = 'farmer' AND verification_status = 'Pending'
+      ORDER BY verification_submitted_at ASC
+    `);
 
-    if (!user) {
-      return res.status(404).json({ message: "Farmer not found" });
+    for (const farmer of farmers) {
+      farmer.verification_document = withSignedUrls(farmer.verification_document);
     }
 
+    res.json({ farmers });
+  } catch (error) {
+    console.error("Farmer verification queue error:", error);
+    res.status(500).json({ message: "Server error loading farmer verifications" });
+  }
+};
+
+const REJECT_REASON_MAX_LENGTH = 500;
+
+// MAO staff review farmers who submitted documents; the Super Admin can
+// also verify a farmer directly, as before.
+const findFarmerToReview = async (req) => {
+  const [[user]] = await db.query(
+    "SELECT id, full_name, verification_status FROM users WHERE id = ? AND role = 'farmer'",
+    [req.params.id]
+  );
+
+  if (!user) return { error: { status: 404, message: "Farmer not found" } };
+
+  if (req.user.role !== "admin" && user.verification_status !== "Pending") {
+    return { error: { status: 409, message: "This farmer has no verification request waiting for review" } };
+  }
+
+  return { user };
+};
+
+const verifyUser = async (req, res) => {
+  try {
+    const { user, error } = await findFarmerToReview(req);
+    if (error) return res.status(error.status).json({ message: error.message });
+
     await db.query(
-      "UPDATE users SET is_verified = 1, verification_status = 'Approved', verification_note = NULL WHERE id = ?",
-      [user.id]
+      `UPDATE users
+       SET is_verified = 1, verification_status = 'Approved', verification_note = NULL,
+           verification_reviewed_by = ?, verification_reviewed_at = NOW()
+       WHERE id = ?`,
+      [req.user.id, user.id]
     );
 
     res.json({ message: "Farmer verified successfully" });
@@ -119,26 +170,31 @@ const verifyUser = async (req, res) => {
 
 const rejectVerification = async (req, res) => {
   try {
-    const { reason } = req.body;
+    const reason = String(req.body.reason || "").trim();
 
-    const [[user]] = await db.query(
-      "SELECT id, full_name FROM users WHERE id = ? AND role = 'farmer'",
-      [req.params.id]
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: "Farmer not found" });
+    // The farmer sees this reason and needs it to know what to resubmit.
+    if (!reason) {
+      return res.status(400).json({ message: "Please give a reason for rejecting this verification" });
+    }
+    if (reason.length > REJECT_REASON_MAX_LENGTH) {
+      return res.status(400).json({ message: `The reason must be ${REJECT_REASON_MAX_LENGTH} characters or fewer` });
     }
 
+    const { user, error } = await findFarmerToReview(req);
+    if (error) return res.status(error.status).json({ message: error.message });
+
     await db.query(
-      "UPDATE users SET is_verified = 0, verification_status = 'Rejected', verification_note = ? WHERE id = ?",
-      [reason || null, user.id]
+      `UPDATE users
+       SET is_verified = 0, verification_status = 'Rejected', verification_note = ?,
+           verification_reviewed_by = ?, verification_reviewed_at = NOW()
+       WHERE id = ?`,
+      [reason, req.user.id, user.id]
     );
 
     await createNotification(
       "Verification Request",
       "Farmer verification rejected",
-      `${user.full_name}'s verification submission was rejected${reason ? `: ${reason}` : "."}`,
+      `${user.full_name}'s verification submission was rejected: ${reason}`,
       user.id
     );
 
@@ -185,4 +241,11 @@ const setUserActive = async (req, res) => {
   }
 };
 
-module.exports = { getAdminUsers, deleteUser, verifyUser, rejectVerification, setUserActive };
+module.exports = {
+  getAdminUsers,
+  getFarmerVerificationQueue,
+  deleteUser,
+  verifyUser,
+  rejectVerification,
+  setUserActive,
+};
