@@ -89,9 +89,11 @@ function PrivacyNotice() {
         <h2>Who can see it</h2>
         <ul>
           <li>
-            <strong>Buyers</strong> see a farmer's name, profile photo, verification status, general
-            location, farm map pin, description, and listings, including each listing's health
-            certificate. A farmer's phone number and email are not shown on listings or seller profiles.
+            <strong>Buyers</strong> see a farmer's name, profile photo, verification status, purok and
+            barangay, an approximate farm location on the map (within about 500 m), description, and
+            listings, including each listing's health certificate. The exact farm pin and sitio or street
+            are shown only to a buyer who has agreed on a deal with the farmer, for pickup. A farmer's
+            phone number and email are not shown on listings or seller profiles.
           </li>
           <li>
             <strong>The other person in a deal</strong> sees the messages, offers, and terms you exchange

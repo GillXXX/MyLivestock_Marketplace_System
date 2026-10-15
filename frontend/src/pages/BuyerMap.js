@@ -53,7 +53,9 @@ function gpsAccuracyLevel(meters) {
 const ARRIVED_KM = 0.05;
 
 // Distance-left panel for the selected seller. Updates on every GPS fix.
-function TripPanel({ trip, isLive }) {
+// With an approximate farm pin (no agreed deal yet) the trip ends at the
+// farm's area, not its gate.
+function TripPanel({ trip, isLive, approximate }) {
   const mins =
     !trip.arrived && !trip.isEstimate && trip.durationMin != null
       ? Math.max(1, Math.round(trip.durationMin))
@@ -69,10 +71,16 @@ function TripPanel({ trip, isLive }) {
       )}
 
       <div className="trip-main">
-        <strong>{trip.arrived ? "You've arrived" : formatKm(trip.distanceKm)}</strong>
+        <strong>
+          {trip.arrived ? (approximate ? "You're in the area" : "You've arrived") : formatKm(trip.distanceKm)}
+        </strong>
         <span>
           {trip.arrived
-            ? "at the seller's farm"
+            ? approximate
+              ? "of the seller's farm (approximate pin)"
+              : "at the seller's farm"
+            : approximate
+            ? "to the seller's area (approximate pin)"
             : trip.isEstimate
             ? "to the seller (straight line)"
             : "to the seller"}
@@ -764,7 +772,13 @@ function BuyerMap() {
                 )}
               </div>
 
-              {trip && <TripPanel trip={trip} isLive={Boolean(liveLocation)} />}
+              {trip && (
+                <TripPanel
+                  trip={trip}
+                  isLive={Boolean(liveLocation)}
+                  approximate={Boolean(selectedListing?.farm_location_approximate)}
+                />
+              )}
 
               <div className="selected-actions">
                 <button
