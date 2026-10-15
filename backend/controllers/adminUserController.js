@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
 const { getSystemSettings } = require("../utils/systemSettings");
+const { withSignedUrls } = require("../utils/privateFiles");
 
 const getAdminUsers = async (req, res) => {
   try {
@@ -30,6 +31,12 @@ const getAdminUsers = async (req, res) => {
       GROUP BY u.id
       ORDER BY u.created_at DESC
     `);
+
+    // Verification documents are private files; give the admin short-lived
+    // links to them.
+    for (const user of users) {
+      user.verification_document = withSignedUrls(user.verification_document);
+    }
 
     const farmers = users.filter((u) => u.role === "farmer");
     const buyers = users.filter((u) => u.role === "buyer");

@@ -13,6 +13,7 @@ const {
   autoApproveExpiredCancellations,
 } = require("../utils/orderStock");
 const { buildAddress, cleanAddressParts } = require("../utils/veruelaPlaces");
+const { storedFileRef } = require("../utils/privateFiles");
 const { getSystemSettings } = require("../utils/systemSettings");
 
 const WORKFLOW_STEPS = ["Inquiry", "Negotiation", "Confirmation", "Completed"];
@@ -629,8 +630,8 @@ exports.submitVerification = async (req, res) => {
     }
 
     const documentsJson = JSON.stringify([
-      { type: "Government ID", url: getFileUrl(govId, req) },
-      { type: "Barangay Certificate", url: getFileUrl(barangayCert, req) },
+      { type: "Government ID", ...storedFileRef(govId, getFileUrl, req) },
+      { type: "Barangay Certificate", ...storedFileRef(barangayCert, getFileUrl, req) },
     ]);
 
     await db.query(

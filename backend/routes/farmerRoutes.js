@@ -4,6 +4,7 @@ const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/roleMiddleware");
 const upload = require("../middleware/uploadMiddleware");
+const { privateUpload } = require("../middleware/uploadMiddleware");
 
 const {
   getFarmerDashboard,
@@ -44,7 +45,7 @@ router.post(
   "/verification",
   protect,
   requireRole("farmer"),
-  upload.fields([
+  privateUpload.fields([
     { name: "government_id", maxCount: 1 },
     { name: "barangay_certificate", maxCount: 1 },
   ]),

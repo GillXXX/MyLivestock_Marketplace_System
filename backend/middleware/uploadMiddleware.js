@@ -1,5 +1,7 @@
 const crypto = require("crypto");
+const fs = require("fs");
 const multer = require("multer");
+const { PRIVATE_UPLOAD_DIR } = require("../utils/privateFiles");
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB per file
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25MB for chat image/video attachments
@@ -139,7 +141,27 @@ const chatUpload = multer({
   },
 });
 
+// Verification documents (government ID, barangay certificate) go to the
+// private folder that's only reachable through signed links — see
+// utils/privateFiles.js. With S3 they're stored like every other upload.
+const privateUpload = s3Enabled
+  ? upload
+  : multer({
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+          fs.mkdirSync(PRIVATE_UPLOAD_DIR, { recursive: true });
+          cb(null, PRIVATE_UPLOAD_DIR);
+        },
+        filename: generateKey,
+      }),
+      fileFilter,
+      limits: {
+        fileSize: MAX_FILE_SIZE_BYTES,
+      },
+    });
+
 module.exports = upload;
+module.exports.privateUpload = privateUpload;
 module.exports.getFileUrl = getFileUrl;
 module.exports.isS3Enabled = s3Enabled;
 module.exports.chatUpload = chatUpload;

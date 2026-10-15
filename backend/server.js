@@ -113,6 +113,33 @@ app.use(
   })
 );
 
+// Verification documents: only through a signed, expiring link handed out
+// to someone allowed to see them (utils/privateFiles.js). Anything else —
+// a guessed name, an expired or altered link — gets a plain 404.
+const { isValidSignedRequest, privateFilePath } = require("./utils/privateFiles");
+
+app.get("/private-files/:filename", (req, res) => {
+  const { filename } = req.params;
+
+  if (!isValidSignedRequest(filename, req.query.expires, req.query.sig)) {
+    return res.status(404).send("This link has expired or isn't valid. Reload the page to get a new one.");
+  }
+
+  res.sendFile(
+    privateFilePath(filename),
+    {
+      headers: {
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": "inline",
+      },
+    },
+    (err) => {
+      if (err && !res.headersSent) res.status(404).send("File not found");
+    }
+  );
+});
+
 const authRoutes = require("./routes/authRoutes");
 const farmerRoutes = require("./routes/farmerRoutes");
 const listingRoutes = require("./routes/listingRoutes");
@@ -200,7 +227,12 @@ if (SERVE_FRONTEND) {
   app.use(express.static(FRONTEND_BUILD_DIR));
 
   app.use((req, res, next) => {
-    if (req.method !== "GET" || req.path.startsWith("/api/") || req.path.startsWith("/uploads/")) {
+    if (
+      req.method !== "GET" ||
+      req.path.startsWith("/api/") ||
+      req.path.startsWith("/uploads/") ||
+      req.path.startsWith("/private-files/")
+    ) {
       return next();
     }
     res.sendFile(path.join(FRONTEND_BUILD_DIR, "index.html"));

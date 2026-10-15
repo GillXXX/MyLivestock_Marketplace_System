@@ -176,6 +176,10 @@ function AdminUsers() {
     }
   };
 
+  // Verification documents come back as signed links on this server
+  // ("/private-files/..."); older ones may still be full public URLs.
+  const docHref = (url) => (url && url.startsWith("/") ? `${API_URL}${url}` : url);
+
   const getVerificationDocs = (user) => {
     if (!user.verification_document) return [];
     try {
@@ -588,7 +592,7 @@ function AdminUsers() {
                         key={doc.type}
                         className="doc-chip"
                         type="button"
-                        onClick={() => window.open(doc.url, "_blank")}
+                        onClick={() => window.open(docHref(doc.url), "_blank")}
                       >
                         <FileText size={14} />
                         {doc.type}
@@ -679,7 +683,7 @@ function AdminUsers() {
                   <a
                     key={index}
                     className="doc-chip"
-                    href={doc.url}
+                    href={docHref(doc.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
