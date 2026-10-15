@@ -5,9 +5,12 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { API_URL } from './config';
+import { installRequestTimeout } from './utils/requestTimeout';
 import { installSessionGuard } from './utils/sessionGuard';
 
-// Sends people to Login when their session expires (see utils/sessionGuard.js).
+// Gives up on API requests that hang (utils/requestTimeout.js) and sends
+// people to Login when their session expires (utils/sessionGuard.js).
+installRequestTimeout();
 installSessionGuard();
 
 // Uploaded files are saved with the full server address of the time they

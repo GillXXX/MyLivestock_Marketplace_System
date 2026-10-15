@@ -27,6 +27,7 @@ import {
 } from "../utils/veruelaGeo";
 import { API_URL } from "../config";
 import { getProductIcon } from "../utils/productCatalog";
+import { pollWhenIdle } from "../utils/polling";
 import "./AdminMapMonitoring.css";
 
 const POLL_INTERVAL_MS = 15000;
@@ -35,6 +36,7 @@ function AdminMapMonitoring() {
   const navigate = useNavigate();
   const goBack = useGoBack("/admin-dashboard");
   const mapRef = useRef(null);
+  const mapPollRef = useRef(false);
 
   const [locations, setLocations] = useState([]);
   const [distribution, setDistribution] = useState([]);
@@ -98,7 +100,7 @@ function AdminMapMonitoring() {
 
   useEffect(() => {
     fetchMapData();
-    const interval = setInterval(() => fetchMapData(), POLL_INTERVAL_MS);
+    const interval = setInterval(pollWhenIdle(mapPollRef, fetchMapData), POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [fetchMapData]);
 
