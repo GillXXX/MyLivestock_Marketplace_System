@@ -155,14 +155,18 @@
   gap: 10px;
 }
 
+/* Up to four 210px filters in a row, wrapping onto the next line when the
+   page is narrower (tablets, small laptops) instead of overflowing it. */
 .filter-row {
   display: grid;
-  grid-template-columns: repeat(4, 210px);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 210px));
   gap: 12px;
   margin-bottom: 20px;
 }
 
 .filter-row select {
+  width: 100%;
+  min-width: 0;
   height: 48px;
   border: 1px solid var(--border);
   border-radius: 14px;
