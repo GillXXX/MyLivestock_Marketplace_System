@@ -1,5 +1,5 @@
 import { X, BadgeCheck, MapPin, FileText, MessageCircle, ShoppingCart } from "lucide-react";
-import { isLivestock, formatPrice, formatQuantity, getListingPlaceholder } from "../utils/productCatalog";
+import { isLivestock, formatPrice, formatQuantity, formatWeight, getListingPlaceholder } from "../utils/productCatalog";
 import { useNavigate } from "react-router-dom";
 import "./ListingDetailsModal.css";
 
@@ -36,7 +36,11 @@ function ListingDetailsModal({ listing, onClose, onInquire, onBuyNow }) {
   // only show the optional fields the farmer actually filled in.
   const stats = [
     { label: "Age", value: listing.age, show: !isProduct || listing.age },
-    { label: isProduct ? "Size" : "Weight", value: listing.weight, show: !isProduct || listing.weight },
+    {
+      label: isProduct ? "Size" : "Weight",
+      value: formatWeight(listing.weight, listing.livestock_type, listing.category),
+      show: !isProduct || listing.weight,
+    },
     {
       label: isProduct ? "Condition" : "Health",
       value: listing.health_status,

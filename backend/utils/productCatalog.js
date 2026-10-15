@@ -9,7 +9,15 @@ const LIVESTOCK_TYPES = ["Swine", "Cattle", "Goat", "Poultry", "Carabao", "Duck"
 
 const FARM_PRODUCT_TYPES = ["Eggs", "Fruits", "Vegetables", "Milk / Dairy", "Honey"];
 
-const UNIT_VALUES = ["head", "kg", "tray", "dozen", "piece", "bundle", "liter", "bottle", "sack"];
+// "kg_live" is how live animals are really sold by weight: the price is
+// per kilo of live weight, but the animals are still counted (and
+// ordered) by head — nobody buys half a pig. Plain "kg" is for farm
+// products; older livestock listings may still carry it.
+const UNIT_VALUES = ["head", "kg_live", "kg", "tray", "dozen", "piece", "bundle", "liter", "bottle", "sack"];
+
+const LIVESTOCK_UNIT_VALUES = ["head", "kg_live"];
+
+const PRODUCT_UNIT_VALUES = UNIT_VALUES.filter((u) => u !== "kg_live");
 
 // Known types decide their own category; a custom ("Other") type uses the
 // category the farmer chose. Old listings have no category and were all
@@ -20,8 +28,18 @@ function getCategory(type, category) {
   return category === "product" ? "product" : "livestock";
 }
 
-function isValidUnit(unit) {
-  return UNIT_VALUES.includes(unit);
+function isValidUnit(unit, category) {
+  return (category === "livestock" ? LIVESTOCK_UNIT_VALUES : PRODUCT_UNIT_VALUES).includes(unit);
+}
+
+// What one unit of quantity costs. For live weight that's the price per
+// kilo times the listing's average weight per head — an estimate until
+// the animals are actually weighed at pickup.
+function getPricePerQuantityUnit(listing) {
+  if (listing.unit === "kg_live") {
+    return Number(listing.price) * (parseFloat(listing.weight) || 0);
+  }
+  return Number(listing.price);
 }
 
 module.exports = {
@@ -30,4 +48,5 @@ module.exports = {
   UNIT_VALUES,
   getCategory,
   isValidUnit,
+  getPricePerQuantityUnit,
 };

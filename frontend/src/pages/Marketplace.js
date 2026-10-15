@@ -27,6 +27,7 @@ import {
   getProductIcon,
   formatPrice,
   formatQuantity,
+  formatWeight,
   getListingPlaceholder,
 } from "../utils/productCatalog";
 import "./Marketplace.css";
@@ -410,7 +411,7 @@ function Marketplace() {
             ) : (
               filteredListings.map((item) => {
                 const SpeciesIcon = getProductIcon(item.livestock_type, item.category);
-                const metaParts = [item.weight, item.age].filter(Boolean);
+                const metaParts = [formatWeight(item.weight, item.livestock_type, item.category), item.age].filter(Boolean);
 
                 return (
                 <div className="market-card" key={item.id}>

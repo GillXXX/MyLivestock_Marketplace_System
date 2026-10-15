@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X, ShoppingCart, CheckCircle2, Minus, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
-import { UNITS, formatQuantity, getListingPlaceholder } from "../utils/productCatalog";
+import { UNITS, formatQuantity, getListingPlaceholder, getPricePerQuantityUnit } from "../utils/productCatalog";
 import "./BuyNowModal.css";
 
 // Starts a deal at Negotiation — from Buy Now, or from "Proceed to
@@ -20,7 +20,10 @@ function BuyNowModal({ listing, onClose, title: heading = "Buy Now", onStarted }
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
 
-  const total = listedPrice * quantity;
+  // Sold by live weight, the total is an estimate from the average weight
+  // per head until the animals are weighed at pickup.
+  const isLiveWeight = listing.unit === "kg_live";
+  const total = Math.round(getPricePerQuantityUnit(listing) * quantity * 100) / 100;
   const unit = UNITS.find((u) => u.value === listing.unit) || UNITS[0];
   const title = listing.breed || listing.livestock_type;
 
@@ -113,7 +116,7 @@ function BuyNowModal({ listing, onClose, title: heading = "Buy Now", onStarted }
             <h3>Negotiation started!</h3>
             <p>
               Your deal for {formatQuantity(quantity, unit.value)} of {title} (₱{total.toLocaleString()}
-              at the listed price) was sent to {listing.seller_name}. Head to Messages to agree on
+              {isLiveWeight ? " estimated from the average weight" : " at the listed price"}) was sent to {listing.seller_name}. Head to Messages to agree on
               the details with the seller.
             </p>
             <div className="buynow-sent-actions">
@@ -150,7 +153,7 @@ function BuyNowModal({ listing, onClose, title: heading = "Buy Now", onStarted }
               </div>
 
               <div className="buynow-listed-price">
-                <span>Price / {unit.value}</span>
+                <span>Price / {unit.priceUnit || unit.value}</span>
                 <em>₱{listedPrice.toLocaleString()}</em>
               </div>
             </div>
@@ -196,9 +199,16 @@ function BuyNowModal({ listing, onClose, title: heading = "Buy Now", onStarted }
                 </div>
 
                 <div className="buynow-total-row">
-                  <span>Total</span>
+                  <span>{isLiveWeight ? "Estimated total" : "Total"}</span>
                   <strong>₱{total.toLocaleString()}</strong>
                 </div>
+
+                {isLiveWeight && (
+                  <p className="buynow-estimate-note">
+                    Based on ~{parseFloat(listing.weight)} kg per head. The final price
+                    depends on the actual weight at pickup.
+                  </p>
+                )}
               </>
             )}
 

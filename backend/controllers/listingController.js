@@ -30,8 +30,25 @@ const validateListingInput = (body) => {
     return { error: "Please fill in all required fields" };
   }
 
-  if (!isValidUnit(unit)) {
-    return { error: "Please choose a valid selling unit" };
+  if (!isValidUnit(unit, category)) {
+    return {
+      error:
+        category === "livestock"
+          ? "Live animals are sold per head or per kg of live weight — please choose one"
+          : "Please choose a valid selling unit",
+    };
+  }
+
+  // For live animals, weight is the average live weight per head in kg,
+  // kept as a plain number so a per-kg price can be turned into an
+  // estimate per head. Farm products keep a free-text size ("Large, 60g").
+  let weightValue = weight || null;
+  if (category === "livestock") {
+    const kg = Number(weight);
+    if (!Number.isFinite(kg) || kg <= 0 || kg > 5000) {
+      return { error: "Please enter the average weight per head in kg" };
+    }
+    weightValue = String(Math.round(kg * 100) / 100);
   }
 
   // price is DECIMAL(10,2) and quantity an INT column.
@@ -51,7 +68,7 @@ const validateListingInput = (body) => {
     unit,
     breed: breed || null,
     age: age || null,
-    weight: weight || null,
+    weight: weightValue,
     price: Math.round(priceValue * 100) / 100,
     quantity: quantityValue,
     healthStatus: healthStatus || null,

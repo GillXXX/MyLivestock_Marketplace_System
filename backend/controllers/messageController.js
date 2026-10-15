@@ -184,6 +184,7 @@ const getMessages = async (req, res) => {
         l.price,
         l.quantity,
         l.unit,
+        l.weight,
         l.image_url,
         l.status,
         seller.full_name AS seller_name,

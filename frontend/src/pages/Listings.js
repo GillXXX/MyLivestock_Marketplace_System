@@ -27,6 +27,7 @@ import {
   isLivestock,
   formatPrice,
   formatQuantity,
+  formatWeight,
 } from "../utils/productCatalog";
 import useGoBack from "../utils/useGoBack";
 import "./Listings.css";
@@ -472,7 +473,9 @@ function Listings() {
                 {(selectedIsLivestock || selectedListing.weight) && (
                   <div>
                     <span>{selectedIsLivestock ? "Weight" : "Size / Weight"}</span>
-                    <strong>{selectedListing.weight || "N/A"}</strong>
+                    <strong>
+                      {formatWeight(selectedListing.weight, selectedListing.livestock_type, selectedListing.category) || "N/A"}
+                    </strong>
                   </div>
                 )}
 

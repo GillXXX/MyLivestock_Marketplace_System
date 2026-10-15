@@ -26,6 +26,9 @@ import {
   OTHER_LIVESTOCK,
   OTHER_PRODUCT,
   UNITS,
+  unitsFor,
+  isValidUnitFor,
+  getPricePerQuantityUnit,
   defaultUnitFor,
   getCategory,
 } from "../utils/productCatalog";
@@ -101,11 +104,19 @@ function Post() {
           setCustomType(savedType);
         }
 
+        // Older live-animal listings may be priced "per kilo" with the
+        // quantity counted in kg, or have a free-text weight ("120 kg").
+        // Leave the unit blank so the farmer re-picks it (and re-checks
+        // the quantity) instead of the meaning changing silently.
+        const savedCategory = getCategory(savedType, data.category);
+        const savedUnit = data.unit || "head";
+        const isSavedLivestock = savedCategory === "livestock";
+
         setFormData({
-          unit: data.unit || "head",
+          unit: isValidUnitFor(savedUnit, savedCategory) ? savedUnit : "",
           breed: data.breed || "",
           age: data.age || "",
-          weight: data.weight || "",
+          weight: isSavedLivestock ? String(parseFloat(data.weight) || "") : data.weight || "",
           price: data.price || "",
           quantity: data.quantity || "",
           healthStatus: data.health_status || "",
@@ -192,13 +203,20 @@ function Post() {
     typeChoice === OTHER_PRODUCT ? "product" : getCategory(typeChoice, "livestock");
   const isProduct = category === "product";
   const unitInfo = UNITS.find((u) => u.value === formData.unit) || UNITS[0];
+  const liveWeightEstimate =
+    Math.round(getPricePerQuantityUnit({ ...formData, price: Number(formData.price) || 0 }) * 100) / 100;
 
   const handleTypeChange = (e) => {
     const choice = e.target.value;
     setTypeChoice(choice);
 
     const nextCategory = choice === OTHER_PRODUCT ? "product" : getCategory(choice, "livestock");
-    setFormData((prev) => ({ ...prev, unit: defaultUnitFor(choice, nextCategory) }));
+    setFormData((prev) => ({
+      ...prev,
+      unit: defaultUnitFor(choice, nextCategory),
+      // Kg per head for animals vs. free-text size for products.
+      weight: nextCategory === category ? prev.weight : "",
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -575,21 +593,34 @@ function Post() {
 
             <div className="form-group">
               <label>
-                {isProduct ? "Size / Weight" : "Weight"}
+                {isProduct ? "Size / Weight" : "Average Weight per Head (kg)"}
                 {isProduct && <span className="optional-mark"> (Optional)</span>}
               </label>
 
               <div className="input-wrapper">
                 <Weight size={18} />
 
-                <input
-                  name="weight"
-                  type="text"
-                  placeholder={isProduct ? "Example: Large, 60g per egg" : "Example: 120 kg"}
-                  value={formData.weight}
-                  onChange={handleChange}
-                  required={!isProduct}
-                />
+                {isProduct ? (
+                  <input
+                    name="weight"
+                    type="text"
+                    placeholder="Example: Large, 60g per egg"
+                    value={formData.weight}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  <input
+                    name="weight"
+                    type="number"
+                    min="0.1"
+                    max="5000"
+                    step="0.1"
+                    placeholder="Example: 100"
+                    value={formData.weight}
+                    onChange={handleChange}
+                    required
+                  />
+                )}
               </div>
             </div>
 
@@ -608,6 +639,15 @@ function Post() {
                   required
                 />
               </div>
+
+              {formData.unit === "kg_live" && (
+                <p className="price-estimate">
+                  {liveWeightEstimate > 0
+                    ? `≈ ₱${liveWeightEstimate.toLocaleString()} per head at the average weight. `
+                    : ""}
+                  The final price is based on the actual weight at pickup.
+                </p>
+              )}
             </div>
 
             <div className="form-group">
@@ -617,7 +657,8 @@ function Post() {
                 <Hash size={18} />
 
                 <select name="unit" value={formData.unit} onChange={handleChange} required>
-                  {UNITS.map((u) => (
+                  {!formData.unit && <option value="">Choose a selling unit</option>}
+                  {unitsFor(category).map((u) => (
                     <option key={u.value} value={u.value}>{u.label}</option>
                   ))}
                 </select>

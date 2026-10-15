@@ -21,8 +21,13 @@ export const ALL_KNOWN_TYPES = [...LIVESTOCK_TYPES, ...FARM_PRODUCT_TYPES];
 export const OTHER_LIVESTOCK = "__other_livestock__";
 export const OTHER_PRODUCT = "__other_product__";
 
+// priceUnit / single default to value. "kg_live" is how live animals are
+// really sold by weight: priced per kilo of live weight, but still
+// counted and ordered by head. Plain "kg" is for farm products; older
+// livestock listings may still carry it.
 export const UNITS = [
   { value: "head", label: "per head", plural: "head" },
+  { value: "kg_live", label: "per kg (live weight)", plural: "head", single: "head", priceUnit: "kg" },
   { value: "kg", label: "per kilo", plural: "kg" },
   { value: "tray", label: "per tray", plural: "trays" },
   { value: "dozen", label: "per dozen", plural: "dozen" },
@@ -108,14 +113,48 @@ function findUnit(unit) {
   return UNITS.find((u) => u.value === unit) || UNITS[0];
 }
 
-// "₱180 / tray"
+const LIVESTOCK_UNIT_VALUES = ["head", "kg_live"];
+
+// Selling units a farmer can choose for this category.
+export function unitsFor(category) {
+  return category === "livestock"
+    ? UNITS.filter((u) => LIVESTOCK_UNIT_VALUES.includes(u.value))
+    : UNITS.filter((u) => u.value !== "kg_live");
+}
+
+export function isValidUnitFor(unit, category) {
+  return unitsFor(category).some((u) => u.value === unit);
+}
+
+// "₱180 / tray", "₱180 / kg"
 export function formatPrice(price, unit) {
-  return `₱${Number(price).toLocaleString()} / ${findUnit(unit).value}`;
+  const u = findUnit(unit);
+  return `₱${Number(price).toLocaleString()} / ${u.priceUnit || u.value}`;
 }
 
 // "3 trays", "1 tray", "12 head"
 export function formatQuantity(quantity, unit) {
   const u = findUnit(unit);
   const n = Number(quantity) || 0;
-  return `${n} ${n === 1 ? u.value : u.plural}`;
+  return `${n} ${n === 1 ? u.single || u.value : u.plural}`;
+}
+
+// What one unit of quantity costs — for live weight, price per kg times
+// the average weight per head (an estimate until weighed at pickup).
+// Mirrors getPricePerQuantityUnit in backend/utils/productCatalog.js.
+export function getPricePerQuantityUnit(listing) {
+  if (listing.unit === "kg_live") {
+    return Number(listing.price) * (parseFloat(listing.weight) || 0);
+  }
+  return Number(listing.price);
+}
+
+// Live-animal weights are saved as a plain number of kg per head; older
+// listings and farm products keep free text, shown as typed.
+export function formatWeight(weight, type, category) {
+  if (!weight) return "";
+  if (getCategory(type, category) === "livestock" && /^\d+(\.\d+)?$/.test(String(weight).trim())) {
+    return `~${Number(weight).toLocaleString()} kg / head`;
+  }
+  return weight;
 }

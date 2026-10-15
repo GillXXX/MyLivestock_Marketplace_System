@@ -208,6 +208,13 @@
   border-radius: 14px;
 }
 
+.buynow-estimate-note {
+  margin: 8px 2px 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 .buynow-total-row span {
   font-size: 12.5px;
   font-weight: 800;

@@ -511,6 +511,13 @@ a.doc-chip:hover {
   letter-spacing: 0;
 }
 
+.price-estimate {
+  margin: 6px 2px 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
 /* INPUT */
 
 .input-wrapper,

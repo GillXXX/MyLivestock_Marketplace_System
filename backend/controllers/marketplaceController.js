@@ -1,5 +1,6 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
+const { getPricePerQuantityUnit } = require("../utils/productCatalog");
 
 const getMarketplaceListings = async (req, res) => {
   try {
@@ -167,7 +168,7 @@ const createTransaction = async (req, res) => {
     }
 
     const [listingRows] = await db.query(
-      "SELECT id, farmer_id, livestock_type, price, quantity, status FROM livestock_listings WHERE id = ?",
+      "SELECT id, farmer_id, livestock_type, price, quantity, unit, weight, status FROM livestock_listings WHERE id = ?",
       [listingId]
     );
 
@@ -198,7 +199,17 @@ const createTransaction = async (req, res) => {
       });
     }
 
-    const amount = Number(listing.price) * orderQuantity;
+    if (listing.unit === "kg_live" && !(parseFloat(listing.weight) > 0)) {
+      return res.status(400).json({ message: "This listing is missing its weight. Ask the seller to update it." });
+    }
+
+    // Sold by live weight, this is an estimate from the listing's average
+    // weight per head; the real figure comes from weighing at pickup.
+    const amount = Math.round(getPricePerQuantityUnit(listing) * orderQuantity * 100) / 100;
+    const priceNote =
+      listing.unit === "kg_live"
+        ? `est. at ₱${Number(listing.price).toLocaleString()}/kg live weight, ~${parseFloat(listing.weight)} kg per head`
+        : "at the listed price";
 
     // Reserving the stock and recording the order happen together or not
     // at all, so a failure partway through can't leave stock taken off the
@@ -253,7 +264,7 @@ const createTransaction = async (req, res) => {
       [
         conversationId,
         buyerId,
-        `🤝 Ready to negotiate: ${orderQuantity} x ${listing.livestock_type} for ₱${amount.toLocaleString()} at the listed price. Let's agree on the details!`,
+        `🤝 Ready to negotiate: ${orderQuantity} x ${listing.livestock_type} for ₱${amount.toLocaleString()} (${priceNote}). Let's agree on the details!`,
         listingId,
       ]
     );
@@ -266,7 +277,7 @@ const createTransaction = async (req, res) => {
     await createNotification(
       "Transaction Alert",
       "Negotiation started",
-      `A buyer started negotiating for ${orderQuantity} x ${listing.livestock_type} (₱${amount.toLocaleString()} at the listed price).`,
+      `A buyer started negotiating for ${orderQuantity} x ${listing.livestock_type} (₱${amount.toLocaleString()}, ${priceNote}).`,
       result.insertId
     );
 
