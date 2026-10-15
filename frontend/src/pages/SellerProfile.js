@@ -175,6 +175,12 @@ function SellerProfile() {
                 },
               ]}
             />
+            {seller.farm_location_approximate && (
+              <p className="seller-map-note">
+                Approximate location: the pin is within about 500 m of the farm. The exact spot is
+                shared once you and the seller agree on a deal.
+              </p>
+            )}
           </div>
         ) : (
           <p className="seller-map-empty">

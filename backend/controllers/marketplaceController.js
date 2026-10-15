@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const { createNotification } = require("../utils/notify");
 const { getPricePerQuantityUnit } = require("../utils/productCatalog");
+const { farmersWithAgreedDeal, applyFarmLocationPrivacy } = require("../utils/locationPrivacy");
 
 const getMarketplaceListings = async (req, res) => {
   try {
@@ -34,7 +35,11 @@ const getMarketplaceListings = async (req, res) => {
       ORDER BY l.created_at DESC`
     );
 
-    res.json({ listings });
+    // Farm pins are approximate unless this buyer has agreed on a deal
+    // with that farmer (see utils/locationPrivacy.js).
+    const exactFor = await farmersWithAgreedDeal(db, req.user.id);
+
+    res.json({ listings: listings.map((listing) => applyFarmLocationPrivacy(listing, "seller_id", exactFor)) });
   } catch (error) {
     console.error("Marketplace listings error:", error);
     res.status(500).json({ message: "Server error loading marketplace" });
@@ -46,7 +51,8 @@ const getSellerProfile = async (req, res) => {
     const { id } = req.params;
 
     const [sellerRows] = await db.query(
-      `SELECT id, full_name, location, farm_location, about, profile_image, is_verified, created_at, farm_lat, farm_lng
+      `SELECT id, full_name, location, farm_location, barangay, purok, about, profile_image, is_verified, created_at,
+              farm_lat, farm_lng
        FROM users
        WHERE id = ? AND role = 'farmer'`,
       [id]
@@ -65,8 +71,17 @@ const getSellerProfile = async (req, res) => {
       [id]
     );
 
+    // Same as the marketplace: an approximate pin, and only the purok and
+    // barangay of the address (not the sitio/street), unless this buyer
+    // has agreed on a deal with the farmer.
+    const exactFor = await farmersWithAgreedDeal(db, req.user.id);
+    const { barangay, purok, ...seller } = applyFarmLocationPrivacy(sellerRows[0], "id", exactFor);
+    if (!exactFor.has(seller.id) && barangay) {
+      seller.farm_location = [purok, barangay, "Veruela, Agusan del Sur"].filter(Boolean).join(", ");
+    }
+
     res.json({
-      seller: sellerRows[0],
+      seller,
       listings,
     });
   } catch (error) {

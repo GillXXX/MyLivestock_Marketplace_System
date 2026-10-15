@@ -463,3 +463,10 @@
     font-size: 13px;
   }
 }
+
+.seller-map-note {
+  margin: 8px 2px 0;
+  color: #667085;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
