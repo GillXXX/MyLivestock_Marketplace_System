@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 
 const EARTH_RADIUS_KM = 6371;
 
+// Before a deal is agreed, buyers get a farm pin moved up to this far from
+// the real spot (backend/utils/locationPrivacy.js, MAX_OFFSET_M — keep both
+// in sync), so a circle this size around the pin always contains the farm.
+export const APPROXIMATE_FARM_RADIUS_M = 500;
+
 // Great-circle distance between two coordinates, per the manuscript's
 // Distance Computation Formula for Geolocation Mapping.
 export function haversineDistanceKm(lat1, lng1, lat2, lng2) {

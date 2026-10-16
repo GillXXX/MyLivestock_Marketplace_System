@@ -29,6 +29,7 @@ import {
   formatKm,
   remainingAlongRoute,
   useLiveLocation,
+  APPROXIMATE_FARM_RADIUS_M,
 } from "../utils/geo";
 import { fetchRoute } from "../utils/routing";
 import { API_URL } from "../config";
@@ -259,6 +260,8 @@ function BuyerMap() {
   );
 
   const mapMarkers = useMemo(() => {
+    // An approximate pin only marks an area; the selected one shows that
+    // area as a circle (drawing one for every farm would bury the map).
     const sellerMarkers = pinnedListings.map((item) => ({
       id: item.id,
       lat: Number(item.farm_lat),
@@ -266,6 +269,8 @@ function BuyerMap() {
       color: selectedListing?.id === item.id ? "#d7a24d" : "#b8842c",
       pulse: selectedListing?.id === item.id,
       shape: "pin",
+      areaRadius:
+        selectedListing?.id === item.id && item.farm_location_approximate ? APPROXIMATE_FARM_RADIUS_M : 0,
       popupHtml: `
           <div class="map-popup">
             <strong>${escapeHtml(item.breed || item.livestock_type)}</strong>
@@ -275,6 +280,11 @@ function BuyerMap() {
             ${
               getDistanceKm(item) != null
                 ? `<span>${escapeHtml(formatDistance(getDistanceKm(item)))} from you</span>`
+                : ""
+            }
+            ${
+              item.farm_location_approximate
+                ? `<span class="map-popup-note">Approximate: the farm is within ${APPROXIMATE_FARM_RADIUS_M} m of this pin. The exact spot is shared once you agree on a deal.</span>`
                 : ""
             }
           </div>
@@ -635,6 +645,11 @@ function BuyerMap() {
               <span>
                 <i className="legend-dot active"></i>Selected
               </span>
+              {pinnedListings.some((item) => item.farm_location_approximate) && (
+                <span title={`Before a deal is agreed, farm pins are placed within ${APPROXIMATE_FARM_RADIUS_M} m of the farm to protect the farmer's home.`}>
+                  <i className="legend-area"></i>Approximate area
+                </span>
+              )}
             </div>
           </div>
 

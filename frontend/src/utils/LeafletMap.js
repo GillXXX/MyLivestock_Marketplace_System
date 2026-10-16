@@ -62,7 +62,9 @@ function buildBarangayIcon() {
  * Thin imperative wrapper around Leaflet so the app doesn't depend on a
  * react-leaflet version matched to this React major version.
  *
- * markers: [{ id, lat, lng, color, popupHtml, pulse, shape: "dot" | "pin" }]
+ * markers: [{ id, lat, lng, color, popupHtml, pulse, shape: "dot" | "pin", areaRadius }]
+ *   areaRadius (metres): also shades a circle around the marker, for a pin
+ *   that only marks an area (an approximate farm location)
  * barangayLabels: [{ name, lat, lng }] - always-visible reference dots/labels
  * boundary: GeoJSON Polygon - drawn as an outline (e.g. municipal boundary)
  * bounds: [[south, west], [north, east]] - paired with restrictToBounds
@@ -272,6 +274,18 @@ const LeafletMap = forwardRef(function LeafletMap(
 
     markers.forEach((marker) => {
       if (marker.lat == null || marker.lng == null) return;
+
+      if (marker.areaRadius) {
+        L.circle([marker.lat, marker.lng], {
+          radius: marker.areaRadius,
+          color: marker.color || "#b8842c",
+          weight: 2,
+          dashArray: "6 6",
+          fillColor: marker.color || "#b8842c",
+          fillOpacity: 0.12,
+          interactive: false,
+        }).addTo(markersLayerRef.current);
+      }
 
       const icon =
         marker.shape === "pin"

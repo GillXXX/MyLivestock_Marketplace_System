@@ -9,7 +9,7 @@ import InquiryModal from "../components/InquiryModal";
 import BuyNowModal from "../components/BuyNowModal";
 import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
-import { haversineDistanceKm, formatDistance, useBuyerLocation } from "../utils/geo";
+import { haversineDistanceKm, formatDistance, useBuyerLocation, APPROXIMATE_FARM_RADIUS_M } from "../utils/geo";
 import { API_URL } from "../config";
 import "./SellerProfile.css";
 
@@ -161,6 +161,7 @@ function SellerProfile() {
                   color: "#d7a24d",
                   shape: "pin",
                   pulse: true,
+                  areaRadius: seller.farm_location_approximate ? APPROXIMATE_FARM_RADIUS_M : 0,
                   popupHtml: `
                     <div class="map-popup">
                       <strong>${escapeHtml(seller.full_name)}</strong>
@@ -177,8 +178,9 @@ function SellerProfile() {
             />
             {seller.farm_location_approximate && (
               <p className="seller-map-note">
-                Approximate location: the pin is within about 500 m of the farm. The exact spot is
-                shared once you and the seller agree on a deal.
+                Approximate location: the farm is inside the shaded circle, within{" "}
+                {APPROXIMATE_FARM_RADIUS_M} m of the pin. The exact spot is shared once you and the
+                seller agree on a deal.
               </p>
             )}
           </div>

@@ -158,6 +158,12 @@
   color: #667085;
 }
 
+.map-popup span.map-popup-note {
+  margin-top: 4px;
+  color: #8a6500;
+  font-weight: 600;
+}
+
 /* Bigger, easier-to-tap map controls on phones; Leaflet's defaults
    (~26px) fall under standard touch-target guidance. */
 @media (max-width: 768px) {

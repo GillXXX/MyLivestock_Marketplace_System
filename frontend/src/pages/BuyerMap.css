@@ -576,6 +576,14 @@
   box-shadow: 0 0 0 3px rgba(215, 162, 77, 0.25);
 }
 
+.buyer-map-page .legend-area {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px dashed #d7a24d;
+  background: rgba(215, 162, 77, 0.15);
+}
+
 .buyer-map-page .map-preview-box {
   position: relative;
   overflow: hidden;
@@ -1182,7 +1190,8 @@
   }
 
   .buyer-map-page .map-legend {
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 6px 12px;
   }
 
   .buyer-map-page .map-legend span {
