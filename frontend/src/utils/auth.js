@@ -1,4 +1,5 @@
 import { API_URL } from "../config";
+import { clearAllListingDrafts } from "./listingDraft";
 
 // Persists a login/verify-code/Google response and routes the user onward.
 // Shared by Login and Register so both land in the same place. A brand-new
@@ -42,6 +43,7 @@ export const logout = (navigate) => {
     }).catch(() => {});
   }
 
+  clearAllListingDrafts();
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   navigate("/login");

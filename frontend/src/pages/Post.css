@@ -462,6 +462,22 @@ a.doc-chip:hover {
   text-decoration: underline;
 }
 
+.form-alert.info {
+  background: var(--green-soft);
+  color: var(--primary);
+}
+
+.form-alert-action {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .form-alert.error {
   background: var(--danger-soft);
   color: #b42318;

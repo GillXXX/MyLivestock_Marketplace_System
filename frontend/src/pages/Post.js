@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ImagePlus,
@@ -34,7 +34,25 @@ import {
 } from "../utils/productCatalog";
 import { API_URL } from "../config";
 import useGoBack from "../utils/useGoBack";
+import { loadListingDraft, saveListingDraft, clearListingDraft } from "../utils/listingDraft";
 import "./Post.css";
+
+const EMPTY_FORM = {
+  unit: "head",
+  breed: "",
+  age: "",
+  weight: "",
+  price: "",
+  quantity: "",
+  healthStatus: "",
+  location: "",
+  description: "",
+  imageUrl: "",
+};
+
+// Fields that feed an open deal's price, so a saved draft mustn't change
+// them while the listing has one (the form locks them too).
+const DEAL_LOCKED_FIELDS = ["unit", "price", "weight"];
 
 function Post() {
   const navigate = useNavigate();
@@ -62,18 +80,62 @@ function Post() {
   const [typeChoice, setTypeChoice] = useState("");
   const [customType, setCustomType] = useState("");
 
-  const [formData, setFormData] = useState({
-    unit: "head",
-    breed: "",
-    age: "",
-    weight: "",
-    price: "",
-    quantity: "",
-    healthStatus: "",
-    location: "",
-    description: "",
-    imageUrl: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+
+  // Auto-saved draft (utils/listingDraft.js). edited is set once the farmer
+  // changes something, so just opening the form never writes a draft;
+  // original is what the form started from, for "Discard changes".
+  const edited = useRef(false);
+  const original = useRef({ typeChoice: "", customType: "", formData: EMPTY_FORM });
+  const [restoredAt, setRestoredAt] = useState(null);
+
+  const applyForm = ({ typeChoice: nextType, customType: nextCustom, formData: nextForm }) => {
+    setTypeChoice(nextType);
+    setCustomType(nextCustom);
+    setFormData(nextForm);
+  };
+
+  // Puts a saved draft over what the form started with. With an open deal,
+  // the type and the price fields keep their saved-on-server values.
+  const restoreDraft = (start, locked) => {
+    const draft = loadListingDraft(id);
+    if (!draft) return;
+
+    const formFromDraft = { ...start.formData, ...draft.formData };
+    if (locked) {
+      DEAL_LOCKED_FIELDS.forEach((field) => (formFromDraft[field] = start.formData[field]));
+    }
+
+    applyForm({
+      typeChoice: locked ? start.typeChoice : draft.typeChoice ?? start.typeChoice,
+      customType: locked ? start.customType : draft.customType ?? start.customType,
+      formData: formFromDraft,
+    });
+    setRestoredAt(draft.savedAt || Date.now());
+  };
+
+  const handleDiscardDraft = () => {
+    clearListingDraft(id);
+    edited.current = false;
+    applyForm(original.current);
+    setRestoredAt(null);
+  };
+
+  useEffect(() => {
+    if (!edited.current) return;
+    const current = { typeChoice, customType, formData };
+    if (JSON.stringify(current) === JSON.stringify(original.current)) {
+      clearListingDraft(id);
+    } else {
+      saveListingDraft(id, current);
+    }
+  }, [id, typeChoice, customType, formData]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    restoreDraft(original.current, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -100,11 +162,13 @@ function Post() {
         }
 
         const savedType = data.livestock_type || "";
+        let loadedChoice = "";
+        let loadedCustom = "";
         if (ALL_KNOWN_TYPES.includes(savedType)) {
-          setTypeChoice(savedType);
+          loadedChoice = savedType;
         } else if (savedType) {
-          setTypeChoice(data.category === "product" ? OTHER_PRODUCT : OTHER_LIVESTOCK);
-          setCustomType(savedType);
+          loadedChoice = data.category === "product" ? OTHER_PRODUCT : OTHER_LIVESTOCK;
+          loadedCustom = savedType;
         }
 
         // Older live-animal listings may be priced "per kilo" with the
@@ -115,7 +179,7 @@ function Post() {
         const savedUnit = data.unit || "head";
         const isSavedLivestock = savedCategory === "livestock";
 
-        setFormData({
+        const loadedForm = {
           unit: isValidUnitFor(savedUnit, savedCategory) ? savedUnit : "",
           breed: data.breed || "",
           age: data.age || "",
@@ -126,10 +190,15 @@ function Post() {
           location: data.location || "",
           description: data.description || "",
           imageUrl: "",
-        });
+        };
+
+        const loadedOpenDeals = Number(data.open_deals) || 0;
+        original.current = { typeChoice: loadedChoice, customType: loadedCustom, formData: loadedForm };
+        applyForm(original.current);
+        restoreDraft(original.current, loadedOpenDeals > 0);
 
         setExistingImageUrl(data.image_url || "");
-        setOpenDeals(Number(data.open_deals) || 0);
+        setOpenDeals(loadedOpenDeals);
 
         try {
           const docs = data.documents ? JSON.parse(data.documents) : [];
@@ -195,6 +264,7 @@ function Post() {
   }, [selectedImage]);
 
   const handleChange = (e) => {
+    edited.current = true;
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -213,6 +283,7 @@ function Post() {
 
   const handleTypeChange = (e) => {
     const choice = e.target.value;
+    edited.current = true;
     setTypeChoice(choice);
 
     const nextCategory = choice === OTHER_PRODUCT ? "product" : getCategory(choice, "livestock");
@@ -304,6 +375,8 @@ function Post() {
         return;
       }
 
+      edited.current = false;
+      clearListingDraft(id);
       alert(data.message || (isEditMode ? "Listing updated successfully!" : "Listing published successfully!"));
       navigate("/listings");
     } catch (error) {
@@ -345,6 +418,20 @@ function Post() {
               Your account isn't verified yet, so you can't post a listing. Submit your
               government ID and barangay certificate on your{" "}
               <Link to="/profile">Profile page</Link> to get verified.
+            </p>
+          </div>
+        )}
+
+        {restoredAt && (
+          <div className="form-alert info">
+            <FileText size={18} />
+            <p>
+              We restored the details you entered on{" "}
+              {new Date(restoredAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })} but didn't{" "}
+              {isEditMode ? "save" : "post"}. Please attach the photo and certificate again.{" "}
+              <button type="button" className="form-alert-action" onClick={handleDiscardDraft}>
+                Discard changes
+              </button>
             </p>
           </div>
         )}
@@ -559,7 +646,10 @@ function Post() {
                         : "Example: Rabbit, Turkey, Sheep"
                     }
                     value={customType}
-                    onChange={(e) => setCustomType(e.target.value)}
+                    onChange={(e) => {
+                      edited.current = true;
+                      setCustomType(e.target.value);
+                    }}
                     disabled={dealLocked}
                     required
                   />
