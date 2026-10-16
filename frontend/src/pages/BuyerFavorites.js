@@ -28,6 +28,7 @@ import {
   getListingPlaceholder,
 } from "../utils/productCatalog";
 import useGoBack from "../utils/useGoBack";
+import ListingReviewBadge from "../components/ListingReviewBadge";
 import "./BuyerFavorites.css";
 
 function BuyerFavorites() {
@@ -358,6 +359,8 @@ function BuyerFavorites() {
 
                 <div className="saved-status-row">
                   <span className={getStatusClass(item.status)}>{item.status}</span>
+
+                  <ListingReviewBadge listing={item} />
 
                   {item.seller_verified ? (
                     <span className="verified-seller">

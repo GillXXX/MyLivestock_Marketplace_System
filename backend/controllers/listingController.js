@@ -389,10 +389,17 @@ const updateListing = async (req, res) => {
       ? "Available"
       : previousStatus;
 
+    // Buyers see "verified by MAO" on an Available listing MAO reviewed.
+    // A listing that stays on (or returns to) the marketplace after this
+    // edit without going back to MAO isn't what MAO reviewed any more —
+    // and after a resubmission the last review was a rejection — so the
+    // review is cleared.
+    const reviewReset = newStatus === "Available" ? ", reviewed_by = NULL, reviewed_at = NULL" : "";
+
     await db.query(
       `UPDATE livestock_listings
       SET livestock_type = ?, category = ?, breed = ?, age = ?, weight = ?, price = ?, quantity = ?,
-          unit = ?, health_status = ?, location = ?, description = ?, image_url = ?, documents = ?, status = ?
+          unit = ?, health_status = ?, location = ?, description = ?, image_url = ?, documents = ?, status = ?${reviewReset}
       WHERE id = ? AND farmer_id = ?`,
       [
         livestockType,

@@ -2,6 +2,7 @@ import { X, BadgeCheck, MapPin, FileText, MessageCircle, ShoppingCart } from "lu
 import { isLivestock, formatPrice, formatQuantity, formatWeight, getListingPlaceholder } from "../utils/productCatalog";
 import { getDocumentLabel } from "../utils/livestockDocRequirements";
 import { useNavigate } from "react-router-dom";
+import ListingReviewBadge from "./ListingReviewBadge";
 import "./ListingDetailsModal.css";
 
 function parseDocuments(documents) {
@@ -89,6 +90,8 @@ function ListingDetailsModal({ listing, onClose, onInquire, onBuyNow }) {
               </>
             )}
           </div>
+
+          <ListingReviewBadge listing={listing} variant="full" />
 
           <div className="details-modal-stats-bar">
             {stats.map((stat) => (

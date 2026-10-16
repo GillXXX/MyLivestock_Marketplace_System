@@ -1,0 +1,41 @@
+.listing-review-badge.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eaf5ef;
+  color: #0f3d2e;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.listing-review-badge.chip svg {
+  color: #1f7a4d;
+}
+
+.listing-review-badge.full {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #eaf5ef;
+  color: #0f3d2e;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.listing-review-badge.full svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #1f7a4d;
+}
+
+.listing-review-badge.full strong {
+  display: block;
+  font-size: 13px;
+}

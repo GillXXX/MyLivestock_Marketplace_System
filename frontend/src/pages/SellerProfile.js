@@ -11,6 +11,7 @@ import LeafletMap from "../utils/LeafletMap";
 import escapeHtml from "../utils/escapeHtml";
 import { haversineDistanceKm, formatDistance, useBuyerLocation, APPROXIMATE_FARM_RADIUS_M } from "../utils/geo";
 import { API_URL } from "../config";
+import ListingReviewBadge, { isMaoApproved } from "../components/ListingReviewBadge";
 import "./SellerProfile.css";
 
 function SellerProfile() {
@@ -210,6 +211,12 @@ function SellerProfile() {
                     <TypeIcon size={12} />
                     {item.livestock_type}
                   </span>
+
+                  {isMaoApproved(item) && (
+                    <span className="seller-listing-review">
+                      <ListingReviewBadge listing={item} />
+                    </span>
+                  )}
                 </div>
 
                 <div className="seller-listing-body">

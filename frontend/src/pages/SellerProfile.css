@@ -271,6 +271,13 @@
   object-fit: cover;
 }
 
+.seller-listing-review {
+  position: absolute;
+  bottom: 9px;
+  left: 9px;
+  display: flex;
+}
+
 .seller-listing-type {
   position: absolute;
   top: 9px;

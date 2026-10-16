@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import ListingDetailsModal from "../components/ListingDetailsModal";
 import InquiryModal from "../components/InquiryModal";
 import BuyNowModal from "../components/BuyNowModal";
+import ListingReviewBadge, { isMaoApproved } from "../components/ListingReviewBadge";
 import { haversineDistanceKm, formatDistance, useBuyerLocation } from "../utils/geo";
 import { API_URL } from "../config";
 import {
@@ -356,7 +357,7 @@ function Marketplace() {
                 <label>Verification</label>
                 <p className="filter-note">
                   <ShieldCheck size={14} />
-                  Sellers verified by MAO are marked with a badge below.
+                  Listings MAO has checked show "MAO verified" on the photo; sellers verified by MAO have a badge by their name.
                 </p>
 
                 <button
@@ -426,11 +427,16 @@ function Marketplace() {
                       {item.livestock_type}
                     </span>
 
-                    {isRecentlyPosted(item.created_at) && (
-                      <span className="market-new-badge">
-                        <Sparkles size={11} />
-                        New
-                      </span>
+                    {(isRecentlyPosted(item.created_at) || isMaoApproved(item)) && (
+                      <div className="market-image-badges">
+                        {isRecentlyPosted(item.created_at) && (
+                          <span className="market-new-badge">
+                            <Sparkles size={11} />
+                            New
+                          </span>
+                        )}
+                        <ListingReviewBadge listing={item} />
+                      </div>
                     )}
 
                     <button

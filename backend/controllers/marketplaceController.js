@@ -22,6 +22,7 @@ const getMarketplaceListings = async (req, res) => {
         l.image_url,
         l.documents,
         l.status,
+        l.reviewed_at,
         l.created_at,
         u.id AS seller_id,
         u.full_name AS seller_name,
@@ -64,7 +65,7 @@ const getSellerProfile = async (req, res) => {
 
     const [listings] = await db.query(
       `SELECT id, livestock_type, category, breed, age, weight, price, quantity, unit, health_status, location,
-        description, image_url, documents, status, created_at
+        description, image_url, documents, status, reviewed_at, created_at
        FROM livestock_listings
        WHERE farmer_id = ? AND status = 'Available'
        ORDER BY created_at DESC`,

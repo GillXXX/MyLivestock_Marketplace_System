@@ -23,6 +23,7 @@ const getFavorites = async (req, res) => {
         l.image_url,
         l.documents,
         l.status,
+        l.reviewed_at,
         l.created_at,
         u.id AS seller_id,
         u.full_name AS seller_name,
