@@ -143,6 +143,13 @@ cd frontend
 npm test
 ```
 
+```bash
+cd backend
+npm test
+```
+
+The backend tests use Node's built-in test runner and a stand-in for the database (`backend/test/helpers.js`), so they don't need MySQL or a `.env`. They cover sign-in checks, role access, listing ownership through the real routes, validation, deal pricing, farm-location privacy, private document links, and returning stock when an order closes.
+
 ---
 
 ## Production
