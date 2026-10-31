@@ -1,0 +1,582 @@
+{
+  "pig": [
+    {
+      "file": "lwpig-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Show_Pig_%2818097041013%29.jpg/960px-Show_Pig_%2818097041013%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Show_Pig_(18097041013).jpg",
+      "author": "Rictor Norton &amp; David Allen from London, United Kingdom",
+      "license": "CC BY 2.0"
+    },
+    {
+      "file": "lwpig-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Large_white_pig_in_wallow.jpg/960px-Large_white_pig_in_wallow.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Large_white_pig_in_wallow.jpg",
+      "author": "Palmount45",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "pig-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Pig_pen_alongside_footpath_on_Bower_Farm_-_geograph.org.uk_-_2591969.jpg/960px-Pig_pen_alongside_footpath_on_Bower_Farm_-_geograph.org.uk_-_2591969.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Pig_pen_alongside_footpath_on_Bower_Farm_-_geograph.org.uk_-_2591969.jpg",
+      "author": "Dave Spicer",
+      "license": "CC BY-SA 2.0"
+    },
+    {
+      "file": "lwpig-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Large_White_pigs_%28Belagro-2021%29_1.jpg/960px-Large_White_pigs_%28Belagro-2021%29_1.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Large_White_pigs_(Belagro-2021)_1.jpg",
+      "author": "Homoatrox",
+      "license": "CC BY-SA 3.0"
+    },
+    {
+      "file": "lwpig-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Large_White_sow_2014-03-06_12-36.jpg/960px-Large_White_sow_2014-03-06_12-36.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Large_White_sow_2014-03-06_12-36.jpg",
+      "author": "User:Steven Walling",
+      "license": "CC BY-SA 3.0"
+    }
+  ],
+  "duroc-pig": [
+    {
+      "file": "duroc-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/20231102_-_Rouxbio_-_05.jpg/960px-20231102_-_Rouxbio_-_05.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:20231102_-_Rouxbio_-_05.jpg",
+      "author": "Fabricio Cardenas",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "duroc-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Duroc-Eber.JPG/960px-Duroc-Eber.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Duroc-Eber.JPG",
+      "author": "Frank Liebig",
+      "license": "CC BY-SA 3.0 de"
+    },
+    {
+      "file": "duroc-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f4/Duroc-Schwein.JPG/960px-Duroc-Schwein.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Duroc-Schwein.JPG",
+      "author": "Radosław Drożdżewski (Zwiadowca21)",
+      "license": "CC BY-SA 3.0"
+    }
+  ],
+  "piglets": [
+    {
+      "file": "piglet-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Contre-jour_photograph_of_a_standing_piglet_at_sunset_with_colorful_sky_in_Don_Det_Laos.jpg/960px-Contre-jour_photograph_of_a_standing_piglet_at_sunset_with_colorful_sky_in_Don_Det_Laos.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Contre-jour_photograph_of_a_standing_piglet_at_sunset_with_colorful_sky_in_Don_Det_Laos.jpg",
+      "author": "Basile Morin",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "piglet-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Standing_piglet_at_golden_hour_in_Don_Det_Laos.jpg/960px-Standing_piglet_at_golden_hour_in_Don_Det_Laos.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Standing_piglet_at_golden_hour_in_Don_Det_Laos.jpg",
+      "author": "Basile Morin",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "piglet-5.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/Piglets_kissing_-_Flickr_-_Stewart.jpg/960px-Piglets_kissing_-_Flickr_-_Stewart.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Piglets_kissing_-_Flickr_-_Stewart.jpg",
+      "author": "Stewart Butterfield from Vancouver, Canada",
+      "license": "CC BY 2.0"
+    },
+    {
+      "file": "lwpig-5.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Large_white_pigs.jpg/960px-Large_white_pigs.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Large_white_pigs.jpg",
+      "author": "Beatrice Kaseke",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "cattle": [
+    {
+      "file": "cattle-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Brahman_cattle_near_Lipa%2C_Batangas%2C_Philippines_%282025%29.jpg/960px-Brahman_cattle_near_Lipa%2C_Batangas%2C_Philippines_%282025%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Brahman_cattle_near_Lipa,_Batangas,_Philippines_(2025).jpg",
+      "author": "Fiszi37",
+      "license": "CC0"
+    },
+    {
+      "file": "cattle-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Brahman_cattle_in_Costa_Rica.jpg/960px-Brahman_cattle_in_Costa_Rica.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Brahman_cattle_in_Costa_Rica.jpg",
+      "author": "Bernard Gagnon",
+      "license": "CC0"
+    },
+    {
+      "file": "cattle-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Brahman_cattle_20020320.JPG/960px-Brahman_cattle_20020320.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Brahman_cattle_20020320.JPG",
+      "author": "Ruestz",
+      "license": "CC BY-SA 2.5"
+    },
+    {
+      "file": "cattle-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Brahman_cattle_20020320_%28cropped%29.JPG/960px-Brahman_cattle_20020320_%28cropped%29.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Brahman_cattle_20020320_(cropped).JPG",
+      "author": "Ruestz",
+      "license": "CC BY-SA 2.5"
+    },
+    {
+      "file": "cattle-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f8/Brahman_cattle_in_T%C3%A1rcoles_River.jpg/960px-Brahman_cattle_in_T%C3%A1rcoles_River.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Brahman_cattle_in_T%C3%A1rcoles_River.jpg",
+      "author": "Bernard Gagnon",
+      "license": "CC0"
+    },
+    {
+      "file": "cattle-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Brahman_cattle_SB024.jpg/960px-Brahman_cattle_SB024.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Brahman_cattle_SB024.jpg",
+      "author": "Sam Berry",
+      "license": "CC BY-SA 3.0"
+    }
+  ],
+  "carabao": [
+    {
+      "file": "carabao-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/San_Vicente%2C_Carabao%2C_Buffalo%2C_Palawan%2C_Philippines.jpg/960px-San_Vicente%2C_Carabao%2C_Buffalo%2C_Palawan%2C_Philippines.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:San_Vicente,_Carabao,_Buffalo,_Palawan,_Philippines.jpg",
+      "author": "Vyacheslav Argenberg",
+      "license": "CC BY 4.0"
+    },
+    {
+      "file": "carabao-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Philippines_National_animal%28carabao%29eat_grass.jpg/960px-Philippines_National_animal%28carabao%29eat_grass.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Philippines_National_animal(carabao)eat_grass.jpg",
+      "author": "Mr.Donn2e",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "carabao-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Carabao_at_Rest.jpg/960px-Carabao_at_Rest.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Carabao_at_Rest.jpg",
+      "author": "Mhlayson",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "goat": [
+    {
+      "file": "nativegoat-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/7449Tethered_goats_in_Bulacan_01.jpg/960px-7449Tethered_goats_in_Bulacan_01.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:7449Tethered_goats_in_Bulacan_01.jpg",
+      "author": "JFVelasquez Floro",
+      "license": "CC0"
+    },
+    {
+      "file": "nativegoat-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/7449Tethered_goats_in_Bulacan_25.jpg/960px-7449Tethered_goats_in_Bulacan_25.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:7449Tethered_goats_in_Bulacan_25.jpg",
+      "author": "JFVelasquez Floro",
+      "license": "CC0"
+    },
+    {
+      "file": "goat-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Drumlin_Farm_goat_P1030896.jpg/960px-Drumlin_Farm_goat_P1030896.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Drumlin_Farm_goat_P1030896.jpg",
+      "author": "NewtonCourt",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "nubian-goat": [
+    {
+      "file": "nubian-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Anglo-Nubier_Ziege.JPG/960px-Anglo-Nubier_Ziege.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Anglo-Nubier_Ziege.JPG",
+      "author": "4028mdk09",
+      "license": "CC BY-SA 3.0"
+    },
+    {
+      "file": "nubian-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Anglo-Nubian_goat_at_a_zoo.jpg/960px-Anglo-Nubian_goat_at_a_zoo.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Anglo-Nubian_goat_at_a_zoo.jpg",
+      "author": "Rivadavia.vila",
+      "license": "CC0"
+    },
+    {
+      "file": "nubian-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Nubian_Goat_002.jpg/960px-Nubian_Goat_002.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Nubian_Goat_002.jpg",
+      "author": "Ltshears",
+      "license": "CC BY-SA 3.0"
+    }
+  ],
+  "boer-goat": [
+    {
+      "file": "boer-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Boer_goat.jpg/960px-Boer_goat.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Boer_goat.jpg",
+      "author": "Lazarus000",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "boer-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Boer_Goat_%2849944899088%29.jpg/960px-Boer_Goat_%2849944899088%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Boer_Goat_(49944899088).jpg",
+      "author": "Lil Shepherd from United Kingdom",
+      "license": "CC BY 2.0"
+    },
+    {
+      "file": "boer-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Boer_goat_Doe.jpg/960px-Boer_goat_Doe.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Boer_goat_Doe.jpg",
+      "author": "Lazarus000",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "boer-5.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Boer_Goat_in_Shoushan_Zoo.jpg/960px-Boer_Goat_in_Shoushan_Zoo.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Boer_Goat_in_Shoushan_Zoo.jpg",
+      "author": "壽山動物園 Shoushan Zoo",
+      "license": "Attribution"
+    }
+  ],
+  "native-chicken": [
+    {
+      "file": "chicken-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Native_Philippine_Chicken_Camarinensis.jpg/960px-Native_Philippine_Chicken_Camarinensis.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Native_Philippine_Chicken_Camarinensis.jpg",
+      "author": "FroyAgta",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "chicken-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Native_Philippine_chicken.jpg/960px-Native_Philippine_chicken.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Native_Philippine_chicken.jpg",
+      "author": "FroyAgta",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "rooster-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/H%C3%BChnerhaltung_traditionell.jpg/960px-H%C3%BChnerhaltung_traditionell.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:H%C3%BChnerhaltung_traditionell.jpg",
+      "author": "Gras-Ober",
+      "license": "CC BY-SA 3.0"
+    }
+  ],
+  "broiler": [
+    {
+      "file": "broiler-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Broiler_Chickens_001.jpg/960px-Broiler_Chickens_001.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Broiler_Chickens_001.jpg",
+      "author": "Icem4k",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "broiler-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Broiler_Chickens_002.jpg/960px-Broiler_Chickens_002.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Broiler_Chickens_002.jpg",
+      "author": "Icem4k",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "broiler-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Chicken_Farm_034.jpg/960px-Chicken_Farm_034.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Chicken_Farm_034.jpg",
+      "author": "jlastras",
+      "license": "CC BY-SA 2.0"
+    }
+  ],
+  "duck": [
+    {
+      "file": "duck-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Ducks_at_Beltring_Hop_Farm_-_geograph.org.uk_-_5189889.jpg/960px-Ducks_at_Beltring_Hop_Farm_-_geograph.org.uk_-_5189889.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Ducks_at_Beltring_Hop_Farm_-_geograph.org.uk_-_5189889.jpg",
+      "author": "Oast House Archive",
+      "license": "CC BY-SA 2.0"
+    },
+    {
+      "file": "pekin-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Pekin_Ducks.jpg/960px-Pekin_Ducks.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Pekin_Ducks.jpg",
+      "author": "Katie Chodil",
+      "license": "CC BY 2.0"
+    },
+    {
+      "file": "duck-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/White_ducks_at_the_farm.jpg/960px-White_ducks_at_the_farm.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:White_ducks_at_the_farm.jpg",
+      "author": "Anitah Pezz",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "pekin-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Mallard_and_Pekin_ducks%2C_General_Coffee_State_Park.jpg/960px-Mallard_and_Pekin_ducks%2C_General_Coffee_State_Park.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Mallard_and_Pekin_ducks,_General_Coffee_State_Park.jpg",
+      "author": "Michael Rivera",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "eggs": [
+    {
+      "file": "eggtray-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/A_Tray_Of_Eggs.jpg/960px-A_Tray_Of_Eggs.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:A_Tray_Of_Eggs.jpg",
+      "author": "safaritravelplus",
+      "license": "CC0"
+    },
+    {
+      "file": "eggtray-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Chicken_eggs_in_tray.jpg/960px-Chicken_eggs_in_tray.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Chicken_eggs_in_tray.jpg",
+      "author": "Maksym Kozlenko",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "eggtray-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Egg_trays_%28Landmarks%3B_2023-08-12%29_E911a_07.jpg/960px-Egg_trays_%28Landmarks%3B_2023-08-12%29_E911a_07.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Egg_trays_(Landmarks;_2023-08-12)_E911a_07.jpg",
+      "author": "E911a",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "eggs-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Eierkarton_10_%28fcm%29.jpg/960px-Eierkarton_10_%28fcm%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Eierkarton_10_(fcm).jpg",
+      "author": "Photograph: Frank C. Müller, Frankfurt am Main",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "duck-eggs": [
+    {
+      "file": "eggtray-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Egg_trays_%28Landmarks%3B_2023-08-12%29_E911a_08.jpg/960px-Egg_trays_%28Landmarks%3B_2023-08-12%29_E911a_08.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Egg_trays_(Landmarks;_2023-08-12)_E911a_08.jpg",
+      "author": "E911a",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "eggtray-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Egg_trays_%28Landmarks%3B_2023-08-12%29_E911a_09.jpg/960px-Egg_trays_%28Landmarks%3B_2023-08-12%29_E911a_09.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Egg_trays_(Landmarks;_2023-08-12)_E911a_09.jpg",
+      "author": "E911a",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "vegetables": [
+    {
+      "file": "beans-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Long_Bean.JPG/960px-Long_Bean.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Long_Bean.JPG",
+      "author": "David",
+      "license": "Public domain"
+    },
+    {
+      "file": "bokchoy-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Brassica_rapa_var._chinensis_%28leaf%29.jpg/960px-Brassica_rapa_var._chinensis_%28leaf%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Brassica_rapa_var._chinensis_(leaf).jpg",
+      "author": "おむこさん志望",
+      "license": "CC BY 2.5"
+    },
+    {
+      "file": "eggplant-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Three_eggplant_fruits_%286061652131%29.jpg/960px-Three_eggplant_fruits_%286061652131%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Three_eggplant_fruits_(6061652131).jpg",
+      "author": "Mark from san diego, usa",
+      "license": "CC BY 2.0"
+    },
+    {
+      "file": "okra-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Quiabo.jpg/960px-Quiabo.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Quiabo.jpg",
+      "author": "ArionStar",
+      "license": "CC0"
+    }
+  ],
+  "squash": [
+    {
+      "file": "squash-5.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Kalabasa_%28Calabaza%29_squash_from_the_Philippines.jpg/960px-Kalabasa_%28Calabaza%29_squash_from_the_Philippines.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Kalabasa_(Calabaza)_squash_from_the_Philippines.jpg",
+      "author": "Obsidian Soul",
+      "license": "CC0"
+    }
+  ],
+  "okra": [
+    {
+      "file": "okra-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Okra_%28Abelmoschus_esculentus%29_in_a_Bowl.jpg/960px-Okra_%28Abelmoschus_esculentus%29_in_a_Bowl.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Okra_(Abelmoschus_esculentus)_in_a_Bowl.jpg",
+      "author": "Dinkun Chen",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "okra-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Quiabo.jpg/960px-Quiabo.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Quiabo.jpg",
+      "author": "ArionStar",
+      "license": "CC0"
+    }
+  ],
+  "banana": [
+    {
+      "file": "banana-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Lakatan_banana_bunch_%28Philippines%29_03.jpg/960px-Lakatan_banana_bunch_%28Philippines%29_03.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lakatan_banana_bunch_(Philippines)_03.jpg",
+      "author": "Obsidian Soul",
+      "license": "CC0"
+    },
+    {
+      "file": "banana-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Lakatan_banana_bunch_%28Philippines%29_02.jpg/960px-Lakatan_banana_bunch_%28Philippines%29_02.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lakatan_banana_bunch_(Philippines)_02.jpg",
+      "author": "Obsidian Soul",
+      "license": "CC0"
+    },
+    {
+      "file": "banana-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Lakatan_banana_bunch_%28Philippines%29_01.jpg/960px-Lakatan_banana_bunch_%28Philippines%29_01.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lakatan_banana_bunch_(Philippines)_01.jpg",
+      "author": "Obsidian Soul",
+      "license": "CC0"
+    },
+    {
+      "file": "banana-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Lakatan_bananas_in_Indonesia.jpg/960px-Lakatan_bananas_in_Indonesia.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lakatan_bananas_in_Indonesia.jpg",
+      "author": "Firzafp",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "banana-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Lakatan_bananas_%28Philippines%29_01.jpg/960px-Lakatan_bananas_%28Philippines%29_01.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lakatan_bananas_(Philippines)_01.jpg",
+      "author": "Obsidian Soul",
+      "license": "CC0"
+    }
+  ],
+  "lanzones": [
+    {
+      "file": "lanzones-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Lanzones.jpg/960px-Lanzones.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lanzones.jpg",
+      "author": "Mike Gonzalez (TheCoffee)",
+      "license": "CC BY-SA 3.0"
+    },
+    {
+      "file": "lanzones-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Lansium_domesticum_%287126753821%29.jpg/960px-Lansium_domesticum_%287126753821%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lansium_domesticum_(7126753821).jpg",
+      "author": "Len Worthington",
+      "license": "CC BY-SA 2.0"
+    },
+    {
+      "file": "marang-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Paete%2CLagunajf6182_15.JPG/960px-Paete%2CLagunajf6182_15.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Paete,Lagunajf6182_15.JPG",
+      "author": "Ramon FVelasquez",
+      "license": "CC BY-SA 3.0"
+    }
+  ],
+  "rambutan": [
+    {
+      "file": "rambutan-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Rambut%C3%A3o.jpg/960px-Rambut%C3%A3o.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Rambut%C3%A3o.jpg",
+      "author": "ArionStar",
+      "license": "CC0"
+    },
+    {
+      "file": "rambutan-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Rambutans_by_Muhammad_Mahdi_Karim.jpg/960px-Rambutans_by_Muhammad_Mahdi_Karim.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Rambutans_by_Muhammad_Mahdi_Karim.jpg",
+      "author": "Muhammad Mahdi Karim",
+      "license": "GFDL 1.2"
+    },
+    {
+      "file": "rambutan-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Rambutan_One_Kind_of_Fruit_in_Indonesia.jpg/960px-Rambutan_One_Kind_of_Fruit_in_Indonesia.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Rambutan_One_Kind_of_Fruit_in_Indonesia.jpg",
+      "author": "Diah Isnawati S",
+      "license": "CC0"
+    },
+    {
+      "file": "rambutan-4.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Nephelium_lappaceum201907mx.jpg/960px-Nephelium_lappaceum201907mx.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Nephelium_lappaceum201907mx.jpg",
+      "author": "Carlos Valenzuela",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "marang": [
+    {
+      "file": "marang-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Marang_sold_within_Kadayawan_Village_in_Magsaysay_Park_2.jpg/960px-Marang_sold_within_Kadayawan_Village_in_Magsaysay_Park_2.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Marang_sold_within_Kadayawan_Village_in_Magsaysay_Park_2.jpg",
+      "author": "Herbertkikoy",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "durian": [
+    {
+      "file": "durian-2.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Durian_fruit_singapore.jpg/960px-Durian_fruit_singapore.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Durian_fruit_singapore.jpg",
+      "author": "G.Mannaerts",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "durian-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Durian_for_sale_in_Sydney_store.jpg/960px-Durian_for_sale_in_Sydney_store.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Durian_for_sale_in_Sydney_store.jpg",
+      "author": "Maksym Kozlenko",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "durian-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/DURIAN_FRUIT_DELIVERY_MANDALAY_MYANMA_FEB_2013_%288511907199%29.jpg/960px-DURIAN_FRUIT_DELIVERY_MANDALAY_MYANMA_FEB_2013_%288511907199%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:DURIAN_FRUIT_DELIVERY_MANDALAY_MYANMA_FEB_2013_(8511907199).jpg",
+      "author": "calflier001",
+      "license": "CC BY-SA 2.0"
+    }
+  ],
+  "honey": [
+    {
+      "file": "honey-7.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Honey_miele.jpg/960px-Honey_miele.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Honey_miele.jpg",
+      "author": "Marcobeltrametti",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "file": "honey-3.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Antiguan_honey_products_at_an_exhibition_in_Saint_Lucia.jpg/960px-Antiguan_honey_products_at_an_exhibition_in_Saint_Lucia.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Antiguan_honey_products_at_an_exhibition_in_Saint_Lucia.jpg",
+      "author": "Government of Antigua and Barbuda",
+      "license": "Public domain"
+    },
+    {
+      "file": "honeycomb-0.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Western_honey_bee_on_a_honeycomb.jpg/960px-Western_honey_bee_on_a_honeycomb.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Western_honey_bee_on_a_honeycomb.jpg",
+      "author": "Matthew T Rader",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "goat-milk": [
+    {
+      "file": "goatmilk-5.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Stew_milks_the_goat_02.jpg/960px-Stew_milks_the_goat_02.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Stew_milks_the_goat_02.jpg",
+      "author": "Ken Mayer",
+      "license": "CC BY 2.0"
+    },
+    {
+      "file": "goatmilk-6.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Stew_milks_the_goat_04.jpg/960px-Stew_milks_the_goat_04.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Stew_milks_the_goat_04.jpg",
+      "author": "Ken Mayer",
+      "license": "CC BY 2.0"
+    }
+  ],
+  "milk": [
+    {
+      "file": "goatmilk-1.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Goat_milk_in_Perekrestok_shop_Perm_2023.jpg/960px-Goat_milk_in_Perekrestok_shop_Perm_2023.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Goat_milk_in_Perekrestok_shop_Perm_2023.jpg",
+      "author": "Svetlov Artem",
+      "license": "CC0"
+    }
+  ]
+}

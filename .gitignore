@@ -25,3 +25,9 @@ backend/frontend-build/
 
 # verification documents (government IDs) — never commit
 backend/uploads-private/
+
+# local-only notes (e.g. test account passwords) — never commit
+*.local.md
+
+# sample ID / certificate used by backend/scripts/seed.js — never commit
+backend/scripts/seed-files/
